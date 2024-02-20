@@ -355,7 +355,8 @@ void CObjectsShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature 
 	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }
 
-void CObjectsShader::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, D3D12_CPU_DESCRIPTOR_HANDLE d3dCbvCPUDescriptorStartHandle, D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorStartHandle)
+void CObjectsShader::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, 
+	D3D12_CPU_DESCRIPTOR_HANDLE d3dCbvCPUDescriptorStartHandle, D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorStartHandle)
 {
 	UINT ncbGameObjectBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256ÀÇ ¹è¼ö
 	m_pd3dcbGameObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbGameObjectBytes * m_nObjects, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
