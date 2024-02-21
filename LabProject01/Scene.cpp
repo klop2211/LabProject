@@ -211,10 +211,12 @@ void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	}
 
 	// Player 정보
-	UINT ncbPlayerBytes = ((sizeof(CB_PLAYER_INFO) + 255) & ~255); //256의 배수
-	m_pd3dcbPlayer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbPlayerBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	//UINT ncbPlayerBytes = ((sizeof(CB_PLAYER_INFO) + 255) & ~255); //256의 배수
+	//m_pd3dcbPlayer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbPlayerBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
-	m_pd3dcbPlayer->Map(0, NULL, (void**)&m_pcbMappedPlayer);
+	//m_pd3dcbPlayer->Map(0, NULL, (void**)&m_pcbMappedPlayer);
+
+	//m_pPlayer->SetCbvGPUDescriptorHandle(m_pd3dcbPlayer->GetGPUVirtualAddress());
 
 }
 
@@ -231,9 +233,9 @@ void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 		pbMappedcbGameObject->m_nMaterial = m_ppObjects[j]->m_pMaterial->m_nReflection;
 	}
 
-	XMFLOAT4X4 xmf4x4World;
-	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_pPlayer->GetWorldMT())));
-	::memcpy(&m_pcbMappedPlayer->m_xmf4x4World, &xmf4x4World, sizeof(XMFLOAT4X4));
+	//XMFLOAT4X4 xmf4x4World;
+	//XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_pPlayer->GetWorldMT())));
+	//::memcpy(&m_pcbMappedPlayer->m_xmf4x4World, &xmf4x4World, sizeof(XMFLOAT4X4));
 
 }
 
@@ -281,19 +283,21 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	}
 }
 
-void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList)
+void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer)
 {
+	m_pPlayer = pPlayer;
+
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
-	m_nShaders = 2;			// 조명 O, X 각각 1개씩
-	CShader* pShader = new CShader[m_nShaders];
+	m_nShaders = 1;			// 조명 O, X 각각 1개씩
+	CShader* pShader = new CDiffusedShader[m_nShaders];
 	m_pShaders = pShader;
 	m_pShaders[0].CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 
-	m_nObjects = 2;		// 직육면체 2개
+	m_nObjects = 3;		// 직육면체 2개 + Player
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
-	d3dDescriptorHeapDesc.NumDescriptors = m_nObjects + 3;		// 재질, 조명, 객체 수
+	d3dDescriptorHeapDesc.NumDescriptors = m_nObjects + 2;		// 재질, 조명, 객체 수
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -311,33 +315,39 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	BuildLightsAndMaterials();
 
-
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	CCubeMeshIlluminated* pCubeMesh = new CCubeMeshIlluminated(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
 
 	m_ppObjects = new CGameObject*[m_nObjects];
 
+	m_ppObjects[0] = (CGameObject*)m_pPlayer;
+	m_ppObjects[0]->SetMaterial(3);
+	m_ppObjects[0]->SetShader(0);
+	m_ppObjects[0]->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr);
+
 	CRotatingObject* pRotatingObject = NULL;
 	pRotatingObject = new CRotatingObject();
 	pRotatingObject->SetMaterial(1);
+	pRotatingObject->SetShader(0);
 	pRotatingObject->SetMesh(pCubeMesh);
 	pRotatingObject->SetPosition(0, 0, 0);
 	pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
 	pRotatingObject->SetRotationSpeed(0);
-	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr);
+	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr + ::gnCbvSrvDescriptorIncrementSize);
 
-	m_ppObjects[0] = pRotatingObject;
+	m_ppObjects[1] = pRotatingObject;
 
 	pRotatingObject = new CRotatingObject();
 	pRotatingObject->SetMaterial(2);
+	pRotatingObject->SetShader(0);
 	pRotatingObject->SetMesh(pCubeMesh);
-	pRotatingObject->SetPosition(30, 30, 0);
+	pRotatingObject->SetPosition(0, 10, 0);
 	pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
 	pRotatingObject->SetRotationSpeed(10);
-	pRotatingObject->SetCbvGPUDescriptorHandle(d3dCbvGPUDescriptorStartHandle.ptr + ::gnCbvSrvDescriptorIncrementSize);
+	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr + ::gnCbvSrvDescriptorIncrementSize * 2);
 
-	m_ppObjects[1] = pRotatingObject;
+	m_ppObjects[2] = pRotatingObject;
 
 }
 
@@ -347,7 +357,8 @@ void CScene::ReleaseObjects()
 
 	if (m_ppObjects)
 	{
-		for (int i = 0; i < m_nObjects; i++) delete m_ppObjects[i];
+		// 0번 객체는 플레이어 객체 GameFramework에서 삭제함
+		for (int i = 1; i < m_nObjects; i++) delete m_ppObjects[i];
 		delete[] m_ppObjects;
 	}
 
@@ -369,7 +380,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
+	m_pPlayer->OnPrepareRender();
+
 	UpdateShaderVariables(pd3dCommandList);
+
 
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
 	pd3dCommandList->SetGraphicsRootDescriptorTable(3, m_d3dMaterialsCbvGPUDescriptorHandle);
@@ -386,10 +400,12 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 		m_pShaders[i].Render(pd3dCommandList);
 		for (int j = 0; j < m_nObjects; j++)
 		{
-			if (m_ppObjects[j]->CheckShader(i))
-				m_ppObjects[j]->Render(pd3dCommandList);
+			if (m_ppObjects[j]->CheckShader(m_pShaders[i].GetShaderNum()))
+				m_ppObjects[j]->Render(pd3dCommandList, pCamera);
 		}
 	}
+
+
 }
 
 

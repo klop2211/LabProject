@@ -54,7 +54,7 @@ public:
 	CGameObject();
 	~CGameObject();
 
-	XMFLOAT4X4 const GetWorldMT(){ return m_xmf4x4World; }
+	XMFLOAT4X4& const GetWorldMT(){ return m_xmf4x4World; }
 
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
