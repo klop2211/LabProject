@@ -289,10 +289,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
-	m_nShaders = 1;			// 조명 O, X 각각 1개씩
-	CShader* pShader = new CDiffusedShader[m_nShaders];
-	m_pShaders = pShader;
-	m_pShaders[0].CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	m_nShaders = 2;			// 조명 O, X 각각 1개씩
+	m_ppShaders = new CShader*[m_nShaders];
+
+	m_ppShaders[0] = new CDiffusedShader;
+	m_ppShaders[1] = new CIlluminatedShader;
+
+	for(int i = 0; i < m_nShaders; ++i)
+		m_ppShaders[i]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 
 	m_nObjects = 3;		// 직육면체 2개 + Player
 
@@ -340,9 +344,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	pRotatingObject = new CRotatingObject();
 	pRotatingObject->SetMaterial(2);
-	pRotatingObject->SetShader(0);
+	pRotatingObject->SetShader(1);
 	pRotatingObject->SetMesh(pCubeMesh);
-	pRotatingObject->SetPosition(0, 10, 0);
+	pRotatingObject->SetPosition(0, 30, 0);
 	pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
 	pRotatingObject->SetRotationSpeed(10);
 	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr + ::gnCbvSrvDescriptorIncrementSize * 2);
@@ -397,10 +401,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 	for (int i = 0; i < m_nShaders; i++)
 	{
-		m_pShaders[i].Render(pd3dCommandList);
+		m_ppShaders[i]->Render(pd3dCommandList);
 		for (int j = 0; j < m_nObjects; j++)
 		{
-			if (m_ppObjects[j]->CheckShader(m_pShaders[i].GetShaderNum()))
+			if (m_ppObjects[j]->CheckShader(m_ppShaders[i]->GetShaderNum()))
 				m_ppObjects[j]->Render(pd3dCommandList, pCamera);
 		}
 	}

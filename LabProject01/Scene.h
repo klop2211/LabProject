@@ -71,7 +71,7 @@ protected:
 	CB_PLAYER_INFO* m_pcbMappedPlayer = NULL;
 
 	// Shader 包府
-	CShader* m_pShaders = NULL;
+	CShader** m_ppShaders = NULL;
 	int	m_nShaders = 0;
 
 	// GameObject 包府
