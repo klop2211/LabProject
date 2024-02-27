@@ -54,6 +54,10 @@ public:
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
 	ID3D12RootSignature* GetGraphicsRootSignature() { return(m_pd3dGraphicsRootSignature); }
 
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nDescriptorHeapIndex, UINT nRootParameterStartIndex);
+	void CreateShaderResourceView(ID3D12Device* pd3dDevice, CTexture* pTexture, int nIndex);
+
+
 	bool ProcessInput(UCHAR* pKeysBuffer) { return false; }
 	void AnimateObjects(float fTimeElapsed);
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
@@ -102,6 +106,12 @@ protected:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dMaterialsCbvCPUDescriptorHandle;
 	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dMaterialsCbvGPUDescriptorHandle;
 
+	// SRV °ü¸®
+
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorStartHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dSrvCPUDescriptorNextHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dSrvGPUDescriptorNextHandle;
 
 };
 
