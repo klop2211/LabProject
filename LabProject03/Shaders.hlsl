@@ -1,17 +1,12 @@
 
-cbuffer cbPlayerInfo : register(b0)
-{
-	matrix		gmtxPlayerWorld : packoffset(c0);
-};
-
-cbuffer cbCameraInfo : register(b1)
+cbuffer cbCameraInfo : register(b0)
 {
 	matrix		gmtxView : packoffset(c0);
 	matrix		gmtxProjection : packoffset(c4);
 	float3		gvCameraPosition : packoffset(c8);
 };
 
-cbuffer cbGameObjectInfo : register(b2)
+cbuffer cbGameObjectInfo : register(b1)
 {
 	matrix		gmtxGameObject : packoffset(c0);
 	uint		gnMaterial : packoffset(c4);
@@ -44,23 +39,6 @@ VS_DIFFUSED_OUTPUT VSDiffused(VS_DIFFUSED_INPUT input)
 }
 
 float4 PSDiffused(VS_DIFFUSED_OUTPUT input) : SV_TARGET
-{
-	return(input.color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-VS_DIFFUSED_OUTPUT VSPlayer(VS_DIFFUSED_INPUT input)
-{
-	VS_DIFFUSED_OUTPUT output;
-
-	output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxPlayerWorld), gmtxView), gmtxProjection);
-	output.color = input.color;
-
-	return(output);
-}
-
-float4 PSPlayer(VS_DIFFUSED_OUTPUT input) : SV_TARGET
 {
 	return(input.color);
 }
