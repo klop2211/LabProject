@@ -229,7 +229,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 	DWORD nCameraMode = (pCamera) ? pCamera->GetMode() : 0x00;
 	if (nCameraMode == THIRD_PERSON_CAMERA)
 	{
-		m_pMesh->Render(pd3dCommandList);
+		m_ppMeshes[0]->Render(pd3dCommandList);
 	}
 }
 
@@ -239,7 +239,11 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 CAirplanePlayer::CAirplanePlayer(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
 	CAirplaneMeshDiffused *pAirplaneMesh = new CAirplaneMeshDiffused(pd3dDevice, pd3dCommandList, 20.0f, 20.0f, 4.0f, XMFLOAT4(0.0f, 0.5f, 0.0f, 0.0f));
-	SetMesh(pAirplaneMesh);
+	
+	m_nMeshes = 1;
+	m_ppMeshes = new CMesh*[1];
+	m_ppMeshes[0] = NULL;
+	SetMesh(0, pAirplaneMesh);
 
 	m_pCamera = ChangeCamera(SPACESHIP_CAMERA/*THIRD_PERSON_CAMERA*/, 0.0f);
 	SetPosition(XMFLOAT3(0.0f, 0.0f, -50.0f));

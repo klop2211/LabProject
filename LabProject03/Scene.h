@@ -26,12 +26,6 @@ struct LIGHTS
 	XMFLOAT4				m_xmf4GlobalAmbient;
 };
 
-struct MATERIALS
-{
-	MATERIAL				m_pReflections[MAX_MATERIALS];
-};
-
-
 class CScene
 {
 public:
@@ -46,6 +40,10 @@ public:
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
+	// srv 积己 包府
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameterStartIndex);
+
+
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer);
 	void ReleaseObjects();
 
@@ -59,13 +57,13 @@ public:
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	void ReleaseUploadBuffers();
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nDescriptorHeapIndex, UINT nRootParameterStartIndex);
 
 	CPlayer* m_pPlayer = NULL;
 
 protected:
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
 
-	ID3D12DescriptorHeap* m_pd3dCbvSrvDescriptorHeap = NULL;
 
 	ID3D12Resource* m_pd3dcbPlayer = NULL;
 	CB_PLAYER_INFO* m_pcbMappedPlayer = NULL;
@@ -81,26 +79,29 @@ protected:
 	ID3D12Resource* m_pd3dcbGameObjects = NULL;
 	UINT8* m_pcbMappedGameObjects = NULL;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dObjectsCbvCPUDescriptorHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dObjectsCbvGPUDescriptorHandle;
-
 	// Light 包府
 	LIGHTS* m_pLights = NULL;
 
 	ID3D12Resource* m_pd3dcbLights = NULL;
 	LIGHTS* m_pcbMappedLights = NULL;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dLightsCbvCPUDescriptorHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dLightsCbvGPUDescriptorHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dLightsGPUDescriptorStartHandle;
 
-	// MATERIAL 包府
-	MATERIALS* m_pMaterials = NULL;
+	// Terrain
+	CHeightMapTerrain* m_pTerrain = NULL;
 
-	ID3D12Resource* m_pd3dcbMaterials = NULL;
-	MATERIAL* m_pcbMappedMaterials = NULL;
+	// Descriptor
+	ID3D12DescriptorHeap* m_pd3dCbvSrvDescriptorHeap = NULL;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE m_d3dMaterialsCbvCPUDescriptorHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dMaterialsCbvGPUDescriptorHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dCbvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dCbvGPUDescriptorStartHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorStartHandle;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dCbvCPUDescriptorNextHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dCbvGPUDescriptorNextHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorNextHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorNextHandle;
 
 
 };

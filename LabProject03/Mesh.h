@@ -15,6 +15,8 @@ public:
 	CVertex() { m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f); }
 	CVertex(XMFLOAT3 xmf3Position) { m_xmf3Position = xmf3Position; }
 	~CVertex() { }
+
+	void SetPosition(const XMFLOAT3& xmf3Position) { m_xmf3Position = xmf3Position; }
 };
 
 class CDiffusedVertex : public CVertex
@@ -27,6 +29,9 @@ public:
 	CDiffusedVertex(float x, float y, float z, XMFLOAT4 xmf4Diffuse) { m_xmf3Position = XMFLOAT3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; }
 	CDiffusedVertex(XMFLOAT3 xmf3Position, XMFLOAT4 xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f)) { m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; }
 	~CDiffusedVertex() { }
+
+	void SetDiffuse(const XMFLOAT4& xmf3Diffuse) { m_xmf4Diffuse = xmf3Diffuse; }
+
 };
 
 class CIlluminatedVertex : public CVertex
@@ -41,11 +46,71 @@ public:
 	~CIlluminatedVertex() { }
 };
 
+class CDiffusedTexturedVertex : public CDiffusedVertex
+{
+public:
+	XMFLOAT2						m_xmf2TexCoord;
+
+public:
+	CDiffusedTexturedVertex()
+	{
+		m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		m_xmf2TexCoord = XMFLOAT2(0.0f, 0.0f);
+	}
+
+	CDiffusedTexturedVertex(float x, float y, float z, XMFLOAT4 xmf4Diffuse, XMFLOAT2 xmf2TexCoord)
+	{
+		m_xmf3Position = XMFLOAT3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; m_xmf2TexCoord = xmf2TexCoord;
+	}
+
+	CDiffusedTexturedVertex(XMFLOAT3 xmf3Position, XMFLOAT4 xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
+		XMFLOAT2 xmf2TexCoord = XMFLOAT2(0.0f, 0.0f))
+	{
+		m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; m_xmf2TexCoord = xmf2TexCoord;
+	}
+
+	~CDiffusedTexturedVertex() { }
+};
+
+class CDiffused2TexturedVertex : public CDiffusedVertex
+{
+public:
+	XMFLOAT2						m_xmf2TexCoord0;
+	XMFLOAT2						m_xmf2TexCoord1;
+
+public:
+	CDiffused2TexturedVertex()
+	{
+		m_xmf3Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		m_xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		m_xmf2TexCoord0 = XMFLOAT2(0.0f, 0.0f);
+		m_xmf2TexCoord1 = XMFLOAT2(0.0f, 0.0f);
+	}
+
+	CDiffused2TexturedVertex(float x, float y, float z, XMFLOAT4 xmf4Diffuse, XMFLOAT2 xmf2TexCoord0, XMFLOAT2 xmf2TexCoord1)
+	{
+		m_xmf3Position = XMFLOAT3(x, y, z); m_xmf4Diffuse = xmf4Diffuse; m_xmf2TexCoord0 = xmf2TexCoord0; m_xmf2TexCoord1 = xmf2TexCoord1;
+	}
+
+	CDiffused2TexturedVertex(XMFLOAT3 xmf3Position, XMFLOAT4 xmf4Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f),
+		XMFLOAT2 xmf2TexCoord0 = XMFLOAT2(0.0f, 0.0f), XMFLOAT2 xmf2TexCoord1 = XMFLOAT2(0.0f, 0.0f))
+	{
+		m_xmf3Position = xmf3Position; m_xmf4Diffuse = xmf4Diffuse; m_xmf2TexCoord0 = xmf2TexCoord0; m_xmf2TexCoord1 = xmf2TexCoord1;
+	}
+
+	~CDiffused2TexturedVertex() { }
+
+	void SetUV(const XMFLOAT2& xmf2TexCoord0, const XMFLOAT2& xmf2TexCoord1){ m_xmf2TexCoord0 = xmf2TexCoord0; m_xmf2TexCoord1 = xmf2TexCoord1; }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 class CMesh
 {
 public:
+	CMesh() {}
     CMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
     virtual ~CMesh();
 
@@ -120,8 +185,10 @@ public:
 	virtual ~CAirplaneMeshDiffused();
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||| <CMeshIlluminated> |||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 class CMeshIlluminated : public CMesh
 {
 public:
@@ -147,4 +214,59 @@ class CSphereMeshIlluminated : public CMeshIlluminated
 public:
 	CSphereMeshIlluminated(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, float fRadius = 2.0f, UINT nSlices = 20, UINT nStacks = 20);
 	virtual ~CSphereMeshIlluminated();
+};
+
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapImage> |||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+class CHeightMapImage
+{
+private:
+	BYTE* m_pHeightMapPixels;
+
+	int m_nWidth;
+	int m_nLength;
+
+	XMFLOAT3 m_xmf3Scale; // ÇÈ¼¿ Å©±â
+
+public:
+	CHeightMapImage(LPCTSTR pFileName, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
+	~CHeightMapImage();
+
+	float GetHeight(float fx, float fz, bool bReverseQuad);
+	XMFLOAT3 GetHeightMapNormal(int nx, int nz);
+
+	BYTE* GetHeightMapPixels() { return m_pHeightMapPixels; }
+
+	XMFLOAT3 GetScale() { return m_xmf3Scale; }
+	int GetHeightMapWidth() { return m_nWidth; }
+	int GetHeightMapLength() { return m_nLength; }
+
+};
+
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapGridMesh> ||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+class CHeightMapGridMesh : public CMesh
+{
+protected:
+	int							m_nWidth;
+	int							m_nLength;
+	XMFLOAT3					m_xmf3Scale;
+
+public:
+	CHeightMapGridMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, int xStart, int zStart, int nWidth, int nLength, XMFLOAT3 xmf3Scale = XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f), void* pContext = NULL);
+
+	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
+	int GetWidth() { return(m_nWidth); }
+	int GetLength() { return(m_nLength); }
+
+	virtual float OnGetHeight(int x, int z, void* pContext);
+	virtual XMFLOAT4 OnGetColor(int x, int z, void* pContext);
 };

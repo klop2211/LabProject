@@ -60,17 +60,6 @@ void CScene::BuildLightsAndMaterials()
 	m_pLights->m_pLights[3].m_fPhi = (float)cos(XMConvertToRadians(90.0f));
 	m_pLights->m_pLights[3].m_fTheta = (float)cos(XMConvertToRadians(30.0f));
 
-	m_pMaterials = new MATERIALS;
-	::ZeroMemory(m_pMaterials, sizeof(MATERIALS));
-
-	m_pMaterials->m_pReflections[0] = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 5.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[1] = { XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 10.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[2] = { XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 15.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[3] = { XMFLOAT4(0.5f, 0.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.5f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 20.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[4] = { XMFLOAT4(0.0f, 0.5f, 1.0f, 1.0f), XMFLOAT4(0.5f, 0.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 25.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[5] = { XMFLOAT4(0.0f, 0.5f, 0.5f, 1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 30.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[6] = { XMFLOAT4(0.5f, 0.5f, 1.0f, 1.0f), XMFLOAT4(0.5f, 0.5f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 35.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
-	m_pMaterials->m_pReflections[7] = { XMFLOAT4(1.0f, 0.5f, 1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f), XMFLOAT4(1.0f, 1.0f, 1.0f, 40.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) };
 }
 
 
@@ -81,7 +70,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
 
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
-	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[2];
+	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[3];
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	pd3dDescriptorRanges[0].RegisterSpace = 0;
 	pd3dDescriptorRanges[0].OffsetInDescriptorsFromTableStart = 0;
@@ -91,10 +80,16 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	pd3dDescriptorRanges[1].RegisterSpace = 0;
 	pd3dDescriptorRanges[1].OffsetInDescriptorsFromTableStart = 0;
-	pd3dDescriptorRanges[1].BaseShaderRegister = 3; //Materials, Lights
-	pd3dDescriptorRanges[1].NumDescriptors = 2;
+	pd3dDescriptorRanges[1].BaseShaderRegister = 4; //Lights
+	pd3dDescriptorRanges[1].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[3];
+	pd3dDescriptorRanges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	pd3dDescriptorRanges[2].RegisterSpace = 0;
+	pd3dDescriptorRanges[2].OffsetInDescriptorsFromTableStart = 0;
+	pd3dDescriptorRanges[2].BaseShaderRegister = 0; //Texture(base, detail)
+	pd3dDescriptorRanges[2].NumDescriptors = 2;
+
+	D3D12_ROOT_PARAMETER pd3dRootParameters[4];
 
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 0; //Camera
@@ -107,9 +102,16 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	pd3dRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	pd3dRootParameters[2].DescriptorTable.NumDescriptorRanges = 1; //Materials, Lights
+	pd3dRootParameters[2].DescriptorTable.NumDescriptorRanges = 1; //Lights
 	pd3dRootParameters[2].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[1];
 	pd3dRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	pd3dRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	pd3dRootParameters[3].DescriptorTable.NumDescriptorRanges = 1; //Terrain Base Texture
+	pd3dRootParameters[3].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[2];
+	pd3dRootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+
 #else
 	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[1];
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -145,13 +147,29 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 #endif
 
+	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs;
+
+	d3dSamplerDescs.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	d3dSamplerDescs.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs.MipLODBias = 0;
+	d3dSamplerDescs.MaxAnisotropy = 1;
+	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs.MinLOD = 0;
+	d3dSamplerDescs.MaxLOD = D3D12_FLOAT32_MAX;
+	d3dSamplerDescs.ShaderRegister = 0;
+	d3dSamplerDescs.RegisterSpace = 0;
+	d3dSamplerDescs.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+
 	D3D12_ROOT_SIGNATURE_FLAGS d3dRootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 	D3D12_ROOT_SIGNATURE_DESC d3dRootSignatureDesc;
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
 	d3dRootSignatureDesc.NumParameters = _countof(pd3dRootParameters);
 	d3dRootSignatureDesc.pParameters = pd3dRootParameters;
-	d3dRootSignatureDesc.NumStaticSamplers = 0;
-	d3dRootSignatureDesc.pStaticSamplers = NULL;
+	d3dRootSignatureDesc.NumStaticSamplers = 1;
+	d3dRootSignatureDesc.pStaticSamplers = &d3dSamplerDescs;
 	d3dRootSignatureDesc.Flags = d3dRootSignatureFlags;
 
 	ID3DBlob* pd3dSignatureBlob = NULL;
@@ -173,21 +191,12 @@ void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	m_pd3dcbLights->Map(0, NULL, (void**)&m_pcbMappedLights);
 
-	// 재질정보
-	UINT ncbMaterialBytes = ((sizeof(MATERIALS) + 255) & ~255); //256의 배수
-	m_pd3dcbMaterials = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbMaterialBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
-
-	m_pd3dcbMaterials->Map(0, NULL, (void**)&m_pcbMappedMaterials);
-
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
 	D3D12_CONSTANT_BUFFER_VIEW_DESC d3dcbvDesc;
 	d3dcbvDesc.BufferLocation = m_pd3dcbLights->GetGPUVirtualAddress();
 	d3dcbvDesc.SizeInBytes = ncbLightsBytes;
-	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, m_d3dLightsCbvCPUDescriptorHandle);
-
-	d3dcbvDesc.BufferLocation = m_pd3dcbMaterials->GetGPUVirtualAddress();
-	d3dcbvDesc.SizeInBytes = ncbMaterialBytes;
-	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, m_d3dMaterialsCbvCPUDescriptorHandle);
+	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, m_d3dCbvCPUDescriptorNextHandle);
+	m_d3dLightsGPUDescriptorStartHandle = m_d3dCbvGPUDescriptorNextHandle;
 #endif
 
 	// GameObject 정보
@@ -202,31 +211,21 @@ void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	{
 		d3dcbvDesc.BufferLocation = d3dGpuVirtualAddress + (ncbGameObjectBytes * j);
 		D3D12_CPU_DESCRIPTOR_HANDLE d3dCbvCPUDescriptorHandle;
-		d3dCbvCPUDescriptorHandle.ptr = m_d3dObjectsCbvCPUDescriptorHandle.ptr + (::gnCbvSrvDescriptorIncrementSize * j);
+		d3dCbvCPUDescriptorHandle.ptr = m_d3dCbvCPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
 		pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, d3dCbvCPUDescriptorHandle);
 	}
-
-	// Player 정보
-	//UINT ncbPlayerBytes = ((sizeof(CB_PLAYER_INFO) + 255) & ~255); //256의 배수
-	//m_pd3dcbPlayer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbPlayerBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
-
-	//m_pd3dcbPlayer->Map(0, NULL, (void**)&m_pcbMappedPlayer);
-
-	//m_pPlayer->SetCbvGPUDescriptorHandle(m_pd3dcbPlayer->GetGPUVirtualAddress());
 
 }
 
 void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	::memcpy(m_pcbMappedLights, m_pLights, sizeof(LIGHTS));
-	::memcpy(m_pcbMappedMaterials, m_pMaterials, sizeof(MATERIALS));
 
 	UINT ncbGameObjectBytes = ((sizeof(CB_GAMEOBJECT_INFO) + 255) & ~255); //256의 배수
 	for (int j = 0; j < m_nObjects; j++)
 	{
 		CB_GAMEOBJECT_INFO* pbMappedcbGameObject = (CB_GAMEOBJECT_INFO*)(m_pcbMappedGameObjects + (j * ncbGameObjectBytes));
 		XMStoreFloat4x4(&pbMappedcbGameObject->m_xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_ppObjects[j]->GetWorldMT())));
-		pbMappedcbGameObject->m_nMaterial = m_ppObjects[j]->m_pMaterial->m_nReflection;
 	}
 
 	//XMFLOAT4X4 xmf4x4World;
@@ -242,11 +241,6 @@ void CScene::ReleaseShaderVariables()
 		m_pd3dcbLights->Unmap(0, NULL);
 		m_pd3dcbLights->Release();
 	}
-	if (m_pd3dcbMaterials)
-	{
-		m_pd3dcbMaterials->Unmap(0, NULL);
-		m_pd3dcbMaterials->Release();
-	}
 	if (m_pd3dcbGameObjects)
 	{
 		m_pd3dcbGameObjects->Unmap(0, NULL);
@@ -257,6 +251,25 @@ void CScene::ReleaseShaderVariables()
 		m_pd3dcbPlayer->Unmap(0, NULL);
 		m_pd3dcbPlayer->Release();
 	}
+
+}
+
+void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameterStartIndex)
+{
+	int nTextures = pTexture->GetTextures();
+	for (int i = 0; i < nTextures; i++)
+	{
+		ID3D12Resource* pShaderResource = pTexture->GetResource(i);
+		D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc = pTexture->GetShaderResourceViewDesc(i);
+		pd3dDevice->CreateShaderResourceView(pShaderResource, &d3dShaderResourceViewDesc, m_d3dSrvCPUDescriptorNextHandle);
+
+		pTexture->SetGpuDescriptorHandle(i, m_d3dSrvGPUDescriptorNextHandle);
+		m_d3dSrvCPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+		m_d3dSrvGPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize;
+
+	}
+	int nRootParameters = pTexture->GetRootParameters();
+	for (int i = 0; i < nRootParameters; i++) pTexture->SetRootParameterIndex(i, nRootParameterStartIndex + i);
 
 }
 
@@ -289,15 +302,16 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_ppShaders = new CShader*[m_nShaders];
 
 	m_ppShaders[0] = new CDiffusedShader;
-	m_ppShaders[1] = new CIlluminatedShader;
+	//m_ppShaders[1] = new CIlluminatedShader;
+	m_ppShaders[1] = new CTerrainShader;
 
 	for(int i = 0; i < m_nShaders; ++i)
 		m_ppShaders[i]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 
-	m_nObjects = 3;		// 직육면체 2개 + Player
+	m_nObjects = 2;		// Player + Terrain
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
-	d3dDescriptorHeapDesc.NumDescriptors = m_nObjects + 2;		// 재질, 조명, 객체 수
+	d3dDescriptorHeapDesc.NumDescriptors = m_nObjects + 1 + 3;		// 조명, 객체 수, 텍스처
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -305,50 +319,43 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	D3D12_CPU_DESCRIPTOR_HANDLE d3dCbvCPUDescriptorStartHandle = m_pd3dCbvSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE d3dCbvGPUDescriptorStartHandle = m_pd3dCbvSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	m_d3dMaterialsCbvCPUDescriptorHandle = d3dCbvCPUDescriptorStartHandle;
-	m_d3dMaterialsCbvGPUDescriptorHandle = d3dCbvGPUDescriptorStartHandle;
-	m_d3dLightsCbvCPUDescriptorHandle.ptr = d3dCbvCPUDescriptorStartHandle.ptr + ::gnCbvSrvDescriptorIncrementSize;
-	m_d3dLightsCbvGPUDescriptorHandle.ptr = d3dCbvGPUDescriptorStartHandle.ptr + ::gnCbvSrvDescriptorIncrementSize;
-	m_d3dObjectsCbvCPUDescriptorHandle.ptr = d3dCbvCPUDescriptorStartHandle.ptr + ::gnCbvSrvDescriptorIncrementSize * 2;
-	m_d3dObjectsCbvGPUDescriptorHandle.ptr = d3dCbvGPUDescriptorStartHandle.ptr + ::gnCbvSrvDescriptorIncrementSize * 2;
+	// Cbv
+	m_d3dCbvCPUDescriptorStartHandle = d3dCbvCPUDescriptorStartHandle;
+	m_d3dCbvGPUDescriptorStartHandle = d3dCbvGPUDescriptorStartHandle;
+	m_d3dCbvCPUDescriptorNextHandle = m_d3dCbvCPUDescriptorStartHandle;
+	m_d3dCbvGPUDescriptorNextHandle = m_d3dCbvGPUDescriptorStartHandle;
+	// Srv
+	m_d3dSrvCPUDescriptorStartHandle.ptr = d3dCbvCPUDescriptorStartHandle.ptr + (::gnCbvSrvDescriptorIncrementSize * (m_nObjects + 1));
+	m_d3dSrvGPUDescriptorStartHandle.ptr = d3dCbvGPUDescriptorStartHandle.ptr + (::gnCbvSrvDescriptorIncrementSize * (m_nObjects + 1));
+	m_d3dSrvCPUDescriptorNextHandle = m_d3dSrvCPUDescriptorStartHandle;
+	m_d3dSrvGPUDescriptorNextHandle = m_d3dSrvGPUDescriptorStartHandle;
 
 
 	BuildLightsAndMaterials();
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	CCubeMeshIlluminated* pCubeMesh = new CCubeMeshIlluminated(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
+	XMFLOAT3 xmf3Scale(18.0f, 6.0f, 18.0f);
+	XMFLOAT4 xmf4Color(0.0f, 0.5f, 0.0f, 0.0f);
+	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	
+	CreateShaderResourceViews(pd3dDevice, m_pTerrain->m_ppMaterials[0]->m_pTexture, 3);
 
 	m_ppObjects = new CGameObject*[m_nObjects];
 
+
 	m_ppObjects[0] = (CGameObject*)m_pPlayer;
-	m_ppObjects[0]->SetMaterial(3);
 	m_ppObjects[0]->SetShader(0);
-	m_ppObjects[0]->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr);
 
-	CRotatingObject* pRotatingObject = NULL;
-	pRotatingObject = new CRotatingObject();
-	pRotatingObject->SetMaterial(1);
-	pRotatingObject->SetShader(0);
-	pRotatingObject->SetMesh(pCubeMesh);
-	pRotatingObject->SetPosition(0, 0, 0);
-	pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-	pRotatingObject->SetRotationSpeed(0);
-	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr + ::gnCbvSrvDescriptorIncrementSize);
+	m_ppObjects[1] = (CGameObject*)m_pTerrain;
+	m_ppObjects[1]->SetShader(2);
 
-	m_ppObjects[1] = pRotatingObject;
+	for (int i = 0; i < m_nObjects; ++i) 
+	{
+		m_ppObjects[i]->SetCbvGPUDescriptorHandle(m_d3dCbvGPUDescriptorNextHandle.ptr += ::gnCbvSrvDescriptorIncrementSize);
+	}
 
-	pRotatingObject = new CRotatingObject();
-	pRotatingObject->SetMaterial(2);
-	pRotatingObject->SetShader(1);
-	pRotatingObject->SetMesh(pCubeMesh);
-	pRotatingObject->SetPosition(0, 30, 0);
-	pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-	pRotatingObject->SetRotationSpeed(10);
-	pRotatingObject->SetCbvGPUDescriptorHandle(m_d3dObjectsCbvGPUDescriptorHandle.ptr + ::gnCbvSrvDescriptorIncrementSize * 2);
-
-	m_ppObjects[2] = pRotatingObject;
-
+	m_pPlayer->Move(XMFLOAT3(200.f, 1000.f, -50.f), false);
 }
 
 void CScene::ReleaseObjects()
@@ -367,9 +374,7 @@ void CScene::ReleaseObjects()
 	ReleaseShaderVariables();
 
 	if (m_pLights) delete m_pLights;
-	if (m_pMaterials) delete m_pMaterials;
 }
-
 
 void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
@@ -386,7 +391,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
-	pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dMaterialsCbvGPUDescriptorHandle);
+	//pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dMaterialsCbvGPUDescriptorHandle);
 #else
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbLightsGpuVirtualAddress); //Lights

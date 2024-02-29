@@ -22,13 +22,6 @@ CMaterial::~CMaterial()
 	}
 }
 
-void CMaterial::SetShader(CShader *pShader)
-{
-	if (m_pShader) m_pShader->Release();
-	m_pShader = pShader;
-	if (m_pShader) m_pShader->AddRef();
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 CGameObject::CGameObject()
