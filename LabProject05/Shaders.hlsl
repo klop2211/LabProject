@@ -40,6 +40,54 @@ float4 PSDiffused(VS_DIFFUSED_OUTPUT input) : SV_TARGET
     return (float4(1.0, 0.0, 0.0, 1.0));
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+#define MAX_VERTEX_INFLUENCES 4
+#define SKINNED_ANIMATION_BONES 128
+
+cbuffer cbBoneOffsets : register(b5)
+{
+    float4x4 gpmtxBoneOffsets[SKINNED_ANIMATION_BONES];
+};
+
+cbuffer cbBoneTransforms : register(b6)
+{
+    float4x4 gpmtxBoneTransforms[SKINNED_ANIMATION_BONES];
+};
+
+struct VS_SKIN_ANIMATION_DIFFUSED_INPUT
+{
+    float3 position : POSITION;
+    int4 indices : BONEINDEX;
+    float4 weights : BONEWEIGHT;
+};
+
+struct VS_SKIN_ANIMATION_DIFFUSED_OUTPUT
+{
+    float4 position : SV_POSITION;
+};
+
+VS_SKIN_ANIMATION_DIFFUSED_OUTPUT VSSkinAnimationDiffused(VS_SKIN_ANIMATION_DIFFUSED_INPUT input)
+{
+    VS_SKIN_ANIMATION_DIFFUSED_OUTPUT output;
+
+    float3 positionW = float3(0.0f, 0.0f, 0.0f);
+    for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
+    {
+        positionW += input.weights[i] * mul(mul(mul(float4(input.position, 1.0f), gpmtxBoneOffsets[input.indices[i]]), gpmtxBoneTransforms[input.indices[i]]), gmtxGameObject).xyz;
+    }
+    
+    output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+
+    return (output);
+}
+
+float4 PSSkinAnimationDiffused(VS_SKIN_ANIMATION_DIFFUSED_OUTPUT input) : SV_TARGET
+{
+    return (float4(0.0, 1.0, 0.0, 1.0));
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

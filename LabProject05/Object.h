@@ -143,8 +143,13 @@ public:
 struct CB_GAMEOBJECT_INFO
 {
 	XMFLOAT4X4						m_xmf4x4World;
-	//UINT							m_nMaterial;
 };
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> ||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+class CAnimationController;
 
 class CGameObject
 {
@@ -183,9 +188,12 @@ public:
 
 	void SetChild(CGameObject* pChild);
 
+	CGameObject* FindFrame(const std::string& strFrameName);
+
 public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
 		std::ifstream& InFile, int& nFrames);
+	
 
 public:
 	int	m_nMaterials = 0;
@@ -213,6 +221,7 @@ protected:
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;
 
+	CAnimationController* m_pAnimationController = NULL;
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

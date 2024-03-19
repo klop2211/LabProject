@@ -15,8 +15,10 @@
 #include <tchar.h>
 #include <math.h>
 
+// C++
 #include <string>
 #include <fstream>
+#include <vector>
 
 #include <wrl.h>
 #include <shellapi.h>
@@ -37,7 +39,6 @@
 #include <wrl.h>
 
 
-#include <vector>
 
 using namespace DirectX;
 using namespace DirectX::PackedVector;
