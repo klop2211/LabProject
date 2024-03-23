@@ -230,6 +230,7 @@ CGameObject::~CGameObject()
 {
 	if (m_pMesh) m_pMesh->Release();
 	if (m_ppMaterials) for (int i = 0; i < m_nMaterials; ++i) m_ppMaterials[i]->Release();
+
 }
 
 void CGameObject::SetMesh(CMesh* pMesh)
@@ -390,6 +391,14 @@ void CGameObject::SetChild(CGameObject* pChild)
 	}
 }
 
+CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
+{
+	if (m_strFrameName == strFrameName) return this;
+
+	if (m_pSibling) return FindFrame(strFrameName);
+	if (m_pChild) return FindFrame(strFrameName);
+}
+
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	std::ifstream& InFile, int& nFrames)
 {
@@ -412,6 +421,17 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 			rvalue->m_xmf3Scale = FBXLoad::ReadFromFile<XMFLOAT3>(InFile);
 			rvalue->m_xmf3Rotation = FBXLoad::ReadFromFile<XMFLOAT3>(InFile);
 			rvalue->m_xmf3Translation = FBXLoad::ReadFromFile<XMFLOAT3>(InFile);
+		}
+		else if (strToken == "<SkinDeformations>:")
+		{
+			CSkinMesh* pSkinMesh = new CSkinMesh();
+			pSkinMesh->LoadSkinMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
+
+			FBXLoad::ReadStringFromFile(InFile, strToken);
+
+			if (strToken == "<Mesh>:") pSkinMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
+
+			rvalue->SetMesh(pSkinMesh);
 		}
 		else if (strToken == "<Mesh>:")
 		{

@@ -4,6 +4,8 @@
 
 #pragma once
 
+class CGameObject;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 class CVertex
@@ -153,6 +155,40 @@ public:
 
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& pInFile);
 };
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||| <CSkinMesh> |||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+#define SKINNED_ANIMATION_BONES 128
+#define BONE_PER_VERTEX 4
+
+class CSkinMesh : public CMesh
+{
+public:
+	CSkinMesh();
+	~CSkinMesh() {};
+
+	void LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
+
+	void SetBoneFrameCaches(CGameObject* pRootObject);
+
+private:
+	std::vector<std::string> m_BoneNames;
+
+	ID3D12Resource* m_pBoneOffsetBuffer = NULL;
+
+	ID3D12Resource* m_pBoneIndicesBuffer = NULL;
+	D3D12_VERTEX_BUFFER_VIEW m_BoneIndicesBufferView;
+
+	ID3D12Resource* m_pBoneWeightBuffer = NULL;
+	D3D12_VERTEX_BUFFER_VIEW m_BoneWeightBufferView;
+
+	std::vector<CGameObject*> m_BoneFrameCaches;
+
+	int m_nBones;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //

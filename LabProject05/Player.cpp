@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "Player.h"
 #include "Shader.h"
+#include "Animation.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -329,7 +330,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/Ellen.bin", std::ios::binary);
+	std::ifstream InFile("../Resource/Model/@EllenIdle.bin", std::ios::binary);
 
 	std::string strToken;
 
@@ -345,7 +346,16 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 			SetChild(pGameObject);
 		}
 	}
-	
+
+	FBXLoad::ReadStringFromFile(InFile, strToken);
+
+	while (strToken != "</Animation>")
+	{
+		m_pAnimationController = new CAnimationController;
+		m_pAnimationController->LoadAnimationFromFile(InFile);
+
+		FBXLoad::ReadStringFromFile(InFile, strToken);
+	}
 
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 	SetPosition(XMFLOAT3(0.0f, 0.0f, -50.0f));

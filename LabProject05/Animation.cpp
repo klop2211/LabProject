@@ -7,10 +7,8 @@ CAnimationController::CAnimationController()
 	m_Tracks.reserve(0);
 }
 
-void CAnimationController::LoadAnimationFromFile(const std::string& strFileName)
+void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
 {
-	std::ifstream InFile{ strFileName };
-
 	std::string strToken;
 
 	FBXLoad::ReadStringFromFile(InFile, strToken);
@@ -24,7 +22,6 @@ void CAnimationController::LoadAnimationFromFile(const std::string& strFileName)
 	for (int i = 0; i < nAnimationSets; ++i)
 	{
 		m_Tracks.emplace_back(InFile);
-
 	}
 }
 

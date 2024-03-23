@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "Mesh.h"
+#include "Object.h"
 
 CMesh::CMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
@@ -655,4 +656,108 @@ XMFLOAT4 CHeightMapGridMesh::OnGetColor(int x, int z, void* pContext)
 CEllenMesh::CEllenMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, XMFLOAT4 xmf4Color)
 {
 
+}
+
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||| <CSkinMesh> |||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+CSkinMesh::CSkinMesh() : CMesh()
+{
+
+}
+
+void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
+{
+	std::string strToken;
+
+	FBXLoad::ReadStringFromFile(InFile, strToken);
+
+	while (strToken != "</SkinDeformations>")
+	{
+		if (strToken == "<BoneNames>:")
+		{
+			m_nBones = FBXLoad::ReadFromFile<int>(InFile);
+			
+			m_BoneNames.reserve(m_nBones);
+
+			for (int i = 0; i < m_nBones; ++i)
+			{
+				FBXLoad::ReadStringFromFile(InFile, strToken);
+				m_BoneNames.emplace_back(strToken);
+			}
+		}
+		else if(strToken == "<BoneOffsets>:")
+		{
+			FBXLoad::ReadFromFile<int>(InFile); //nBones
+
+			XMFLOAT4X4* pData = new XMFLOAT4X4[m_nBones];
+
+			FBXLoad::ReadFromFile<XMFLOAT4X4>(InFile, pData, m_nBones);
+
+			for(int i = 0; i < m_nBones; ++i)
+			{
+				XMStoreFloat4x4(&pData[i], XMMatrixTranspose(XMLoadFloat4x4(&pData[i])));
+			}
+			
+			UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256ÀÇ ¹è¼ö
+			ID3D12Resource* pUploadBuffer = NULL;
+			m_pBoneOffsetBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
+				pData, ncbElementBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
+			pUploadBuffer->Release();
+
+		}
+		else if (strToken == "<BoneIndices>:")
+		{
+			int nControllPoints = FBXLoad::ReadFromFile<int>(InFile);
+
+			XMINT4* pData = new XMINT4[nControllPoints];
+
+			FBXLoad::ReadFromFile<XMINT4>(InFile, pData, nControllPoints);
+
+			ID3D12Resource* pUploadBuffer = NULL;
+			m_pBoneIndicesBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
+				pData, sizeof(XMINT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
+			
+			m_BoneIndicesBufferView.BufferLocation = m_pBoneIndicesBuffer->GetGPUVirtualAddress();
+			m_BoneIndicesBufferView.StrideInBytes = sizeof(XMINT4);
+			m_BoneIndicesBufferView.SizeInBytes = sizeof(XMINT4) * nControllPoints;
+
+			pUploadBuffer->Release();
+		}
+		else if (strToken == "<BoneWeights>:")
+		{
+			int nControllPoints = FBXLoad::ReadFromFile<int>(InFile);
+
+			XMFLOAT4* pData = new XMFLOAT4[nControllPoints];
+
+			FBXLoad::ReadFromFile<XMFLOAT4>(InFile, pData, nControllPoints);
+
+			ID3D12Resource* pUploadBuffer = NULL;
+			m_pBoneWeightBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
+				pData, sizeof(XMFLOAT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
+
+			m_BoneWeightBufferView.BufferLocation = m_pBoneWeightBuffer->GetGPUVirtualAddress();
+			m_BoneWeightBufferView.StrideInBytes = sizeof(XMFLOAT4);
+			m_BoneWeightBufferView.SizeInBytes = sizeof(XMFLOAT4) * nControllPoints;
+
+			pUploadBuffer->Release();
+
+		}
+
+		FBXLoad::ReadStringFromFile(InFile, strToken);
+
+	}
+}
+
+void CSkinMesh::SetBoneFrameCaches(CGameObject* pRootObject)
+{
+	m_BoneFrameCaches.reserve(m_nBones);
+
+	for (int i = 0; i < m_nBones;)
+	{
+		m_BoneFrameCaches.emplace_back(pRootObject->FindFrame(m_BoneNames[i]));
+	}
 }

@@ -74,7 +74,7 @@ public:
 	CAnimationController();
 	~CAnimationController() {}
 
-	void LoadAnimationFromFile(const std::string& strFileName);
+	void LoadAnimationFromFile(std::ifstream& InFile);
 
 private:
 	float m_fTime;
