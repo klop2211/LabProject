@@ -74,7 +74,7 @@ VS_SKIN_ANIMATION_DIFFUSED_OUTPUT VSSkinAnimationDiffused(VS_SKIN_ANIMATION_DIFF
     float3 positionW = float3(0.0f, 0.0f, 0.0f);
     for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
     {
-        positionW += input.weights[i] * mul(mul(mul(float4(input.position, 1.0f), gpmtxBoneOffsets[input.indices[i]]), gpmtxBoneTransforms[input.indices[i]]), gmtxGameObject).xyz;
+        positionW += input.weights[i] * mul(mul(float4(input.position, 1.0f), gpmtxBoneOffsets[input.indices[i]]), gpmtxBoneTransforms[input.indices[i]]).xyz;
     }
     
     output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);

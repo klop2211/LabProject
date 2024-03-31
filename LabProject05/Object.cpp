@@ -272,12 +272,30 @@ void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandLi
 
 void CGameObject::Animate(float fTimeElapsed)
 {
+	if (m_pAnimationController)
+	{
+		ResetAnimatedSRT();
+		m_pAnimationController->Animate(fTimeElapsed, this);
+	}
+
+	if (m_pSibling) m_pSibling->Animate(fTimeElapsed);
+	if (m_pChild) m_pChild->Animate(fTimeElapsed);
+}
+
+void CGameObject::ResetAnimatedSRT()
+{
+	m_xmf3BlendedScale = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3BlendedRotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_xmf3BlendedTranslation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	if (m_pSibling) m_pSibling->ResetAnimatedSRT();
+	if (m_pChild) m_pChild->ResetAnimatedSRT();
 
 }
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	if (!m_pParent)	// 이 오브젝트가 루트 노드일 때만 시행
+	if (!m_pParent && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(&m_xmf4x4World);
 
 	if(m_ppMaterials)
@@ -395,8 +413,22 @@ CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
 {
 	if (m_strFrameName == strFrameName) return this;
 
-	if (m_pSibling) return FindFrame(strFrameName);
-	if (m_pChild) return FindFrame(strFrameName);
+	CGameObject* pFrameObject = NULL;
+	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(strFrameName)) return(pFrameObject);
+	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(strFrameName)) return(pFrameObject);
+
+	return NULL;
+}
+
+CGameObject* CGameObject::FindSkinMeshFrame()
+{
+	//TODO: 타입명 이넘 처리
+	if (m_pMesh && m_pMesh->GetType() == 1) return this;
+
+	CGameObject* rvalue = NULL;
+
+	if (m_pSibling && (rvalue = m_pSibling->FindSkinMeshFrame())) return rvalue;
+	if (m_pChild && (rvalue = m_pChild->FindSkinMeshFrame())) return rvalue;
 }
 
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
@@ -428,6 +460,8 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 			pSkinMesh->LoadSkinMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
 
 			FBXLoad::ReadStringFromFile(InFile, strToken);
+
+			pSkinMesh->SetType(1);
 
 			if (strToken == "<Mesh>:") pSkinMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
 

@@ -125,6 +125,9 @@ public:
 
 	void ReleaseUploadBuffers();
 
+	void SetType(const int& ntype) { m_nType = ntype; }
+	int GetType() { return m_nType; }
+
 protected:
 	ID3D12Resource					*m_pd3dVertexBuffer = NULL;
 	ID3D12Resource					*m_pd3dVertexUploadBuffer = NULL;
@@ -149,9 +152,12 @@ protected:
 	std::string m_strMeshName;
 	int m_nSubMeshes = 0;
 
+	int m_nType = 0; // 0: 일반 메쉬, 1: 스킨메쉬
 
 public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList);
+	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) {}
 
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& pInFile);
 };
@@ -167,24 +173,35 @@ class CSkinMesh : public CMesh
 {
 public:
 	CSkinMesh();
-	~CSkinMesh() {};
+	~CSkinMesh() {}
 
 	void LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
-	void SetBoneFrameCaches(CGameObject* pRootObject);
+	void SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
+
+	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList);
+
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void ReleaseUploadBuffers();
 
 private:
 	std::vector<std::string> m_BoneNames;
 
 	ID3D12Resource* m_pBoneOffsetBuffer = NULL;
+	ID3D12Resource* m_pBoneOffsetUploadBuffer = NULL;
 
 	ID3D12Resource* m_pBoneIndicesBuffer = NULL;
+	ID3D12Resource* m_pBoneIndicesUploadBuffer = NULL;
 	D3D12_VERTEX_BUFFER_VIEW m_BoneIndicesBufferView;
 
 	ID3D12Resource* m_pBoneWeightBuffer = NULL;
+	ID3D12Resource* m_pBoneWeightUploadBuffer = NULL;
 	D3D12_VERTEX_BUFFER_VIEW m_BoneWeightBufferView;
 
 	std::vector<CGameObject*> m_BoneFrameCaches;
+
+	ID3D12Resource* m_pSkinningBoneTransforms = NULL;
+	XMFLOAT4X4* m_pxmf4x4MappedSkinningBoneTransforms = NULL;
 
 	int m_nBones;
 };

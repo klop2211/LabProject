@@ -54,8 +54,12 @@ void CMesh::ReleaseUploadBuffers()
 
 void CMesh::Render(ID3D12GraphicsCommandList *pd3dCommandList)
 {
+	UpdateShaderVariables(pd3dCommandList);
+
 	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);
-	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dVertexBufferView);
+
+	OnPreRender(pd3dCommandList);
+
 	if (m_ppd3dIndexBuffers)
 	{
 		for (int i = 0; i < m_nSubMeshes; ++i)
@@ -68,6 +72,12 @@ void CMesh::Render(ID3D12GraphicsCommandList *pd3dCommandList)
 	{
 		pd3dCommandList->DrawInstanced(m_nVertices, 1, m_nOffset, 0);
 	}
+}
+
+void CMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	pd3dCommandList->IASetVertexBuffers(m_nSlot, 1, &m_d3dVertexBufferView);
+
 }
 
 void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
@@ -669,6 +679,7 @@ CSkinMesh::CSkinMesh() : CMesh()
 
 }
 
+
 void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	std::string strToken;
@@ -703,10 +714,8 @@ void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			}
 			
 			UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256의 배수
-			ID3D12Resource* pUploadBuffer = NULL;
 			m_pBoneOffsetBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
-				pData, ncbElementBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
-			pUploadBuffer->Release();
+				pData, ncbElementBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pBoneOffsetUploadBuffer);
 
 		}
 		else if (strToken == "<BoneIndices>:")
@@ -717,15 +726,13 @@ void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 			FBXLoad::ReadFromFile<XMINT4>(InFile, pData, nControllPoints);
 
-			ID3D12Resource* pUploadBuffer = NULL;
 			m_pBoneIndicesBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
-				pData, sizeof(XMINT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
+				pData, sizeof(XMINT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pBoneIndicesUploadBuffer);
 			
 			m_BoneIndicesBufferView.BufferLocation = m_pBoneIndicesBuffer->GetGPUVirtualAddress();
 			m_BoneIndicesBufferView.StrideInBytes = sizeof(XMINT4);
 			m_BoneIndicesBufferView.SizeInBytes = sizeof(XMINT4) * nControllPoints;
 
-			pUploadBuffer->Release();
 		}
 		else if (strToken == "<BoneWeights>:")
 		{
@@ -735,15 +742,12 @@ void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 
 			FBXLoad::ReadFromFile<XMFLOAT4>(InFile, pData, nControllPoints);
 
-			ID3D12Resource* pUploadBuffer = NULL;
 			m_pBoneWeightBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
-				pData, sizeof(XMFLOAT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &pUploadBuffer);
+				pData, sizeof(XMFLOAT4) * nControllPoints, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pBoneWeightUploadBuffer);
 
 			m_BoneWeightBufferView.BufferLocation = m_pBoneWeightBuffer->GetGPUVirtualAddress();
 			m_BoneWeightBufferView.StrideInBytes = sizeof(XMFLOAT4);
 			m_BoneWeightBufferView.SizeInBytes = sizeof(XMFLOAT4) * nControllPoints;
-
-			pUploadBuffer->Release();
 
 		}
 
@@ -752,12 +756,58 @@ void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	}
 }
 
-void CSkinMesh::SetBoneFrameCaches(CGameObject* pRootObject)
+void CSkinMesh::SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject)
 {
 	m_BoneFrameCaches.reserve(m_nBones);
 
-	for (int i = 0; i < m_nBones;)
+	for (int i = 0; i < m_nBones; ++i)
 	{
 		m_BoneFrameCaches.emplace_back(pRootObject->FindFrame(m_BoneNames[i]));
 	}
+
+	UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256의 배수
+	m_pSkinningBoneTransforms = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes);
+	m_pSkinningBoneTransforms->Map(0, NULL, (void**)&m_pxmf4x4MappedSkinningBoneTransforms);
+
+}
+
+void CSkinMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[3] = { m_d3dVertexBufferView, m_BoneIndicesBufferView, m_BoneWeightBufferView };
+	pd3dCommandList->IASetVertexBuffers(m_nSlot, 3, pVertexBufferViews);
+}
+
+void CSkinMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	if (m_pBoneOffsetBuffer)
+	{
+		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneOffsetsGpuVirtualAddress = m_pBoneOffsetBuffer->GetGPUVirtualAddress();
+		pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbBoneOffsetsGpuVirtualAddress); //Skinned Bone Offsets
+	}
+
+	if (m_pSkinningBoneTransforms)
+	{
+		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = m_pSkinningBoneTransforms->GetGPUVirtualAddress();
+		pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
+
+		for (int j = 0; j < m_BoneFrameCaches.size(); j++)
+		{
+			XMStoreFloat4x4(&m_pxmf4x4MappedSkinningBoneTransforms[j], XMMatrixTranspose(XMLoadFloat4x4(&m_BoneFrameCaches[j]->GetWorldMT())));
+		}
+	}
+
+}
+
+void CSkinMesh::ReleaseUploadBuffers()
+{
+	CMesh::ReleaseUploadBuffers();
+
+	if (m_pBoneOffsetUploadBuffer) m_pBoneOffsetUploadBuffer->Release();
+	m_pBoneOffsetUploadBuffer = NULL;
+
+	if (m_pBoneIndicesUploadBuffer) m_pBoneIndicesUploadBuffer->Release();
+	m_pBoneIndicesUploadBuffer = NULL;
+
+	if (m_pBoneWeightUploadBuffer) m_pBoneWeightUploadBuffer->Release();
+	m_pBoneWeightUploadBuffer = NULL;
 }

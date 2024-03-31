@@ -168,6 +168,7 @@ public:
 
 	virtual void Animate(float fTimeElapsed);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+	void ResetAnimatedSRT();
 
 	virtual void ReleaseUploadBuffers();
 
@@ -175,6 +176,7 @@ public:
 	XMFLOAT3 GetLook();
 	XMFLOAT3 GetUp();
 	XMFLOAT3 GetRight();
+	XMFLOAT4X4& GetWorldMT()  { return m_xmf4x4World; }
 
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 xmf3Position);
@@ -189,6 +191,7 @@ public:
 	void SetChild(CGameObject* pChild);
 
 	CGameObject* FindFrame(const std::string& strFrameName);
+	CGameObject* FindSkinMeshFrame();
 
 public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
@@ -208,15 +211,19 @@ public:
 	XMFLOAT3 m_xmf3Rotation;
 	XMFLOAT3 m_xmf3Translation;
 
+	XMFLOAT3 m_xmf3BlendedScale;
+	XMFLOAT3 m_xmf3BlendedRotation;
+	XMFLOAT3 m_xmf3BlendedTranslation;
+
 	CGameObject* m_pParent = NULL;
 	CGameObject* m_pChild = NULL;
 	CGameObject* m_pSibling = NULL;
 
+	CMesh* m_pMesh = NULL;
 
 protected:
 	XMFLOAT4X4 m_xmf4x4World;
 
-	CMesh* m_pMesh = NULL;
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;

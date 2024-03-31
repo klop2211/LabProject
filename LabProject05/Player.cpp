@@ -330,7 +330,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/@EllenIdle.bin", std::ios::binary);
+	std::ifstream InFile("../Resource/Model/Mawang_Test.bin", std::ios::binary);
 
 	std::string strToken;
 
@@ -349,20 +349,28 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 
-	while (strToken != "</Animation>")
+	if (strToken == "<Animation>")
 	{
 		m_pAnimationController = new CAnimationController;
 		m_pAnimationController->LoadAnimationFromFile(InFile);
 
 		FBXLoad::ReadStringFromFile(InFile, strToken);
+
+
 	}
+
+	m_pAnimationController->SetFrameCaches(this);
+
+	CSkinMesh* pSkinMesh = (CSkinMesh*)FindSkinMeshFrame()->m_pMesh;
+	if(pSkinMesh) 
+		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, m_pChild);
 
 	m_pCamera = ChangeCamera(THIRD_PERSON_CAMERA, 0.0f);
 	SetPosition(XMFLOAT3(0.0f, 0.0f, -50.0f));
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	SetShader((int)ShaderNum::Diffused);
+	SetShader((int)ShaderNum::AnimationWireframe);
 
 }
 
@@ -404,7 +412,7 @@ CCamera* CEllenPlayer::ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed)
 		SetMaxVelocityY(400.0f);
 		m_pCamera = OnChangeCamera(THIRD_PERSON_CAMERA, nCurrentCameraMode);
 		m_pCamera->SetTimeLag(0.25f);
-		m_pCamera->SetOffset(XMFLOAT3(0.0f, 260.0f, -80.0f));
+		m_pCamera->SetOffset(XMFLOAT3(0.0f, 50.0f, -300.0));
 		m_pCamera->GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 		m_pCamera->SetViewport(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT, 0.0f, 1.0f);
 		m_pCamera->SetScissorRect(0, 0, FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT);
@@ -423,7 +431,7 @@ void CEllenPlayer::OnPrepareRender()
 {
 	CPlayer::OnPrepareRender();
 
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(0.0f), 0.0f);
+	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(-90.0f), XMConvertToRadians(0.0f), 0.0f);
 	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
 }
 

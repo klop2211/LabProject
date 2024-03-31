@@ -257,6 +257,7 @@ void CScene::ReleaseUploadBuffers()
 
 void CScene::AnimateObjects(float fTimeElapsed)
 {
+	m_pPlayer->OnPrepareRender();
 	for (int i = 0; i < m_nObjects; i++)
 	{
 		m_ppObjects[i]->Animate(fTimeElapsed);
@@ -278,7 +279,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_nShaders = 2;			// 조명 O, X 각각 1개씩
 	m_ppShaders = new CShader*[m_nShaders];
 
-	m_ppShaders[0] = new CDiffusedShader;
+	m_ppShaders[0] = new CAnimationWireframeShader;
 	//m_ppShaders[1] = new CIlluminatedShader;
 	m_ppShaders[1] = new CTerrainShader;
 
@@ -322,7 +323,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	m_ppObjects[0] = (CGameObject*)m_pPlayer;
-	m_ppObjects[0]->SetShader(0);
+	m_ppObjects[0]->SetShader(3);
 
 	m_ppObjects[1] = (CGameObject*)m_pTerrain;
 	m_ppObjects[1]->SetShader(2);
@@ -356,7 +357,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
-	m_pPlayer->OnPrepareRender();
+	//m_pPlayer->OnPrepareRender();
 
 	UpdateShaderVariables(pd3dCommandList);
 
