@@ -110,7 +110,7 @@ public:
 };
 
 #define TPS_DEFAULT_DISTANCE_OFFSET 500.f
-#define TPS_DEFAULT_YAW_OFFSET 0.f
+#define TPS_DEFAULT_YAW_OFFSET 40.f
 class CThirdPersonCamera : public CCamera
 {
 private:

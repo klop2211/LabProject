@@ -83,7 +83,13 @@ void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
 	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
 	m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, mtxRotate);
-	m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, mtxRotate);
+	//m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, mtxRotate);
+	//m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, mtxRotate);
+	m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
+	m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
+
+
+	//m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, mtxRotate);
 }
 
 void CPlayer::Update(float fTimeElapsed)
@@ -173,7 +179,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	//m_xmf3Gravity.y = -9.8f;
 	m_fSpeed = 1000.f;
-	m_fMaxVelocityXZ = 25.f;
+	m_fMaxVelocityXZ = 100.f;
 
 	SetCamera(pCamera);
 
