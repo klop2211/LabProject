@@ -370,11 +370,6 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					break;
 				case VK_RETURN:
 					break;
-				case VK_F1:
-				case VK_F2:
-				case VK_F3:
-					m_pCamera = m_pPlayer->ChangeCamera((DWORD)(wParam - VK_F1 + 1), m_GameTimer.GetTimeElapsed());
-					break;
 				case VK_F9:
 				{
 					ChangeSwapChainState();
@@ -454,9 +449,11 @@ void CGameFramework::BuildObjects()
 {
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator, NULL);
 
-	CEllenPlayer* pEllenPlayer = new CEllenPlayer(m_pd3dDevice, m_pd3dCommandList);
+	m_pCamera = new CThirdPersonCamera;
+	CEllenPlayer* pEllenPlayer = new CEllenPlayer(m_pd3dDevice, m_pd3dCommandList, m_pCamera);
 	m_pPlayer = pEllenPlayer;
-	m_pCamera = m_pPlayer->GetCamera();
+	m_pCamera->SetPlayer(m_pPlayer);
+	((CThirdPersonCamera*)m_pCamera)->ResetFromPlayer();
 
 	m_pScene = new CScene;
 	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_pPlayer);
@@ -508,7 +505,7 @@ void CGameFramework::ProcessInput()
 			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
-		if ((dwDirection != 0) || (cxDelta != 0.0f) || (cyDelta != 0.0f))
+		if ((cxDelta != 0.0f) || (cyDelta != 0.0f))
 		{
 			if (cxDelta || cyDelta)
 			{
@@ -517,8 +514,8 @@ void CGameFramework::ProcessInput()
 				else
 					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 			}
-			if (dwDirection) m_pPlayer->Move(dwDirection, 50.0f * m_GameTimer.GetTimeElapsed(), true);
 		}
+		m_pPlayer->AddVelocity(dwDirection, m_GameTimer.GetTimeElapsed());
 	}
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 }

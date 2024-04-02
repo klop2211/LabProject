@@ -2,9 +2,7 @@
 
 #define ASPECT_RATIO				(float(FRAME_BUFFER_WIDTH) / float(FRAME_BUFFER_HEIGHT))
 
-#define FIRST_PERSON_CAMERA			0x01
-#define SPACESHIP_CAMERA			0x02
-#define THIRD_PERSON_CAMERA			0x03
+enum class CameraMode{ GHOST, FIRST_PERSON, THIRD_PERSON };
 
 struct VS_CB_CAMERA_INFO
 {
@@ -27,11 +25,9 @@ protected:
 	float           				m_fRoll;
 	float           				m_fYaw;
 
-	DWORD							m_nMode;
+	CameraMode						m_CameraMode;
 
 	XMFLOAT3						m_xmf3LookAtWorld;
-	XMFLOAT3						m_xmf3Offset;
-	float           				m_fTimeLag;
 
 	XMFLOAT4X4						m_xmf4x4View;
 	XMFLOAT4X4						m_xmf4x4Projection;
@@ -67,8 +63,8 @@ public:
 	void SetPlayer(CPlayer *pPlayer) { m_pPlayer = pPlayer; }
 	CPlayer *GetPlayer() { return(m_pPlayer); }
 
-	void SetMode(DWORD nMode) { m_nMode = nMode; }
-	DWORD GetMode() { return(m_nMode); }
+	void SetMode(CameraMode Mode) { m_CameraMode = Mode; }
+	CameraMode GetMode() { return(m_CameraMode); }
 
 	void SetPosition(XMFLOAT3 xmf3Position) { m_xmf3Position = xmf3Position; }
 	XMFLOAT3& GetPosition() { return(m_xmf3Position); }
@@ -84,31 +80,24 @@ public:
 	float& GetRoll() { return(m_fRoll); }
 	float& GetYaw() { return(m_fYaw); }
 
-//	void SetOffset(XMFLOAT3 xmf3Offset) { m_xmf3Offset = xmf3Offset; }
-	void SetOffset(XMFLOAT3 xmf3Offset) { m_xmf3Offset = xmf3Offset; m_xmf3Position.x += xmf3Offset.x; m_xmf3Position.y += xmf3Offset.y; m_xmf3Position.z += xmf3Offset.z; }
-	XMFLOAT3& GetOffset() { return(m_xmf3Offset); }
-
-	void SetTimeLag(float fTimeLag) { m_fTimeLag = fTimeLag; }
-	float GetTimeLag() { return(m_fTimeLag); }
-
 	XMFLOAT4X4 GetViewMatrix() { return(m_xmf4x4View); }
 	XMFLOAT4X4 GetProjectionMatrix() { return(m_xmf4x4Projection); }
 	D3D12_VIEWPORT GetViewport() { return(m_d3dViewport); }
 	D3D12_RECT GetScissorRect() { return(m_d3dScissorRect); }
 
 	virtual void Move(const XMFLOAT3& xmf3Shift) { m_xmf3Position.x += xmf3Shift.x; m_xmf3Position.y += xmf3Shift.y; m_xmf3Position.z += xmf3Shift.z; }
-	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f) { }
-	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed) { }
+	virtual void Rotate(float fPitch, float fYaw, float fRoll) { }
+	virtual void Update(float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& xmf3LookAt) { }
 };
 
-class CSpaceShipCamera : public CCamera
+class CGhostCamera : public CCamera
 {
 public:
-	CSpaceShipCamera(CCamera *pCamera);
-	virtual ~CSpaceShipCamera() { }
+	CGhostCamera(CCamera *pCamera);
+	virtual ~CGhostCamera() { }
 
-	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
+	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 };
 
 class CFirstPersonCamera : public CCamera
@@ -117,16 +106,33 @@ public:
 	CFirstPersonCamera(CCamera *pCamera);
 	virtual ~CFirstPersonCamera() { }
 
-	virtual void Rotate(float fPitch = 0.0f, float fYaw = 0.0f, float fRoll = 0.0f);
+	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 };
 
+#define TPS_DEFAULT_DISTANCE_OFFSET 500.f
+#define TPS_DEFAULT_YAW_OFFSET 0.f
 class CThirdPersonCamera : public CCamera
 {
+private:
+	float m_fDistanceOffset = TPS_DEFAULT_DISTANCE_OFFSET; // meter
+
+	float m_fMovingLagSpeed = 0; // m/s
+	float m_fRotatingLagSpeed = 0; // degree/s
+
 public:
+	CThirdPersonCamera();
 	CThirdPersonCamera(CCamera *pCamera);
 	virtual ~CThirdPersonCamera() { }
 
-	virtual void Update(XMFLOAT3& xmf3LookAt, float fTimeElapsed);
+	void SetOffset(const float& fOffset) { m_fDistanceOffset = fOffset; }
+	void SetMovingLagSpeed(const float& fSpeed) { m_fMovingLagSpeed = fSpeed; }
+	void SetRotatingLagSpeed(const float& fSpeed) { m_fRotatingLagSpeed = fSpeed; }
+
+	virtual void Update(float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& vLookAt);
+	virtual void Rotate(float fPitch, float fYaw, float fRoll);
+	virtual void Rotate();
+
+	void ResetFromPlayer();
 };
 

@@ -324,11 +324,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_ppObjects[0] = (CGameObject*)m_pPlayer;
 	m_ppObjects[0]->SetShader(3);
+	m_ppObjects[0]->SetPosition(200.f, m_pTerrain->GetHeight(200.f, 200.f), 200.f);
 
 	m_ppObjects[1] = (CGameObject*)m_pTerrain;
 	m_ppObjects[1]->SetShader(2);
-
-	m_pPlayer->Move(XMFLOAT3(200.f, 1000.f, -50.f), false);
 }
 
 void CScene::ReleaseObjects()

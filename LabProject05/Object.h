@@ -178,14 +178,14 @@ public:
 	XMFLOAT3 GetRight();
 	XMFLOAT4X4& GetWorldMT()  { return m_xmf4x4World; }
 
-	void SetPosition(float x, float y, float z);
-	void SetPosition(XMFLOAT3 xmf3Position);
+	virtual void SetPosition(const float& x, const float& y, const float& z);
+	virtual void SetPosition(XMFLOAT3 xmf3Position);
 
 	void MoveStrafe(float fDistance = 1.0f);
 	void MoveUp(float fDistance = 1.0f);
 	void MoveForward(float fDistance = 1.0f);
 
-	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
+	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
 
 	void SetChild(CGameObject* pChild);

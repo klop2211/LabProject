@@ -257,7 +257,7 @@ void CGameObject::SetMaterial(int nMaterial, CMaterial* pMaterial)
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 {
-	m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(m_xmf4x4ToParent, *pxmf4x4Parent) : m_xmf4x4World;
+	m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(m_xmf4x4ToParent, *pxmf4x4Parent) : m_xmf4x4ToParent;
 
 	if (m_pSibling) m_pSibling->UpdateTransform(pxmf4x4Parent);
 	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
@@ -324,7 +324,7 @@ void CGameObject::ReleaseUploadBuffers()
 	}
 }
 
-void CGameObject::SetPosition(float x, float y, float z)
+void CGameObject::SetPosition(const float& x, const float& y, const float& z)
 {
 	m_xmf4x4World._41 = x;
 	m_xmf4x4World._42 = y;
@@ -380,7 +380,7 @@ void CGameObject::MoveForward(float fDistance)
 	CGameObject::SetPosition(xmf3Position);
 }
 
-void CGameObject::Rotate(float fPitch, float fYaw, float fRoll)
+void CGameObject::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
 	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
 	m_xmf4x4World = Matrix4x4::Multiply(mtxRotate, m_xmf4x4World);
