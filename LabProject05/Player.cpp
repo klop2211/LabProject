@@ -81,15 +81,16 @@ void CPlayer::Move(float fTimeElapsed)
 
 void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
+	m_fPitch += fPitch;
+	m_fYaw += fYaw;
+	m_fRoll += fRoll;
+
+	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.f), XMConvertToRadians(fYaw), XMConvertToRadians(0.f));
 	m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, mtxRotate);
-	//m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, mtxRotate);
-	//m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, mtxRotate);
 	m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
 	m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
 
-
-	//m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, mtxRotate);
+	if (m_pCamera) m_pCamera->Rotate(fPitch, fYaw, fRoll);
 }
 
 void CPlayer::Update(float fTimeElapsed)
@@ -191,7 +192,4 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 void CEllenPlayer::OnPrepareRender()
 {
 	CPlayer::OnPrepareRender();
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(-90.0f), XMConvertToRadians(0.0f), 0.0f);
-	m_xmf4x4ToParent = Matrix4x4::Multiply(mtxRotate, m_xmf4x4ToParent);
-
 }

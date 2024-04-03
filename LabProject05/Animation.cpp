@@ -55,8 +55,6 @@ void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
 		track.SetFrameCaches(pRootObject);
 }
 
-
-
 CAnimationTrack::CAnimationTrack()
 {
 	m_fPosition = 0.f;

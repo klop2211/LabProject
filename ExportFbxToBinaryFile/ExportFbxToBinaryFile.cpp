@@ -110,7 +110,6 @@ int main(int argc, char** argv)
 	WriteString("</Animation>");
 
 	::fclose(gpBinaryFile);
-
     DestroySdkObjects(pfbxSdkManager, bResult);
 
 	return(0);

@@ -110,13 +110,14 @@ public:
 };
 
 #define TPS_DEFAULT_DISTANCE_OFFSET 500.f
-#define TPS_DEFAULT_YAW_OFFSET 40.f
+#define TPS_DEFAULT_PITCH_OFFSET 40.f
+
 class CThirdPersonCamera : public CCamera
 {
 private:
-	float m_fDistanceOffset = TPS_DEFAULT_DISTANCE_OFFSET; // meter
+	XMFLOAT3 m_xmf3Offset; 
 
-	float m_fMovingLagSpeed = 0; // m/s
+	float m_fMovingLagSpeed = 1000.f; // m/s
 	float m_fRotatingLagSpeed = 0; // degree/s
 
 public:
@@ -124,7 +125,7 @@ public:
 	CThirdPersonCamera(CCamera *pCamera);
 	virtual ~CThirdPersonCamera() { }
 
-	void SetOffset(const float& fOffset) { m_fDistanceOffset = fOffset; }
+	void SetOffset(const XMFLOAT3& xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	void SetMovingLagSpeed(const float& fSpeed) { m_fMovingLagSpeed = fSpeed; }
 	void SetRotatingLagSpeed(const float& fSpeed) { m_fRotatingLagSpeed = fSpeed; }
 

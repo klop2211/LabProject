@@ -324,7 +324,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_ppObjects[0] = (CGameObject*)m_pPlayer;
 	m_ppObjects[0]->SetShader(3);
-	m_ppObjects[0]->SetPosition(400.f, m_pTerrain->GetHeight(400.f, 400.f), 400.f);
+	m_ppObjects[0]->SetPosition(0.f, 0, 0.f);
+
 
 	m_ppObjects[1] = (CGameObject*)m_pTerrain;
 	m_ppObjects[1]->SetShader(2);

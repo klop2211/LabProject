@@ -73,8 +73,6 @@ void CCamera::Update(float fTimeElapsed)
 void CCamera::GenerateProjectionMatrix(float fNearPlaneDistance, float fFarPlaneDistance, float fAspectRatio, float fFOVAngle)
 {
 	m_xmf4x4Projection = Matrix4x4::PerspectiveFovLH(XMConvertToRadians(fFOVAngle), fAspectRatio, fNearPlaneDistance, fFarPlaneDistance);
-//	XMMATRIX xmmtxProjection = XMMatrixPerspectiveFovLH(XMConvertToRadians(fFOVAngle), fAspectRatio, fNearPlaneDistance, fFarPlaneDistance);
-//	XMStoreFloat4x4(&m_xmf4x4Projection, xmmtxProjection);
 }
 
 void CCamera::GenerateViewMatrix(XMFLOAT3 xmf3Position, XMFLOAT3 xmf3LookAt, XMFLOAT3 xmf3Up)
@@ -190,8 +188,10 @@ void CFirstPersonCamera::Rotate(float x, float y, float z)
 CThirdPersonCamera::CThirdPersonCamera() :CCamera()
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
-	m_fDistanceOffset = TPS_DEFAULT_DISTANCE_OFFSET;
-	m_fYaw = TPS_DEFAULT_YAW_OFFSET;
+
+	XMMATRIX xmmtxRotate = XMMatrixRotationX(XMConvertToRadians(TPS_DEFAULT_PITCH_OFFSET));
+	m_xmf3Offset = Vector3::TransformCoord(XMFLOAT3(0.0f, 0.0f, -TPS_DEFAULT_DISTANCE_OFFSET), xmmtxRotate);
+	m_fPitch = 0;
 	if (m_pPlayer) ResetFromPlayer();
 	GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 }
@@ -199,8 +199,8 @@ CThirdPersonCamera::CThirdPersonCamera() :CCamera()
 CThirdPersonCamera::CThirdPersonCamera(CCamera *pCamera) : CCamera(pCamera)
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
-	m_fDistanceOffset = TPS_DEFAULT_DISTANCE_OFFSET;
-	m_fYaw = TPS_DEFAULT_YAW_OFFSET;
+	m_xmf3Offset = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_fPitch = 0;
 	if (m_pPlayer) ResetFromPlayer();
 }
 
@@ -208,17 +208,20 @@ void CThirdPersonCamera::Update(float fTimeElapsed)
 {
 	if (m_pPlayer)
 	{
-		float fDistance = Vector3::Length(Vector3::Subtract(m_pPlayer->GetPosition(), m_xmf3Position));
-		XMFLOAT3 xmf3Direction = Vector3::Subtract(m_pPlayer->GetPosition(), m_xmf3LookAtWorld);
-		float fLength = m_fMovingLagSpeed ? m_fMovingLagSpeed * fTimeElapsed : Vector3::Length(xmf3Direction);
+		XMMATRIX xmmtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(m_fPitch), XMConvertToRadians(m_fYaw), XMConvertToRadians(m_fRoll));
+		XMFLOAT3 xmf3Offset = Vector3::TransformCoord(m_xmf3Offset, xmmtxRotate);
+		XMFLOAT3 xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), xmf3Offset);
+		XMFLOAT3 xmf3Direction = Vector3::Subtract(xmf3Position, m_xmf3Position);
+		float fLength = Vector3::Length(xmf3Direction);
 		xmf3Direction = Vector3::Normalize(xmf3Direction);
-		if (fDistance > m_fDistanceOffset) 
-			m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Direction, fLength);
-		if (fDistance < m_fDistanceOffset - 1.f)
-			m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Direction, fLength);
-
-
-		SetLookAt(m_pPlayer->GetPosition());
+		float fDistance = m_fMovingLagSpeed ? m_fMovingLagSpeed * fTimeElapsed : fLength;
+		if (fDistance > fLength) fDistance = fLength;
+		if (fLength < 0.01f) fDistance = fLength; // 오차 정리
+		if (fDistance > 0)
+		{
+			m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Direction, fDistance);
+			SetLookAt(m_pPlayer->GetPosition());
+		}
 	}
 
 	CCamera::Update(fTimeElapsed);
@@ -235,24 +238,43 @@ void CThirdPersonCamera::SetLookAt(XMFLOAT3& xmf3LookAt)
 
 void CThirdPersonCamera::Rotate(float fPitch, float fYaw, float fRoll)
 {
-	m_fPitch = fPitch;
-	m_fYaw = fYaw;
-	m_fRoll = fRoll;
-	Rotate();
+	m_fPitch += fPitch;
+	m_fYaw += fYaw;
+	m_fRoll += fRoll;
 }
 
 void CThirdPersonCamera::Rotate()
 {
-	XMMATRIX xmmtxRotateYaw = XMMatrixRotationAxis(XMLoadFloat3(&m_pPlayer->GetRight()), XMConvertToRadians(m_fYaw));
-	XMMATRIX xmmtxRotatePitch = XMMatrixRotationAxis(XMLoadFloat3(&m_pPlayer->GetUp()), XMConvertToRadians(m_fPitch));
+	XMFLOAT3 xmf3Right = XMFLOAT3(1.f, 0.f, 0.f);
+	XMFLOAT3 xmf3Up = XMFLOAT3(0.f, 1.0f, 0.f);
+	float fDeltaYaw = m_pPlayer->GetYaw() - m_fYaw;
+	float fDeltaPitch = m_pPlayer->GetPitch() - m_fPitch;
+	XMMATRIX xmmtxRotateYaw = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Up), XMConvertToRadians(fDeltaYaw));
+	XMMATRIX xmmtxRotatePitch = XMMatrixRotationAxis(XMLoadFloat3(&xmf3Right), XMConvertToRadians(fDeltaPitch));
+	
+	m_fPitch += fDeltaPitch;
+	m_fYaw += fDeltaYaw;
+
+	// pitch가 90도를 넘어가면 화면이 뒤집어짐
+	if (m_fPitch < -85.f)
+	{
+		xmmtxRotatePitch = XMMatrixIdentity();
+		m_fPitch = -85.f;
+	}
+	else if (m_fPitch > 85.f)
+	{
+		xmmtxRotatePitch = XMMatrixIdentity();
+		m_fPitch = 85.f;
+	}
 	XMStoreFloat3(&m_xmf3Position, XMVector3TransformCoord(XMVector3TransformCoord(XMLoadFloat3(&m_xmf3Position), xmmtxRotateYaw), xmmtxRotatePitch));
 }
 
 void CThirdPersonCamera::ResetFromPlayer()
 {
-	m_xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLook(), -m_fDistanceOffset);
-	Rotate();
-	SetLookAt(m_pPlayer->GetPosition());
+	//// 플레이어 Look 벡터기준 m_fDistanceOffset만큼 카메라를 뒤로 이동
+	//m_xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLook(), -m_fDistanceOffset);
+	//Rotate();
+	//SetLookAt(m_pPlayer->GetPosition());
 }
 
 
