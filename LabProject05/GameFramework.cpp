@@ -352,6 +352,14 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			break;
 		case WM_MOUSEMOVE:
 			break;
+		case WM_MOUSEWHEEL:
+			if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
+			{
+				CThirdPersonCamera* pCamera = ((CThirdPersonCamera*)m_pCamera);
+				pCamera->AddOffsetDistance(-HIWORD(wParam));
+				pCamera->SetOffset(pCamera->GetOffsetDistance(), pCamera->GetOffsetPitch());
+			}
+			break;
 		default:
 			break;
 	}

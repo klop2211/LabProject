@@ -115,6 +115,8 @@ public:
 class CThirdPersonCamera : public CCamera
 {
 private:
+	float m_fOffsetDistance;
+	float m_fOffsetPitch;
 	XMFLOAT3 m_xmf3Offset; 
 
 	float m_fMovingLagSpeed = 1000.f; // m/s
@@ -125,14 +127,21 @@ public:
 	CThirdPersonCamera(CCamera *pCamera);
 	virtual ~CThirdPersonCamera() { }
 
+	float GetOffsetDistance() const { return m_fOffsetDistance; }
+	float GetOffsetPitch() const { return m_fOffsetPitch; }
+
+	void SetOffsetDistance(const float& fDistance) { m_fOffsetDistance = fDistance; }
+	void SetOffsetPitch(const float& fPitch) { m_fPitch = fPitch; }
+	void SetOffset(const float& fDistance, const float& fAngle); // 카메라 오프셋 벡터를 각 거리와 각도(Degree)를 이용하여 설정한다.
 	void SetOffset(const XMFLOAT3& xmf3Offset) { m_xmf3Offset = xmf3Offset; }
 	void SetMovingLagSpeed(const float& fSpeed) { m_fMovingLagSpeed = fSpeed; }
 	void SetRotatingLagSpeed(const float& fSpeed) { m_fRotatingLagSpeed = fSpeed; }
 
+	void AddOffsetDistance(const float& fValue) { m_fOffsetDistance += fValue; }
+
 	virtual void Update(float fTimeElapsed);
 	virtual void SetLookAt(XMFLOAT3& vLookAt);
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
-	virtual void Rotate();
 
 	void ResetFromPlayer();
 };
