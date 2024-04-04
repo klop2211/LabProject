@@ -196,7 +196,7 @@ void CAnimationSet::UpdateMatrix()
 			XMStoreFloat4x4(&Frame->m_xmf4x4ToParent, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 		}
 	}
-
+	
 }
 
 CAnimationLayer::CAnimationLayer()
@@ -278,8 +278,8 @@ CAnimationCurve::CAnimationCurve(std::ifstream& InFile): CAnimationCurve()
 		while (strToken != "</AnimationCurve>")
 		{
 			if (strToken == "<TX>:") LoadKeys(InFile, m_Translations);
-			if (strToken == "<SX>:") LoadKeys(InFile, m_Scales);
 			if (strToken == "<RX>:") LoadKeys(InFile, m_Rotates);
+			if (strToken == "<SX>:") LoadKeys(InFile, m_Scales);
 
 			FBXLoad::ReadStringFromFile(InFile, strToken);
 		}
@@ -340,10 +340,8 @@ void CAnimationCurve::LoadKeys(std::ifstream& InFile, std::vector<XMFLOAT3>& vec
 
 	FBXLoad::ReadFromFile(InFile, pBuffer, nKeys * 2);
 
-	for (int i = nKeys; i < nKeys * 2; ++i) {
-		float temp = pBuffer[i];
-		vecKeyValues[i - nKeys].y = temp;
-	}
+	for (int i = nKeys; i < nKeys * 2; ++i) vecKeyValues[i - nKeys].y = pBuffer[i];
+	
 
 
 	//Z

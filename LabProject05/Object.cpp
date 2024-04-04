@@ -296,7 +296,7 @@ void CGameObject::ResetAnimatedSRT()
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
 	if (!m_pParent && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
-		UpdateTransform(&m_xmf4x4World);
+		UpdateTransform(NULL);
 
 	if(m_ppMaterials)
 		for (int i = 0; i < m_nMaterials; ++i)

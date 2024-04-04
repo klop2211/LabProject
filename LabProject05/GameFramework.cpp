@@ -361,6 +361,11 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 				pCamera->AddOffsetDistance(-(short)HIWORD(wParam) / WHEEL_DEGREE * pCamera->GetZoomScale());
 				pCamera->SetOffset(pCamera->GetOffsetDistance(), pCamera->GetOffsetPitch());
 			}
+			else if (m_pCamera->GetMode() == CameraMode::GHOST)
+			{
+				CGhostCamera* pCamera = ((CGhostCamera*)m_pCamera);
+				pCamera->SetMovingSpeed(pCamera->GetMovingSpeed() + (short)HIWORD(wParam) / WHEEL_DEGREE * CAMERA_ACCELERATION);
+			}
 			break;
 		default:
 			break;
@@ -377,6 +382,15 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 				case VK_ESCAPE:
 					::PostQuitMessage(0);
+					break;
+				case VK_OEM_MINUS:
+				{
+					CCamera* pCamera = new CGhostCamera(m_pCamera);
+					delete m_pCamera;
+					m_pCamera = pCamera;
+					m_pPlayer->SetCamera(m_pCamera);
+					m_pPlayer->OffRotate();
+				}
 					break;
 				case VK_RETURN:
 					break;
@@ -498,12 +512,12 @@ void CGameFramework::ProcessInput()
 	if (!bProcessedByScene)
 	{
 		DWORD dwDirection = 0;
-		if (pKeysBuffer[VK_UP] & 0xF0) dwDirection |= DIR_FORWARD;
-		if (pKeysBuffer[VK_DOWN] & 0xF0) dwDirection |= DIR_BACKWARD;
-		if (pKeysBuffer[VK_LEFT] & 0xF0) dwDirection |= DIR_LEFT;
-		if (pKeysBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
-		if (pKeysBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
-		if (pKeysBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;
+		if (pKeysBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
+		if (pKeysBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
+		if (pKeysBuffer['A'] & 0xF0) dwDirection |= DIR_LEFT;
+		if (pKeysBuffer['D'] & 0xF0) dwDirection |= DIR_RIGHT;
+		if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_UP;
+		if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_DOWN;
 
 		float cxDelta = 0.0f, cyDelta = 0.0f;
 		POINT ptCursorPos;

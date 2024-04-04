@@ -16,6 +16,7 @@ protected:
 	XMFLOAT3					m_xmf3Up;
 	XMFLOAT3					m_xmf3Look;
 
+	bool						m_bRotate = true;
 	float           			m_fPitch;
 	float           			m_fYaw;
 	float           			m_fRoll;
@@ -60,6 +61,9 @@ public:
 	CCamera *GetCamera() { return(m_pCamera); }
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
 
+	bool IsRotate() const { return m_bRotate; }
+	void OnRotate() { m_bRotate = true; }
+	void OffRotate() { m_bRotate = false; }
 	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
 
 	void Move(float fTimeElapsed);

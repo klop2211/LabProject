@@ -39,8 +39,8 @@ int main(int argc, char** argv)
 //	char *pszWriteFileName = "Eagle.bin";
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
-	FbxString pfbxstrModelFilePath("Mawang_Test.fbx");
-	char *pszWriteFileName = "Mawang_Test.bin";
+	FbxString pfbxstrModelFilePath("../Resource/Model/test.fbx");
+	char *pszWriteFileName = "../Resource/Model/test.bin";
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");
@@ -73,16 +73,18 @@ int main(int argc, char** argv)
 	}
 #endif
 	FbxGeometryConverter fbxGeomConverter(pfbxSdkManager);
+
+	//FbxAxisSystem fbxSceneAxisSystem = pfbxModelScene->GetGlobalSettings().GetAxisSystem();
+	//FbxAxisSystem fbxDirectXAxisSystem(FbxAxisSystem::eDirectX);
+	//if (fbxSceneAxisSystem != fbxDirectXAxisSystem) fbxDirectXAxisSystem.ConvertScene(pfbxModelScene);
+
+	FbxSystemUnit fbxSceneSystemUnit = pfbxModelScene->GetGlobalSettings().GetSystemUnit();
+	if (fbxSceneSystemUnit.GetScaleFactor() != 1.0) FbxSystemUnit::cm.ConvertScene(pfbxModelScene);
+
 	fbxGeomConverter.Triangulate(pfbxModelScene, true);
 	fbxGeomConverter.RemoveBadPolygonsFromMeshes(pfbxModelScene, NULL);
 		//fbxGeomConverter.SplitMeshesPerMaterial(pfbxModelScene, true);
 
-		//FbxAxisSystem fbxSceneAxisSystem = pfbxModelScene->GetGlobalSettings().GetAxisSystem();
-		//FbxAxisSystem fbxDirectXAxisSystem(FbxAxisSystem::eDirectX);
-		//if (fbxSceneAxisSystem != fbxDirectXAxisSystem) fbxDirectXAxisSystem.ConvertScene(pfbxModelScene);
-
-//	FbxSystemUnit fbxSceneSystemUnit = pfbxModelScene->GetGlobalSettings().GetSystemUnit();
-//	if (fbxSceneSystemUnit.GetScaleFactor() != 1.0) FbxSystemUnit::cm.ConvertScene(pfbxModelScene);
 
 #ifdef _WITH_SEPARATED_ANIMATIONS
 	//for(int i = 0; i < nSeparatedAnimations; i++)

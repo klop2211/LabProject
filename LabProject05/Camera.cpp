@@ -272,11 +272,23 @@ void CThirdPersonCamera::ResetFromPlayer()
 //|||||||||||||||||||||||||||||||||||||||||||||||||||< CGhostCamera >|||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
+void CGhostCamera::Move(const DWORD& dwDirection, const float& fElapsedTime)
+{
+	XMFLOAT3 xmf3Shift = XMFLOAT3(0.0,0.0,0.0);
+	if (dwDirection & DIR_FORWARD) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Look, m_fMovingSpeed * fElapsedTime);
+	if (dwDirection & DIR_BACKWARD) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Look, -m_fMovingSpeed * fElapsedTime);
+	if (dwDirection & DIR_LEFT) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Right, -m_fMovingSpeed * fElapsedTime);
+	if (dwDirection & DIR_RIGHT) xmf3Shift = Vector3::Add(xmf3Shift, m_xmf3Right, +m_fMovingSpeed * fElapsedTime);
+	if (dwDirection & DIR_UP) xmf3Shift = Vector3::Add(xmf3Shift, XMFLOAT3(0, 1, 0), +m_fMovingSpeed * fElapsedTime);
+	if (dwDirection & DIR_DOWN) xmf3Shift = Vector3::Add(xmf3Shift, XMFLOAT3(0, 1, 0), -m_fMovingSpeed * fElapsedTime);
+
+	CCamera::Move(xmf3Shift);
+}
+
 CGhostCamera::CGhostCamera(CCamera* pCamera) : CCamera(pCamera)
 {
 	m_CameraMode = CameraMode::GHOST;
 }
-
 
 void CGhostCamera::Rotate(float x, float y, float z)
 {
@@ -289,7 +301,8 @@ void CGhostCamera::Rotate(float x, float y, float z)
 	}
 	if (y != 0.0f)
 	{
-		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(y));
+		XMFLOAT3 xmf3RotationAxis = XMFLOAT3(0.f, 1.0, 0.f);
+		XMMATRIX xmmtxRotate = XMMatrixRotationAxis(XMLoadFloat3(&xmf3RotationAxis), XMConvertToRadians(y));
 		m_xmf3Right = Vector3::TransformNormal(m_xmf3Right, xmmtxRotate);
 		m_xmf3Up = Vector3::TransformNormal(m_xmf3Up, xmmtxRotate);
 		m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, xmmtxRotate);

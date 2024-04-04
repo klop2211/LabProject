@@ -59,6 +59,11 @@ void CPlayer::ReleaseShaderVariables()
 
 void CPlayer::AddVelocity(const DWORD& dwDirection, const float& fElapsedTime)
 {
+	if (m_pCamera->GetMode() == CameraMode::GHOST)
+	{
+		((CGhostCamera*)m_pCamera)->Move(dwDirection, fElapsedTime);
+		return;
+	}
 	if (dwDirection)
 	{
 		if (dwDirection & DIR_FORWARD) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Look, m_fSpeed * fElapsedTime);
@@ -81,6 +86,10 @@ void CPlayer::Move(float fTimeElapsed)
 
 void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
+	if (m_pCamera) m_pCamera->Rotate(fPitch, fYaw, fRoll);
+
+	if (!m_bRotate) return;
+
 	m_fPitch += fPitch;
 	m_fYaw += fYaw;
 	m_fRoll += fRoll;
@@ -90,7 +99,6 @@ void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 	m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
 	m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
 
-	if (m_pCamera) m_pCamera->Rotate(fPitch, fYaw, fRoll);
 }
 
 void CPlayer::Update(float fTimeElapsed)
@@ -143,7 +151,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	m_xmf4x4ToParent = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/Player_Idle.bin", std::ios::binary);
+	std::ifstream InFile("../Resource/Model/test.bin", std::ios::binary);
 
 	std::string strToken;
 
@@ -169,7 +177,6 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 		FBXLoad::ReadStringFromFile(InFile, strToken);
 
-
 	}
 
 	m_pAnimationController->SetFrameCaches(this);
@@ -191,5 +198,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 void CEllenPlayer::OnPrepareRender()
 {
+
 	CPlayer::OnPrepareRender();
+	
 }

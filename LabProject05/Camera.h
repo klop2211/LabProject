@@ -91,14 +91,26 @@ public:
 	virtual void SetLookAt(XMFLOAT3& xmf3LookAt) { }
 };
 
+// 카메라 가속 수치 cm/s
+#define CAMERA_ACCELERATION 100.f
+
 class CGhostCamera : public CCamera
 {
+private:
+	float m_fMovingSpeed = 100.f;
+
 public:
 	CGhostCamera(CCamera *pCamera);
 	virtual ~CGhostCamera() { }
 
+	float GetMovingSpeed() const { return m_fMovingSpeed; }
+	
+	void SetMovingSpeed(const float& fValue) { m_fMovingSpeed = fValue; }
+
+	void Move(const DWORD& dwDirection, const float& fElapsedTime);
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 };
+
 
 class CFirstPersonCamera : public CCamera
 {
@@ -109,7 +121,7 @@ public:
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 };
 
-#define TPS_DEFAULT_DISTANCE_OFFSET 500.f
+#define TPS_DEFAULT_DISTANCE_OFFSET 600.f
 #define TPS_DEFAULT_PITCH_OFFSET 40.f
 
 class CThirdPersonCamera : public CCamera
@@ -119,7 +131,7 @@ private:
 	float m_fOffsetPitch;
 	XMFLOAT3 m_xmf3Offset; 
 
-	float m_fMovingLagSpeed = 1000.f; // m/s
+	float m_fMovingLagSpeed = 1000.f; // cm/s
 	float m_fRotatingLagSpeed = 0; // degree/s
 
 	float m_fZoomScale = 20.f;
