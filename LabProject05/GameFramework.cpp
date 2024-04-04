@@ -336,6 +336,8 @@ void CGameFramework::ChangeSwapChainState()
 
 }
 
+#define WHEEL_DEGREE 120.f
+
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
@@ -356,7 +358,7 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 			if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
 			{
 				CThirdPersonCamera* pCamera = ((CThirdPersonCamera*)m_pCamera);
-				pCamera->AddOffsetDistance(-HIWORD(wParam));
+				pCamera->AddOffsetDistance(-(short)HIWORD(wParam) / WHEEL_DEGREE * pCamera->GetZoomScale());
 				pCamera->SetOffset(pCamera->GetOffsetDistance(), pCamera->GetOffsetPitch());
 			}
 			break;
@@ -419,6 +421,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
         case WM_LBUTTONUP:
         case WM_RBUTTONUP:
         case WM_MOUSEMOVE:
+		case WM_MOUSEWHEEL:
 			OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
             break;
         case WM_KEYDOWN:

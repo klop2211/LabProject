@@ -122,6 +122,8 @@ private:
 	float m_fMovingLagSpeed = 1000.f; // m/s
 	float m_fRotatingLagSpeed = 0; // degree/s
 
+	float m_fZoomScale = 20.f;
+
 public:
 	CThirdPersonCamera();
 	CThirdPersonCamera(CCamera *pCamera);
@@ -129,6 +131,7 @@ public:
 
 	float GetOffsetDistance() const { return m_fOffsetDistance; }
 	float GetOffsetPitch() const { return m_fOffsetPitch; }
+	float GetZoomScale() const { return m_fZoomScale; }
 
 	void SetOffsetDistance(const float& fDistance) { m_fOffsetDistance = fDistance; }
 	void SetOffsetPitch(const float& fPitch) { m_fPitch = fPitch; }
