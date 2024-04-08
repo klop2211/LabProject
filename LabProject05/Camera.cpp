@@ -189,19 +189,18 @@ CThirdPersonCamera::CThirdPersonCamera() :CCamera()
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
 
-	m_fOffsetDistance = TPS_DEFAULT_DISTANCE_OFFSET;
-	m_fOffsetPitch = TPS_DEFAULT_PITCH_OFFSET;
+	m_fOffsetDistance = cfTpsDefaultDistanceOffset;
+	m_fOffsetPitch = cfTpsDefaultPitchOffset;
 	SetOffset(m_fOffsetDistance, m_fOffsetPitch);
 	m_fPitch = 0;
-	if (m_pPlayer) ResetFromPlayer();
 	GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
 }
 
 CThirdPersonCamera::CThirdPersonCamera(CCamera *pCamera) : CCamera(pCamera)
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
-	m_fOffsetDistance = TPS_DEFAULT_DISTANCE_OFFSET;
-	m_fOffsetPitch = TPS_DEFAULT_PITCH_OFFSET;
+	m_fOffsetDistance = cfTpsDefaultDistanceOffset;
+	m_fOffsetPitch = cfTpsDefaultPitchOffset;
 	SetOffset(m_fOffsetDistance, m_fOffsetPitch);
 	m_fPitch = 0;
 	if (m_pPlayer) ResetFromPlayer();
@@ -261,8 +260,19 @@ void CThirdPersonCamera::Rotate(float fPitch, float fYaw, float fRoll)
 
 void CThirdPersonCamera::ResetFromPlayer()
 {
-	// 플레이어 Look 벡터기준 m_fOffsetDistance만큼 카메라를 뒤로 이동 이후 Update 함수를 통해 정상적인 위치로 이동함
-	m_xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), m_pPlayer->GetLook(), -m_fOffsetDistance);
+	m_fPitch = m_pPlayer->GetPitch();
+	m_fYaw = m_pPlayer->GetYaw();
+	m_fRoll = m_pPlayer->GetRoll();
+
+	// 플레이어 position기준 m_xmf3Offset만큼 카메라를 이동 이후 플레이어의 pitch, yaw, roll 값을 이용하여 카메라 위치 리셋
+	XMMATRIX xmmtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(m_fPitch), XMConvertToRadians(m_fYaw), XMConvertToRadians(m_fRoll));
+	XMFLOAT3 xmf3Offset = Vector3::TransformCoord(m_xmf3Offset, xmmtxRotate);
+	XMFLOAT3 xmf3Position = Vector3::Add(m_pPlayer->GetPosition(), xmf3Offset);
+	XMFLOAT3 xmf3Direction = Vector3::Subtract(xmf3Position, m_xmf3Position);
+	float fLength = Vector3::Length(xmf3Direction);
+	xmf3Direction = Vector3::Normalize(xmf3Direction);
+	float fDistance = fLength;
+	m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Direction, fDistance);
 	SetLookAt(m_pPlayer->GetPosition());
 }
 

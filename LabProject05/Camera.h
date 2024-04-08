@@ -121,12 +121,12 @@ public:
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 };
 
-#define TPS_DEFAULT_DISTANCE_OFFSET 600.f
-#define TPS_DEFAULT_PITCH_OFFSET 40.f
-
 class CThirdPersonCamera : public CCamera
 {
 private:
+	const float cfTpsDefaultDistanceOffset = 600.f;
+	const float cfTpsDefaultPitchOffset = 40.f;
+
 	float m_fOffsetDistance;
 	float m_fOffsetPitch;
 	XMFLOAT3 m_xmf3Offset; 
@@ -159,5 +159,6 @@ public:
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 
 	void ResetFromPlayer();
+	void ResetOffset();
 };
 

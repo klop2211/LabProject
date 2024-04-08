@@ -62,7 +62,7 @@ public:
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
 
 	bool IsRotate() const { return m_bRotate; }
-	void OnRotate() { m_bRotate = true; }
+	void OnRotate();
 	void OffRotate() { m_bRotate = false; }
 	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
 

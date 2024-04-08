@@ -84,6 +84,16 @@ void CPlayer::Move(float fTimeElapsed)
 	m_xmf3Position = Vector3::Add(m_xmf3Position, Vector3::ScalarProduct(m_xmf3Velocity, fTimeElapsed, false));
 }
 
+void CPlayer::OnRotate()
+{
+	m_bRotate = true;
+	if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
+	{
+		CThirdPersonCamera* pCamera = (CThirdPersonCamera*)m_pCamera;
+		pCamera->ResetFromPlayer();
+	}
+}
+
 void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
 	if (m_pCamera) m_pCamera->Rotate(fPitch, fYaw, fRoll);
@@ -200,5 +210,11 @@ void CEllenPlayer::OnPrepareRender()
 {
 
 	CPlayer::OnPrepareRender();
-	
+	XMFLOAT4X4 xmf4x4AxisTransform = XMFLOAT4X4
+	{	1,0,0,0,
+		0,0,-1,0,
+		0,1,0,0,
+		0,0,0,1 };
+	m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4AxisTransform, m_xmf4x4ToParent);
+
 }

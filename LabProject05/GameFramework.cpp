@@ -343,13 +343,15 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	if (m_pScene) m_pScene->OnProcessingMouseMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID)
 	{
-		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
+			m_pPlayer->OffRotate();
+		case WM_LBUTTONDOWN:
 			::SetCapture(hWnd);
 			::GetCursorPos(&m_ptOldCursorPos);
 			break;
-		case WM_LBUTTONUP:
 		case WM_RBUTTONUP:
+			m_pPlayer->OnRotate();
+		case WM_LBUTTONUP:
 			::ReleaseCapture();
 			break;
 		case WM_MOUSEMOVE:
@@ -525,8 +527,8 @@ void CGameFramework::ProcessInput()
 		{
 			SetCursor(NULL);
 			GetCursorPos(&ptCursorPos);
-			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) / 3.0f;
-			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) / 3.0f;
+			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) * 0.3f;
+			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) * 0.3f;
 			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
@@ -534,12 +536,10 @@ void CGameFramework::ProcessInput()
 		{
 			if (cxDelta || cyDelta)
 			{
-				if (pKeysBuffer[VK_RBUTTON] & 0xF0)
-					m_pPlayer->Rotate(cyDelta, 0.0f, -cxDelta);
-				else
-					m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
+				m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
 			}
 		}
+
 		m_pPlayer->AddVelocity(dwDirection, m_GameTimer.GetTimeElapsed());
 	}
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());

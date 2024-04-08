@@ -74,9 +74,9 @@ int main(int argc, char** argv)
 #endif
 	FbxGeometryConverter fbxGeomConverter(pfbxSdkManager);
 
-	FbxAxisSystem fbxSceneAxisSystem = pfbxModelScene->GetGlobalSettings().GetAxisSystem();
-	FbxAxisSystem fbxDirectXAxisSystem(FbxAxisSystem::eDirectX);
-	if (fbxSceneAxisSystem != fbxDirectXAxisSystem) fbxDirectXAxisSystem.DeepConvertScene(pfbxModelScene);
+	//FbxAxisSystem fbxSceneAxisSystem = pfbxModelScene->GetGlobalSettings().GetAxisSystem();
+	//FbxAxisSystem fbxDirectXAxisSystem(FbxAxisSystem::eDirectX);
+	//if (fbxSceneAxisSystem != fbxDirectXAxisSystem) fbxDirectXAxisSystem.ConvertScene(pfbxModelScene);
 
 	FbxSystemUnit fbxSceneSystemUnit = pfbxModelScene->GetGlobalSettings().GetSystemUnit();
 	if (fbxSceneSystemUnit.GetScaleFactor() != 1.0) FbxSystemUnit::cm.ConvertScene(pfbxModelScene);
