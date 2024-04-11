@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Timer.h"
-#include "Scene.h"
+
+class CScene;
+class CPlayer;
+class CCamera;
 
 class CGameFramework
 {

@@ -159,6 +159,5 @@ public:
 	virtual void Rotate(float fPitch, float fYaw, float fRoll);
 
 	void ResetFromPlayer();
-	void ResetOffset();
 };
 

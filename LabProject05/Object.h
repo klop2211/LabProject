@@ -7,17 +7,14 @@
 #define DIR_UP					0x10
 #define DIR_DOWN				0x20
 
-#include "Mesh.h"
-#include "Camera.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
 #define RESOURCE_TEXTURE2D			0x01
 #define RESOURCE_TEXTURE2D_ARRAY	0x02	//[]
 #define RESOURCE_TEXTURE2DARRAY		0x03
 #define RESOURCE_TEXTURE_CUBE		0x04
 #define RESOURCE_BUFFER				0x05
 
+class CCamera;
+class CMesh;
 class CGameObject;
 
 class CTexture
@@ -113,10 +110,10 @@ public:
 	int m_nShader = NULL;
 	CTexture* m_pTexture = NULL;
 
-	XMFLOAT4						m_xmf4AlbedoColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	XMFLOAT4						m_xmf4EmissiveColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4						m_xmf4SpecularColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	XMFLOAT4						m_xmf4AmbientColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4 m_xmf4AlbedoColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	XMFLOAT4 m_xmf4EmissiveColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4 m_xmf4SpecularColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	XMFLOAT4 m_xmf4AmbientColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	void SetShader(const int& nShader) { m_nShader = nShader; }
 	void SetMaterialType(UINT nType) { m_nType |= nType; }
@@ -177,12 +174,8 @@ public:
 	XMFLOAT3 GetRight();
 	XMFLOAT4X4& GetWorldMT()  { return m_xmf4x4World; }
 
-	virtual void SetPosition(const float& x, const float& y, const float& z);
-	virtual void SetPosition(XMFLOAT3 xmf3Position);
-
-	void MoveStrafe(float fDistance = 1.0f);
-	void MoveUp(float fDistance = 1.0f);
-	void MoveForward(float fDistance = 1.0f);
+	void SetPosition(const float& x, const float& y, const float& z);
+	void SetPosition(XMFLOAT3 xmf3Position);
 
 	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
 	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
@@ -196,7 +189,6 @@ public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
 		std::ifstream& InFile, int& nFrames);
 	
-
 public:
 	int	m_nMaterials = 0;
 	CMaterial** m_ppMaterials = NULL;
@@ -223,7 +215,6 @@ public:
 protected:
 	XMFLOAT4X4 m_xmf4x4World;
 
-
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;
 
@@ -231,31 +222,10 @@ protected:
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//||||||||||||||||||||||||||||||||||||||||||||||||||| <CRotatingObject> ||||||||||||||||||||||||||||||||||||||||||||||||||||
-//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-class CRotatingObject : public CGameObject
-{
-public:
-	CRotatingObject();
-	virtual ~CRotatingObject();
-
-private:
-	XMFLOAT3					m_xmf3RotationAxis;
-	float						m_fRotationSpeed;
-
-public:
-	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
-	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) { m_xmf3RotationAxis = xmf3RotationAxis; }
-
-	virtual void Animate(float fTimeElapsed);
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
-};
-
-
-//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+class CHeightMapImage;
 
 class CHeightMapTerrain : public CGameObject
 {
@@ -265,17 +235,17 @@ public:
 private:
 	CHeightMapImage* m_pHeightMapImage;
 
-	int							m_nWidth;
-	int							m_nLength;
+	int	m_nWidth;
+	int	m_nLength;
 
-	XMFLOAT3					m_xmf3Scale;
+	XMFLOAT3 m_xmf3Scale;
 
 public:
-	float GetHeight(float x, float z, bool bReverseQuad = false) { return(m_pHeightMapImage->GetHeight(x, z, bReverseQuad)); } //World
-	XMFLOAT3 GetNormal(float x, float z) { return(m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z))); }
+	float GetHeight(float x, float z, bool bReverseQuad = false);
+	XMFLOAT3 GetNormal(float x, float z);
 
-	int GetRawImageWidth() { return(m_pHeightMapImage->GetHeightMapWidth()); }
-	int GetRawImageLength() { return(m_pHeightMapImage->GetHeightMapLength()); }
+	int GetRawImageWidth();
+	int GetRawImageLength(); 
 
 	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }

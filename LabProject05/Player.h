@@ -2,16 +2,11 @@
 
 #include "Object.h"
 
-
-struct CB_PLAYER_INFO
-{
-	XMFLOAT4X4						m_xmf4x4World;
-};
+//class CMovementComponent;
 
 class CPlayer : public CGameObject
 {
 protected:
-	XMFLOAT3					m_xmf3Position;
 	XMFLOAT3					m_xmf3Right;
 	XMFLOAT3					m_xmf3Up;
 	XMFLOAT3					m_xmf3Look;
@@ -34,11 +29,13 @@ protected:
 
 	CCamera* m_pCamera = NULL;
 
+	//Components
+	//CMovementComponent* m_pMovementComponent = NULL;
+
 public:
 	CPlayer();
 	virtual ~CPlayer();
 
-	XMFLOAT3 GetPosition() { return(m_xmf3Position); }
 	XMFLOAT3 GetLookVector() { return(m_xmf3Look); }
 	XMFLOAT3 GetUpVector() { return(m_xmf3Up); }
 	XMFLOAT3 GetRightVector() { return(m_xmf3Right); }
@@ -48,8 +45,6 @@ public:
 	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
 	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
 	void SetVelocity(const XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
-	virtual void SetPosition(const float& x, const float& y, const float& z) { SetPosition(XMFLOAT3(x, y, z)); }
-	virtual void SetPosition(const XMFLOAT3& xmf3Position) { m_xmf3Position = xmf3Position; }
 
 	const XMFLOAT3& GetVelocity() const { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
@@ -80,9 +75,9 @@ public:
 	virtual void ReleaseShaderVariables();
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
 
-	CCamera *OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode);
+	CCamera* OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode);
 
-	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) { return(NULL); }
+	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) { return(NULL); }
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 

@@ -114,6 +114,5 @@ private:
 	float m_fTime;
 
 	std::vector<CAnimationTrack> m_Tracks;
-	
 };
 

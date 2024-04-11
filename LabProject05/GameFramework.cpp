@@ -4,6 +4,9 @@
 
 #include "stdafx.h"
 #include "GameFramework.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "Player.h"
 
 
 CGameFramework::CGameFramework()

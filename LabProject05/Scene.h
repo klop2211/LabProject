@@ -1,7 +1,11 @@
 #pragma once
-#include "Player.h"
 
 class CShader;
+class CPlayer;
+class CGameObject;
+class CTexture;
+class CCamera;
+class CHeightMapTerrain;
 
 struct LIGHT
 {
@@ -63,10 +67,6 @@ public:
 
 protected:
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
-
-
-	ID3D12Resource* m_pd3dcbPlayer = NULL;
-	CB_PLAYER_INFO* m_pcbMappedPlayer = NULL;
 
 	// Shader °ü¸®
 	CShader** m_ppShaders = NULL;

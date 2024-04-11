@@ -3,6 +3,8 @@
 #include "Scene.h"
 #include "Shader.h"
 #include "Animation.h"
+#include "Camera.h"
+#include "Mesh.h"
 
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -326,9 +328,9 @@ void CGameObject::ReleaseUploadBuffers()
 
 void CGameObject::SetPosition(const float& x, const float& y, const float& z)
 {
-	m_xmf4x4World._41 = x;
-	m_xmf4x4World._42 = y;
-	m_xmf4x4World._43 = z;
+	m_xmf4x4ToParent._41 = x;
+	m_xmf4x4ToParent._42 = y;
+	m_xmf4x4ToParent._43 = z;
 }
 
 void CGameObject::SetPosition(XMFLOAT3 xmf3Position)
@@ -354,30 +356,6 @@ XMFLOAT3 CGameObject::GetUp()
 XMFLOAT3 CGameObject::GetRight()
 {
 	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4World._11, m_xmf4x4World._12, m_xmf4x4World._13)));
-}
-
-void CGameObject::MoveStrafe(float fDistance)
-{
-	XMFLOAT3 xmf3Position = GetPosition();
-	XMFLOAT3 xmf3Right = GetRight();
-	xmf3Position = Vector3::Add(xmf3Position, xmf3Right, fDistance);
-	CGameObject::SetPosition(xmf3Position);
-}
-
-void CGameObject::MoveUp(float fDistance)
-{
-	XMFLOAT3 xmf3Position = GetPosition();
-	XMFLOAT3 xmf3Up = GetUp();
-	xmf3Position = Vector3::Add(xmf3Position, xmf3Up, fDistance);
-	CGameObject::SetPosition(xmf3Position);
-}
-
-void CGameObject::MoveForward(float fDistance)
-{
-	XMFLOAT3 xmf3Position = GetPosition();
-	XMFLOAT3 xmf3Look = GetLook();
-	xmf3Position = Vector3::Add(xmf3Position, xmf3Look, fDistance);
-	CGameObject::SetPosition(xmf3Position);
 }
 
 void CGameObject::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
@@ -493,32 +471,6 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//|||||||||||||||||||||||||||||||||||||||||||||||||| <CRotatingObject> |||||||||||||||||||||||||||||||||||||||||||||||||
-//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-CRotatingObject::CRotatingObject()
-{
-	m_xmf3RotationAxis = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	m_fRotationSpeed = 15.0f;
-}
-
-CRotatingObject::~CRotatingObject()
-{
-}
-
-void CRotatingObject::Animate(float fTimeElapsed)
-{
-	CGameObject::Rotate(&m_xmf3RotationAxis, m_fRotationSpeed * fTimeElapsed);
-}
-
-void CRotatingObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
-{
-	CGameObject::Render(pd3dCommandList, pCamera);
-}
-
-
-
-//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
@@ -554,3 +506,24 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 CHeightMapTerrain::~CHeightMapTerrain()
 {
 }
+
+float CHeightMapTerrain::GetHeight(float x, float z, bool bReverseQuad)
+{ 
+	return(m_pHeightMapImage->GetHeight(x, z, bReverseQuad));
+} 
+
+XMFLOAT3 CHeightMapTerrain::GetNormal(float x, float z)
+{ 
+	return(m_pHeightMapImage->GetHeightMapNormal(int(x / m_xmf3Scale.x), int(z / m_xmf3Scale.z)));
+}
+
+int CHeightMapTerrain::GetRawImageWidth()
+{ 
+	return(m_pHeightMapImage->GetHeightMapWidth());
+}
+
+int CHeightMapTerrain::GetRawImageLength()
+{ 
+	return(m_pHeightMapImage->GetHeightMapLength());
+}
+

@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Player.h"
+#include "Object.h"
 
 CScene::CScene()
 {
@@ -223,12 +226,6 @@ void CScene::ReleaseShaderVariables()
 		m_pd3dcbGameObjects->Unmap(0, NULL);
 		m_pd3dcbGameObjects->Release();
 	}
-	if (m_pd3dcbPlayer)
-	{
-		m_pd3dcbPlayer->Unmap(0, NULL);
-		m_pd3dcbPlayer->Release();
-	}
-
 }
 
 void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameterStartIndex)
@@ -324,7 +321,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_ppObjects[0] = (CGameObject*)m_pPlayer;
 	m_ppObjects[0]->SetShader(3);
-	m_ppObjects[0]->SetPosition(500, m_pTerrain->GetHeight(500, 500), 500);
+	//m_ppObjects[0]->SetPosition(500, m_pTerrain->GetHeight(500, 500), 500);
 
 
 	m_ppObjects[1] = (CGameObject*)m_pTerrain;
