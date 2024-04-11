@@ -543,7 +543,7 @@ void CGameFramework::ProcessInput()
 			}
 		}
 
-		m_pPlayer->AddVelocity(dwDirection, m_GameTimer.GetTimeElapsed());
+		m_pPlayer->InputActionMove(dwDirection, m_GameTimer.GetTimeElapsed());
 	}
 	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
 }

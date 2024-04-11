@@ -11,7 +11,7 @@ CMovementComponent::CMovementComponent(CGameObject* pOwner, const XMFLOAT3& xmf3
 void CMovementComponent::Update(const float& fElapsedTime)
 {
 
-	Vector3::Normalize(m_xmf3Direction);
+	m_xmf3Direction = Vector3::Normalize(m_xmf3Direction);
 	XMFLOAT3 xmf3NewPosition = Vector3::Add(m_pOwner->GetPosition(), m_xmf3Direction, fElapsedTime * m_fVelocity);
 
 	if (m_bGravity)

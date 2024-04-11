@@ -131,7 +131,7 @@ private:
 	float m_fOffsetPitch;
 	XMFLOAT3 m_xmf3Offset; 
 
-	float m_fMovingLagSpeed = 1000.f; // cm/s
+	float m_fMovingLagSpeed = 0.f; // cm/s
 	float m_fRotatingLagSpeed = 0; // degree/s
 
 	float m_fZoomScale = 20.f;

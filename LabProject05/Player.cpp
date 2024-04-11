@@ -6,7 +6,7 @@
 #include "Player.h"
 #include "Shader.h"
 #include "Animation.h"
-//#include "MovementComponent.h"
+#include "MovementComponent.h"
 #include "Camera.h"
 #include "Mesh.h"
 
@@ -59,30 +59,34 @@ void CPlayer::ReleaseShaderVariables()
 	if (m_pCamera) m_pCamera->ReleaseShaderVariables();
 }
 
-void CPlayer::AddVelocity(const DWORD& dwDirection, const float& fElapsedTime)
+void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTime)
 {
-	if (m_pCamera->GetMode() == CameraMode::GHOST)
+	switch (m_pCamera->GetMode())
 	{
+	case CameraMode::GHOST:
 		((CGhostCamera*)m_pCamera)->Move(dwDirection, fElapsedTime);
-		return;
-	}
-	if (dwDirection)
+		break;
+	case CameraMode::THIRD_PERSON:
+	case CameraMode::FIRST_PERSON:
 	{
-		if (dwDirection & DIR_FORWARD) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Look, m_fSpeed * fElapsedTime);
-		if (dwDirection & DIR_BACKWARD) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Look, -m_fSpeed * fElapsedTime);
-		if (dwDirection & DIR_LEFT) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Right, -m_fSpeed * fElapsedTime);
-		if (dwDirection & DIR_RIGHT) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Right, +m_fSpeed * fElapsedTime);
-		if (dwDirection & DIR_UP) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Up, +m_fSpeed * fElapsedTime);
-		if (dwDirection & DIR_DOWN) m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, m_xmf3Up, -m_fSpeed * fElapsedTime);
+		XMFLOAT3 xmf3Direction = XMFLOAT3(0.f, 0.f, 0.f);
+		if (dwDirection)
+		{
+			if (dwDirection & DIR_FORWARD) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Look);
+			if (dwDirection & DIR_BACKWARD) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Look, -1.f);
+			if (dwDirection & DIR_LEFT) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Right, -1.f);
+			if (dwDirection & DIR_RIGHT) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Right);
+			if (dwDirection & DIR_UP) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Up);
+			if (dwDirection & DIR_DOWN) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Up, -1.f);
+		}
+		if (m_pMovementComponent)
+			m_pMovementComponent->SetDirection(xmf3Direction);
 	}
-	else
-		m_xmf3Velocity = XMFLOAT3(0, 0, 0);
-	UpdateVelocity();
-}
+		break;
+	default:
+		break;
+	}
 
-void CPlayer::Move(float fTimeElapsed)
-{
-	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, Vector3::ScalarProduct(m_xmf3Gravity, fTimeElapsed, false));
 }
 
 void CPlayer::OnRotate()
@@ -114,7 +118,8 @@ void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 
 void CPlayer::Update(float fTimeElapsed)
 {
-	Move(fTimeElapsed);
+	if (m_pMovementComponent)
+		m_pMovementComponent->Update(fTimeElapsed);
 
 	if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
 	{
@@ -138,18 +143,6 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 	}
 }
 
-void CPlayer::UpdateVelocity()
-{
-	float fLength = sqrtf(m_xmf3Velocity.x * m_xmf3Velocity.x + m_xmf3Velocity.z * m_xmf3Velocity.z);
-	if (fLength > m_fMaxVelocityXZ)
-	{
-		m_xmf3Velocity.x *= (m_fMaxVelocityXZ / fLength);
-		m_xmf3Velocity.z *= (m_fMaxVelocityXZ / fLength);
-	}
-	fLength = sqrtf(m_xmf3Velocity.y * m_xmf3Velocity.y);
-	if (fLength > m_fMaxVelocityY) m_xmf3Velocity.y *= (m_fMaxVelocityY / fLength);
-
-}
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||||< CEllenPlayer >|||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -195,9 +188,9 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	if(pSkinMesh) 
 		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, m_pChild);
 
-	//m_xmf3Gravity.y = -9.8f;
 	m_fSpeed = 1000.f;
-	m_fMaxVelocityXZ = 100.f;
+
+	m_pMovementComponent = new CMovementComponent((CGameObject*)this, XMFLOAT3(0.f,0.f,0.f), m_fSpeed);
 
 	SetCamera(pCamera);
 

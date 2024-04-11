@@ -2,7 +2,7 @@
 
 #include "Object.h"
 
-//class CMovementComponent;
+class CMovementComponent;
 
 class CPlayer : public CGameObject
 {
@@ -30,7 +30,7 @@ protected:
 	CCamera* m_pCamera = NULL;
 
 	//Components
-	//CMovementComponent* m_pMovementComponent = NULL;
+	CMovementComponent* m_pMovementComponent = NULL;
 
 public:
 	CPlayer();
@@ -51,7 +51,7 @@ public:
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
 
-	void AddVelocity(const DWORD& dwDirection, const float& fElapsedTime);
+	void InputActionMove(const DWORD& dwDirection, const float& fElapsedTime);
 
 	CCamera *GetCamera() { return(m_pCamera); }
 	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
@@ -60,8 +60,6 @@ public:
 	void OnRotate();
 	void OffRotate() { m_bRotate = false; }
 	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
-
-	void Move(float fTimeElapsed);
 
 	void Update(float fTimeElapsed);
 
@@ -80,9 +78,6 @@ public:
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) { return(NULL); }
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
-
-private:
-	void UpdateVelocity();
 
 };
 

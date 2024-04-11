@@ -22,6 +22,9 @@
     <Filter Include="Objects">
       <UniqueIdentifier>{509f310f-5e3e-47b1-a84b-539fd07cc271}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{b4ed955d-d05b-49ac-a23c-985907b7d1bb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -34,9 +37,6 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="LabProject05.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="d3dx12.h">
@@ -78,12 +78,12 @@
     <ClInclude Include="Player.h">
       <Filter>Objects</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="DDSTextureLoader12.cpp">
@@ -121,6 +121,9 @@
     </ClCompile>
     <ClCompile Include="Player.cpp">
       <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
