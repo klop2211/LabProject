@@ -183,7 +183,8 @@ public:
 	void SetChild(CGameObject* pChild);
 
 	CGameObject* FindFrame(const std::string& strFrameName);
-	CGameObject* FindSkinMeshFrame();
+
+	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
 
 public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 

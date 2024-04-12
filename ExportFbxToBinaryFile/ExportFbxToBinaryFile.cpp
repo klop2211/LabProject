@@ -39,8 +39,8 @@ int main(int argc, char** argv)
 //	char *pszWriteFileName = "Eagle.bin";
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
-	FbxString pfbxstrModelFilePath("../Resource/Model/test.fbx");
-	char *pszWriteFileName = "../Resource/Model/test.bin";
+	FbxString pfbxstrModelFilePath("../Resource/Model/Mawang_Zup.fbx");
+	char *pszWriteFileName = "../Resource/Model/Mawang_Zup.bin";
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");

@@ -398,15 +398,14 @@ CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
 	return NULL;
 }
 
-CGameObject* CGameObject::FindSkinMeshFrame()
+void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject)
 {
-	//TODO: 타입명 이넘 처리
-	if (m_pMesh && m_pMesh->GetType() == 1) return this;
+	CSkinMesh* pSkinMesh = dynamic_cast<CSkinMesh*>(m_pMesh);
+	if(pSkinMesh)
+		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
 
-	CGameObject* rvalue = NULL;
-
-	if (m_pSibling && (rvalue = m_pSibling->FindSkinMeshFrame())) return rvalue;
-	if (m_pChild && (rvalue = m_pChild->FindSkinMeshFrame())) return rvalue;
+	if (m_pChild) m_pChild->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
+	if (m_pSibling) m_pSibling->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,

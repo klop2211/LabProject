@@ -474,6 +474,7 @@ void CSkinMesh::SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 void CSkinMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	//TODO: 텍스처 관련 버퍼 추가(UV, normal, bitangent, tangent)
 	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[3] = { m_d3dVertexBufferView, m_BoneIndicesBufferView, m_BoneWeightBufferView };
 	pd3dCommandList->IASetVertexBuffers(m_nSlot, 3, pVertexBufferViews);
 }

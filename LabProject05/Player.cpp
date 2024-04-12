@@ -154,7 +154,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	m_xmf4x4ToParent = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/test.bin", std::ios::binary);
+	std::ifstream InFile("../Resource/Model/Mawang_Zup.bin", std::ios::binary);
 
 	std::string strToken;
 
@@ -184,9 +184,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	m_pAnimationController->SetFrameCaches(this);
 
-	CSkinMesh* pSkinMesh = (CSkinMesh*)FindSkinMeshFrame()->m_pMesh;
-	if(pSkinMesh) 
-		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, m_pChild);
+	m_pChild->PrepareSkinning(pd3dDevice, pd3dCommandList, m_pChild);
 
 	m_fSpeed = 1000.f;
 
@@ -201,13 +199,13 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 void CEllenPlayer::OnPrepareRender()
 {
-
 	CPlayer::OnPrepareRender();
 	XMFLOAT4X4 xmf4x4AxisTransform = XMFLOAT4X4
 	{	1,0,0,0,
 		0,0,-1,0,
 		0,1,0,0,
 		0,0,0,1 };
+
 	m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4AxisTransform, m_xmf4x4ToParent);
 
 }
