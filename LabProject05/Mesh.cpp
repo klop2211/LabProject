@@ -414,7 +414,7 @@ void CSkinMesh::LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 				XMStoreFloat4x4(&pData[i], XMMatrixTranspose(XMLoadFloat4x4(&pData[i])));
 			}
 			
-			UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256의 배수
+			UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * m_nBones) + 255) & ~255); //256의 배수
 			m_pBoneOffsetBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
 				pData, ncbElementBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pBoneOffsetUploadBuffer);
 

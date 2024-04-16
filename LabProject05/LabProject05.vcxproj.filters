@@ -28,6 +28,9 @@
     <Filter Include="Mesh">
       <UniqueIdentifier>{2a6ede86-e720-43b4-90ef-3265290ad054}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DescriptorManager">
+      <UniqueIdentifier>{c828a261-6bf1-44ea-a179-b3fdd5e92d70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -84,6 +87,9 @@
     <ClInclude Include="Mesh.h">
       <Filter>Mesh</Filter>
     </ClInclude>
+    <ClInclude Include="DescriptorManager.h">
+      <Filter>DescriptorManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -127,6 +133,9 @@
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
       <Filter>Mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorManager.cpp">
+      <Filter>DescriptorManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -17,7 +17,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	d3dHeapPropertiesDesc.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	d3dHeapPropertiesDesc.CreationNodeMask = 1;
 	d3dHeapPropertiesDesc.VisibleNodeMask = 1;
-
+	
 	D3D12_RESOURCE_DESC d3dResourceDesc;
 	::ZeroMemory(&d3dResourceDesc, sizeof(D3D12_RESOURCE_DESC));
 	d3dResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -32,7 +32,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	d3dResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	d3dResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	D3D12_RESOURCE_STATES d3dResourceInitialStates = D3D12_RESOURCE_STATE_COPY_DEST;
+	D3D12_RESOURCE_STATES d3dResourceInitialStates = D3D12_RESOURCE_STATE_COMMON;
 	if (d3dHeapType == D3D12_HEAP_TYPE_UPLOAD) d3dResourceInitialStates =
 		D3D12_RESOURCE_STATE_GENERIC_READ;
 	else if (d3dHeapType == D3D12_HEAP_TYPE_READBACK) d3dResourceInitialStates =
@@ -52,16 +52,21 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 			{
 				//업로드 버퍼를 생성한다. 
 				d3dHeapPropertiesDesc.Type = D3D12_HEAP_TYPE_UPLOAD;
-				pd3dDevice->CreateCommittedResource(&d3dHeapPropertiesDesc,
-					D3D12_HEAP_FLAG_NONE, &d3dResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, NULL,
-					__uuidof(ID3D12Resource), (void**)ppd3dUploadBuffer);
+				pd3dDevice->CreateCommittedResource(
+					&d3dHeapPropertiesDesc,
+					D3D12_HEAP_FLAG_NONE,
+					&d3dResourceDesc, 
+					D3D12_RESOURCE_STATE_GENERIC_READ, 
+					NULL,
+					__uuidof(ID3D12Resource), 
+					(void**)ppd3dUploadBuffer);
 
 				//업로드 버퍼를 매핑하여 초기화 데이터를 업로드 버퍼에 복사한다. 
 				D3D12_RANGE d3dReadRange = { 0, 0 };
-				UINT8* pBufferDataBegin = NULL;
+				UINT8* pBufferDataBegin;
 				(*ppd3dUploadBuffer)->Map(0, &d3dReadRange, (void**)&pBufferDataBegin);
 				memcpy(pBufferDataBegin, pData, nBytes);
-				(*ppd3dUploadBuffer)->Unmap(0, NULL);
+				(*ppd3dUploadBuffer)->Unmap(0, nullptr);
 
 				//업로드 버퍼의 내용을 디폴트 버퍼에 복사한다. 
 				pd3dCommandList->CopyResource(pd3dBuffer, *ppd3dUploadBuffer);
@@ -94,7 +99,8 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	return(pd3dBuffer);
 }
 
-ID3D12Resource* CreateTextureResourceFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, ID3D12Resource** ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates)
+ID3D12Resource* CreateTextureResourceFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
+	const wchar_t* pszFileName, ID3D12Resource** ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates)
 {
 	ID3D12Resource* pd3dTexture = NULL;
 	std::unique_ptr<uint8_t[]> ddsData;

@@ -6,6 +6,7 @@ class CGameObject;
 class CTexture;
 class CCamera;
 class CHeightMapTerrain;
+class CDescriptorManager;
 
 struct LIGHT
 {
@@ -39,14 +40,12 @@ public:
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return true; }
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return true; }
 
-	// Gameobject의 월드 변환 행렬 및 재질, Light, Material 정보 등 DescriptorTable을 통해 업데이트 해주기 위한 버퍼를 생성하고 관리
 	void CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
-	// srv 생성 관리
-	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nRootParameterStartIndex);
-
+	// Srv 생성
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice);
 
 	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer);
 	void ReleaseObjects();
@@ -73,7 +72,7 @@ protected:
 	int	m_nShaders = 0;
 
 	// GameObject 관리
-	CGameObject** m_ppObjects = NULL;
+	std::vector<CGameObject*> m_Objects;
 	int	m_nObjects = 0;
 
 	ID3D12Resource* m_pd3dcbGameObjects = NULL;
@@ -91,18 +90,7 @@ protected:
 	CHeightMapTerrain* m_pTerrain = NULL;
 
 	// Descriptor
-	ID3D12DescriptorHeap* m_pd3dCbvSrvDescriptorHeap = NULL;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dCbvCPUDescriptorStartHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dCbvGPUDescriptorStartHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorStartHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorStartHandle;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dCbvCPUDescriptorNextHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dCbvGPUDescriptorNextHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE			m_d3dSrvCPUDescriptorNextHandle;
-	D3D12_GPU_DESCRIPTOR_HANDLE			m_d3dSrvGPUDescriptorNextHandle;
-
+	CDescriptorManager* m_pDescriptorManager = NULL;
 
 };
 

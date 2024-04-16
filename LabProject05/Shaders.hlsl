@@ -138,8 +138,8 @@ float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Texture2D gtxtTerrainTexture : register(t0);
-Texture2D gtxtDetailTexture : register(t1);
+Texture2D gtxtTerrainTexture : register(t17);
+Texture2D gtxtDetailTexture : register(t18);
 SamplerState gssWrap : register(s0);
 
 struct VS_TERRAIN_INPUT
@@ -176,7 +176,7 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
     float4 cDetailTexColor = gtxtDetailTexture.Sample(gssWrap, input.uv1);
 	//	float fAlpha = gtxtTerrainTexture.Sample(gssWrap, input.uv0);
 
-    float4 cColor = cBaseTexColor * 0.5f + cDetailTexColor * 0.5f;
+    float4 cColor = cBaseTexColor * 0.7f + cDetailTexColor * 0.3f;
 	//	float4 cColor = saturate(lerp(cBaseTexColor, cDetailTexColor, fAlpha));
     //cColor = float4(0.0, 1.0, 0.0, 1.0);
     return (cColor);

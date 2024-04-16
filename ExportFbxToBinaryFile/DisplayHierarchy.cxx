@@ -867,7 +867,6 @@ void WriteMesh(FbxMesh *pfbxMesh)
 		WriteControlPoints(pfbxMesh, nControlPoints);
 
 		//WriteControlPointUVs(pfbxMesh, nControlPoints);
-
 		//WriteControlPointNormals(pfbxMesh, nControlPoints);
 		//WriteControlPointTangents(pfbxMesh, nControlPoints);
 		//WriteControlPointBiTangents(pfbxMesh, nControlPoints);

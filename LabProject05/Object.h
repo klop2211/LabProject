@@ -7,79 +7,238 @@
 #define DIR_UP					0x10
 #define DIR_DOWN				0x20
 
-#define RESOURCE_TEXTURE2D			0x01
-#define RESOURCE_TEXTURE2D_ARRAY	0x02	//[]
-#define RESOURCE_TEXTURE2DARRAY		0x03
-#define RESOURCE_TEXTURE_CUBE		0x04
-#define RESOURCE_BUFFER				0x05
+enum class TextureType 
+{
+	NONE = 0,
+	RESOURCE_TEXTURE2D = 0x01, 
+	RESOURCE_TEXTURE2D_ARRAY = 0x02,
+	RESOURCE_TEXTURE2DARRAY = 0x03,
+	RESOURCE_TEXTURE_CUBE = 0x04,
+	RESOURCE_BUFFER = 0x05
+};
+
+enum class TextureLoadType
+{
+	File = 0,
+	Procedural = 1
+};
+
+enum class TextureMappingType
+{
+	Null = 0,
+	Planar = 1,
+	Spherical = 2, 
+	Cylindrical = 3,
+	Box = 4,
+	Face = 5,
+	UV = 6,
+	Environment = 7
+};
+
+enum class TextureBlendMode
+{
+	None = -1, 
+	Translucent = 0,
+	Additive = 1, 
+	Modulate = 2,
+	Modulate2, 
+	Over, 
+	Normal,
+	Dissolve, 
+	Darken, 
+	ColorBurn,
+	LinearBurn,
+	DarkerColor, 
+	Lighten, 
+	Screen, 
+	ColorDodge, 
+	LinearDodge, 
+	LighterColor, 
+	SoftLight, 
+	HardLight, 
+	VividLight, 
+	LinearLight, 
+	PinLight, 
+	HardMix,
+	Difference, 
+	Exclusion, 
+	Substract, 
+	Divide, 
+	Hue, 
+	Saturation, 
+	Color, 
+	Luminosity, 
+	Overlay
+};
+
+enum class TextureMaterialUseType
+{
+	None = -1,
+	Model = 0,
+	Default
+};
+
+enum class TextureUseType
+{
+	Standard = 0, 
+	ShadowMap, 
+	LightMap, 
+	SphericalReflexionMap, 
+	SphereReflexionMap, 
+	BumpNormalMap
+};
 
 class CCamera;
 class CMesh;
 class CGameObject;
+class CDescriptorManager;
 
 class CTexture
 {
 public:
-	CTexture(int nTextureResources, UINT nResourceType, int nSamplers, int nRootParameters);
+	CTexture();
+	CTexture(std::ifstream& InFile);
 	virtual ~CTexture();
 
 private:
-	int								m_nReferences = 0;
+	//Fbx Texture Info
+	std::string m_strTextureName;
 
-	UINT							m_nTextureType;
+	TextureLoadType m_LoadType;
 
-	int								m_nTextures = 0;
-	_TCHAR(*m_ppstrTextureNames)[64] = NULL;
-	ID3D12Resource** m_ppd3dTextures = NULL;
-	ID3D12Resource** m_ppd3dTextureUploadBuffers;
+	std::string m_strTextureFileName;
 
-	UINT* m_pnResourceTypes = NULL;
+	XMFLOAT2 m_UVScale;
+	XMFLOAT2 m_UVTranslation;
+	bool m_UVSwap;
+	XMFLOAT3 m_UVWRotation;
 
-	DXGI_FORMAT* m_pdxgiBufferFormats = NULL;
-	int* m_pnBufferElements = NULL;
+	int m_AlphaSource;
 
-	int								m_nRootParameters = 0;
-	int* m_pnRootParameterIndices = NULL;
-	D3D12_GPU_DESCRIPTOR_HANDLE* m_pd3dSrvGpuDescriptorHandles = NULL;
+	XMINT4 m_CroppingBox; //Left, Top, Right, Bottom
 
-	int								m_nSamplers = 0;
-	D3D12_GPU_DESCRIPTOR_HANDLE* m_pd3dSamplerGpuDescriptorHandles = NULL;
+	TextureMappingType m_MappingType;
+	TextureBlendMode m_BlendMode;
+
+	float m_DefaultAlpha;
+
+	TextureMaterialUseType m_MaterialUseType;
+	TextureUseType m_TextureUseType;
+
+	// Render 관련
+	TextureType m_ResourceType;
+
+	ID3D12Resource* m_pd3dTexture;
+	ID3D12Resource* m_pd3dTextureUploadBuffer;
+
+	UINT m_RootParameterIndex;
+
+	DXGI_FORMAT m_BufferFormat;
+	UINT m_BufferElements;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE m_SrvGpuDescriptorHandle;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE m_SamplerGpuDescriptorHandle;
 
 public:
-	void AddRef() { m_nReferences++; }
-	void Release() { if (--m_nReferences <= 0) delete this; }
+	void SetSampler(D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle);
 
-	void SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle);
-
-	void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nParameterIndex, int nTextureIndex);
+	void UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
-	void LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nResourceType, UINT nIndex);
+	void LoadTextureFromFile(std::ifstream& InFile);
+
+	void LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 	
 	void LoadBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT ndxgiFormat, UINT nIndex);
-	ID3D12Resource* CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nIndex, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
+	ID3D12Resource* CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nIndex, TextureType nResourceType, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
 
-	//int LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pParent, FILE* pInFile, CShader* pShader, UINT nIndex);
+	void SetRootParameterIndex(UINT nRootParameterIndex);
+	void SetGpuDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle() { return(m_SrvGpuDescriptorHandle); }
 
-	void SetRootParameterIndex(int nIndex, UINT nRootParameterIndex);
-	void SetGpuDescriptorHandle(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(int nIndex) { return(m_pd3dSrvGpuDescriptorHandles[nIndex]); }
+	std::string& GetTextureName() { return(m_strTextureName); }
+	ID3D12Resource* GetResource() { return(m_pd3dTexture); }
+	int GetRootParameter() { return(m_RootParameterIndex); }
 
-	int GetRootParameters() { return(m_nRootParameters); }
-	int GetTextures() { return(m_nTextures); }
-	_TCHAR* GetTextureName(int nIndex) { return(m_ppstrTextureNames[nIndex]); }
-	ID3D12Resource* GetResource(int nIndex) { return(m_ppd3dTextures[nIndex]); }
-	int GetRootParameter(int nIndex) { return(m_pnRootParameterIndices[nIndex]); }
+	TextureType GetTextureType() { return(m_ResourceType); }
+	DXGI_FORMAT GetBufferFormat() { return(m_BufferFormat); }
+	int GetBufferElements() { return(m_BufferElements); }
 
-	UINT GetTextureType() { return(m_nTextureType); }
-	UINT GetTextureType(int nIndex) { return(m_pnResourceTypes[nIndex]); }
-	DXGI_FORMAT GetBufferFormat(int nIndex) { return(m_pdxgiBufferFormats[nIndex]); }
-	int GetBufferElements(int nIndex) { return(m_pnBufferElements[nIndex]); }
+	D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc();
 
-	D3D12_SHADER_RESOURCE_VIEW_DESC GetShaderResourceViewDesc(int nIndex);
+	void ReleaseUploadBuffer();
+
+	void CreateShaderResourceView(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
+};
+
+
+// 재질이 가지는 특성
+class CTextureProperty
+{
+private:
+	std::string m_PropertyName;
+	std::vector<CTexture> m_Textures; // 각 특성을 표현하기위한 텍스처들
+
+public:
+	CTextureProperty() {}
+	// dds 파일로 텍스처 직접 추가
+	CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
+	// fbx 파일을 익스포트한 bin 파일 로드
+	CTextureProperty(std::ifstream& InFile, const std::string& strName);
+	~CTextureProperty() {}
+
+	void LoadTexturePropertyFromFile(std::ifstream& InFile);
+
+	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	void ReleaseUploadBuffers();
+
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
+};
+
+//TODO: ShadingModel이 어떤의미인지 어떻게 사용되는 지 공부
+class CShadingModel
+{
+private:
+	std::string m_strName;
+
+public:
+	virtual void LoadShadingModelFromFile(std::ifstream& InFile) {}
+};
+
+class CPhongModel : public CShadingModel
+{
+private:
+	XMFLOAT3 m_Ambient;
+	XMFLOAT3 m_Diffuse;
+	XMFLOAT3 m_Specular;
+	XMFLOAT3 m_Emissive;
+
+	float m_TransparencyFactor;
+	float m_Shininess;
+	float m_ReflectionFactor;
+
+public:
+	virtual void LoadShadingModelFromFile(std::ifstream& InFile);
+
+
+};
+
+class CLambertModel : public CShadingModel
+{
+private:
+	XMFLOAT3 m_Ambient;
+	XMFLOAT3 m_Diffuse;
+	XMFLOAT3 m_Emissive;
+
+	float m_TransparencyFactor;
+
+public:
+	virtual void LoadShadingModelFromFile(std::ifstream& InFile);
+
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +256,11 @@ class CMaterial
 {
 public:
 	CMaterial();
+	CMaterial(const int& nProperty);
 	virtual ~CMaterial();
 
 private:
-	int								m_nReferences = 0;
+	int	m_nReferences = 0;
 
 public:
 	void AddRef() { m_nReferences++; }
@@ -108,7 +268,11 @@ public:
 
 public:
 	int m_nShader = NULL;
-	CTexture* m_pTexture = NULL;
+	std::vector<CTextureProperty> m_TextureProperties;
+
+	CShadingModel* m_pShadingModel = NULL;
+
+	std::string m_strName;
 
 	XMFLOAT4 m_xmf4AlbedoColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	XMFLOAT4 m_xmf4EmissiveColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -117,13 +281,19 @@ public:
 
 	void SetShader(const int& nShader) { m_nShader = nShader; }
 	void SetMaterialType(UINT nType) { m_nType |= nType; }
-	void SetTexture(CTexture* pTexture);
+
+	void SetName(const std::string& strName) { m_strName = strName; }
 
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	void ReleaseShaderVariables();
 
 	void ReleaseUploadBuffers();
 
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
+
+	void LoadTexturePropertiesFromFile(std::ifstream& InFile);
+
+	void AddTexturePropertyFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 
 public:
 	UINT							m_nType = 0x00;
@@ -157,10 +327,12 @@ public:
 
 	virtual void SetMesh(CMesh* pMesh);
 	void SetShader(const int& nShader) { m_nShader = nShader; }
-	void SetMaterial(int nMaterial, CMaterial* pMaterial);
+	void SetMaterial(const int& index, CMaterial* pMaterial);
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+
+	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
 
 	virtual void Animate(float fTimeElapsed);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
@@ -186,13 +358,14 @@ public:
 
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
 
+	void LoadMaterialFromFile(std::ifstream& InFile);
+
 public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, 
 		std::ifstream& InFile, int& nFrames);
 	
 public:
-	int	m_nMaterials = 0;
-	CMaterial** m_ppMaterials = NULL;
+	std::vector<CMaterial*> m_Materials;
 
 	//Heirarchy 구조 관련 변수
 	std::string m_strFrameName;
@@ -225,6 +398,7 @@ protected:
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 
 class CHeightMapImage;
 

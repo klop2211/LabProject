@@ -132,6 +132,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DDSTextureLoader12.h" />
+    <ClInclude Include="DescriptorManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="LabProject05.h" />
@@ -151,6 +152,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />
+    <ClCompile Include="DescriptorManager.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="LabProject05.cpp" />
     <ClCompile Include="Mesh.cpp" />

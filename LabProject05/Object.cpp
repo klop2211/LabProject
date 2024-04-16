@@ -5,147 +5,152 @@
 #include "Animation.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "DescriptorManager.h"
 
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||| <CTexture> ||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-CTexture::CTexture(int nTextures, UINT nTextureType, int nSamplers, int nRootParameters)
+CTexture::CTexture()
 {
-	m_nTextureType = nTextureType;
 
-	m_nTextures = nTextures;
-	if (m_nTextures > 0)
-	{
-		m_ppd3dTextureUploadBuffers = new ID3D12Resource * [m_nTextures];
-		m_ppd3dTextures = new ID3D12Resource * [m_nTextures];
-		for (int i = 0; i < m_nTextures; i++) m_ppd3dTextureUploadBuffers[i] = m_ppd3dTextures[i] = NULL;
+}
 
-		m_ppstrTextureNames = new _TCHAR[m_nTextures][64];
-		for (int i = 0; i < m_nTextures; i++) m_ppstrTextureNames[i][0] = '\0';
+CTexture::CTexture(std::ifstream& InFile)
+{
+	std::string strToken;
+	FBXLoad::ReadStringFromFile(InFile, strToken);
 
-		m_pd3dSrvGpuDescriptorHandles = new D3D12_GPU_DESCRIPTOR_HANDLE[m_nTextures];
-		for (int i = 0; i < m_nTextures; i++) m_pd3dSrvGpuDescriptorHandles[i].ptr = NULL;
-
-		m_pnResourceTypes = new UINT[m_nTextures];
-		m_pdxgiBufferFormats = new DXGI_FORMAT[m_nTextures];
-		m_pnBufferElements = new int[m_nTextures];
-	}
-	m_nRootParameters = nRootParameters;
-	if (nRootParameters > 0) m_pnRootParameterIndices = new int[nRootParameters];
-	for (int i = 0; i < m_nRootParameters; i++) m_pnRootParameterIndices[i] = -1;
-
-	m_nSamplers = nSamplers;
-	if (m_nSamplers > 0) m_pd3dSamplerGpuDescriptorHandles = new D3D12_GPU_DESCRIPTOR_HANDLE[m_nSamplers];
+	if (strToken == "<Texture>:")
+		LoadTextureFromFile(InFile);
 }
 
 CTexture::~CTexture()
 {
-	if (m_ppd3dTextures)
-	{
-		for (int i = 0; i < m_nTextures; i++) if (m_ppd3dTextures[i]) m_ppd3dTextures[i]->Release();
-		delete[] m_ppd3dTextures;
-	}
-
-	if (m_ppstrTextureNames) delete[] m_ppstrTextureNames;
-
-	if (m_pnResourceTypes) delete[] m_pnResourceTypes;
-	if (m_pdxgiBufferFormats) delete[] m_pdxgiBufferFormats;
-	if (m_pnBufferElements) delete[] m_pnBufferElements;
-
-	if (m_pnRootParameterIndices) delete[] m_pnRootParameterIndices;
-	if (m_pd3dSrvGpuDescriptorHandles) delete[] m_pd3dSrvGpuDescriptorHandles;
-
-	if (m_pd3dSamplerGpuDescriptorHandles) delete[] m_pd3dSamplerGpuDescriptorHandles;
+	if (m_pd3dTexture)
+		m_pd3dTexture->Release();
 }
 
-void CTexture::SetRootParameterIndex(int nIndex, UINT nRootParameterIndex)
+void CTexture::SetRootParameterIndex(UINT nRootParameterIndex)
 {
-	m_pnRootParameterIndices[nIndex] = nRootParameterIndex;
+	m_RootParameterIndex = nRootParameterIndex;
 }
 
-void CTexture::SetGpuDescriptorHandle(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle)
+void CTexture::SetGpuDescriptorHandle(D3D12_GPU_DESCRIPTOR_HANDLE d3dSrvGpuDescriptorHandle)
 {
-	m_pd3dSrvGpuDescriptorHandles[nIndex] = d3dSrvGpuDescriptorHandle;
+	m_SrvGpuDescriptorHandle = d3dSrvGpuDescriptorHandle;
 }
 
-void CTexture::SetSampler(int nIndex, D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle)
+void CTexture::SetSampler(D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHandle)
 {
-	m_pd3dSamplerGpuDescriptorHandles[nIndex] = d3dSamplerGpuDescriptorHandle;
+	m_SamplerGpuDescriptorHandle = d3dSamplerGpuDescriptorHandle;
 }
 
-void CTexture::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+void CTexture::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	if (m_nRootParameters == m_nTextures)
-	{
-		for (int i = 0; i < m_nRootParameters; i++)
-		{
-			if (m_pd3dSrvGpuDescriptorHandles[i].ptr && (m_pnRootParameterIndices[i] != -1))
-				pd3dCommandList->SetGraphicsRootDescriptorTable(m_pnRootParameterIndices[i], m_pd3dSrvGpuDescriptorHandles[i]);
-		}
-	}
-	else
-	{
-		if (m_pd3dSrvGpuDescriptorHandles[0].ptr) 
-			pd3dCommandList->SetGraphicsRootDescriptorTable(m_pnRootParameterIndices[0], m_pd3dSrvGpuDescriptorHandles[0]);
-	}
-}
-
-void CTexture::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList, int nParameterIndex, int nTextureIndex)
-{
-	pd3dCommandList->SetGraphicsRootDescriptorTable(m_pnRootParameterIndices[nParameterIndex],
-		m_pd3dSrvGpuDescriptorHandles[nTextureIndex]);
+	pd3dCommandList->SetGraphicsRootDescriptorTable(m_RootParameterIndex, m_SrvGpuDescriptorHandle);
 }
 
 void CTexture::ReleaseShaderVariables()
 {
+
 }
 
-void CTexture::ReleaseUploadBuffers()
+void CTexture::LoadTextureFromFile(std::ifstream& InFile)
 {
-	if (m_ppd3dTextureUploadBuffers)
-	{
-		for (int i = 0; i < m_nTextures; i++) if (m_ppd3dTextureUploadBuffers[i]) m_ppd3dTextureUploadBuffers[i]->Release();
-		delete[] m_ppd3dTextureUploadBuffers;
-		m_ppd3dTextureUploadBuffers = NULL;
-	}
+	FBXLoad::ReadFromFile<int>(InFile); //index
+
+	std::string strToken;
+
+	FBXLoad::ReadStringFromFile(InFile, strToken);
+	m_strTextureName = strToken;
+
+	m_LoadType = (TextureLoadType)FBXLoad::ReadFromFile<int>(InFile);
+
+	FBXLoad::ReadStringFromFile(InFile, strToken);
+	m_strTextureFileName = strToken;
+
+	m_UVScale.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_UVScale.y = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_UVTranslation.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_UVTranslation.y = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_UVSwap = (bool)FBXLoad::ReadFromFile<int>(InFile);
+
+	m_UVWRotation.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_UVWRotation.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_UVWRotation.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_AlphaSource = FBXLoad::ReadFromFile<int>(InFile);
+
+	m_CroppingBox.x = FBXLoad::ReadFromFile<int>(InFile); // left
+	m_CroppingBox.y = FBXLoad::ReadFromFile<int>(InFile); // top
+	m_CroppingBox.z = FBXLoad::ReadFromFile<int>(InFile); // right
+	m_CroppingBox.w = FBXLoad::ReadFromFile<int>(InFile); // bottom
+
+	m_MappingType = (TextureMappingType)FBXLoad::ReadFromFile<int>(InFile);
+
+	m_BlendMode = (TextureBlendMode)FBXLoad::ReadFromFile<int>(InFile);
+
+	m_DefaultAlpha = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_MaterialUseType = (TextureMaterialUseType)FBXLoad::ReadFromFile<int>(InFile);
+
+	m_TextureUseType = (TextureUseType)FBXLoad::ReadFromFile<int>(InFile);
 }
 
-void CTexture::LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, wchar_t* pszFileName, UINT nResourceType, UINT nIndex)
+void CTexture::ReleaseUploadBuffer()
 {
-	m_pnResourceTypes[nIndex] = nResourceType;
-	m_ppd3dTextures[nIndex] = ::CreateTextureResourceFromDDSFile(pd3dDevice, pd3dCommandList, pszFileName, &m_ppd3dTextureUploadBuffers[nIndex], D3D12_RESOURCE_STATE_GENERIC_READ/*D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE*/);
+	m_pd3dTextureUploadBuffer->Release();
+}
+
+void CTexture::CreateShaderResourceView(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc = GetShaderResourceViewDesc();
+	pd3dDevice->CreateShaderResourceView(m_pd3dTexture, &d3dShaderResourceViewDesc, pDescriptorManager->GetSrvNextCPUHandle());
+	
+	m_SrvGpuDescriptorHandle = pDescriptorManager->GetSrvNextGPUHandle();
+	
+	pDescriptorManager->AddSrvIndex();
+}
+
+void CTexture::LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
+{
+	m_ResourceType = nResourceType;
+	m_RootParameterIndex = nRootParameterIndex;
+	std::wstring wstrFileName;
+	wstrFileName.assign(strFileName.begin(), strFileName.end());
+	m_pd3dTexture = ::CreateTextureResourceFromDDSFile(pd3dDevice, pd3dCommandList, wstrFileName.c_str(), &m_pd3dTextureUploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ/*D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE*/);
 }
 
 void CTexture::LoadBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT ndxgiFormat, UINT nIndex)
 {
-	m_pnResourceTypes[nIndex] = RESOURCE_BUFFER;
-	m_pdxgiBufferFormats[nIndex] = ndxgiFormat;
-	m_pnBufferElements[nIndex] = nElements;
-	m_ppd3dTextures[nIndex] = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pData, nElements * nStride, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, &m_ppd3dTextureUploadBuffers[nIndex]);
+	m_ResourceType = TextureType::RESOURCE_BUFFER;
+	m_BufferFormat = ndxgiFormat;
+	m_BufferElements = nElements;
+	m_pd3dTexture = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pData, nElements * nStride, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_GENERIC_READ, &m_pd3dTextureUploadBuffer);
 }
 
-ID3D12Resource* CTexture::CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nIndex, UINT nResourceType, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue)
+ID3D12Resource* CTexture::CreateTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nIndex, TextureType nResourceType, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue)
 {
-	m_pnResourceTypes[nIndex] = nResourceType;
-	m_ppd3dTextures[nIndex] = ::CreateTexture2DResource(pd3dDevice, pd3dCommandList, nWidth, nHeight, nElements, nMipLevels, dxgiFormat, d3dResourceFlags, d3dResourceStates, pd3dClearValue);
-	return(m_ppd3dTextures[nIndex]);
+	m_ResourceType = nResourceType;
+	m_pd3dTexture = ::CreateTexture2DResource(pd3dDevice, pd3dCommandList, nWidth, nHeight, nElements, nMipLevels, dxgiFormat, d3dResourceFlags, d3dResourceStates, pd3dClearValue);
+	return(m_pd3dTexture);
 }
 
-D3D12_SHADER_RESOURCE_VIEW_DESC CTexture::GetShaderResourceViewDesc(int nIndex)
+D3D12_SHADER_RESOURCE_VIEW_DESC CTexture::GetShaderResourceViewDesc()
 {
-	ID3D12Resource* pShaderResource = GetResource(nIndex);
-	D3D12_RESOURCE_DESC d3dResourceDesc = pShaderResource->GetDesc();
+	D3D12_RESOURCE_DESC d3dResourceDesc = m_pd3dTexture->GetDesc();
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC d3dShaderResourceViewDesc;
 	d3dShaderResourceViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	int nTextureType = GetTextureType(nIndex);
-	switch (nTextureType)
+	switch (m_ResourceType)
 	{
-	case RESOURCE_TEXTURE2D: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize == 1)
-	case RESOURCE_TEXTURE2D_ARRAY: //[]
+	case TextureType::RESOURCE_TEXTURE2D: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize == 1)
+	case TextureType::RESOURCE_TEXTURE2D_ARRAY: //[]
 		d3dShaderResourceViewDesc.Format = d3dResourceDesc.Format;
 		d3dShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		d3dShaderResourceViewDesc.Texture2D.MipLevels = -1;
@@ -153,7 +158,7 @@ D3D12_SHADER_RESOURCE_VIEW_DESC CTexture::GetShaderResourceViewDesc(int nIndex)
 		d3dShaderResourceViewDesc.Texture2D.PlaneSlice = 0;
 		d3dShaderResourceViewDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		break;
-	case RESOURCE_TEXTURE2DARRAY: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize != 1)
+	case TextureType::RESOURCE_TEXTURE2DARRAY: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize != 1)
 		d3dShaderResourceViewDesc.Format = d3dResourceDesc.Format;
 		d3dShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 		d3dShaderResourceViewDesc.Texture2DArray.MipLevels = -1;
@@ -163,18 +168,18 @@ D3D12_SHADER_RESOURCE_VIEW_DESC CTexture::GetShaderResourceViewDesc(int nIndex)
 		d3dShaderResourceViewDesc.Texture2DArray.FirstArraySlice = 0;
 		d3dShaderResourceViewDesc.Texture2DArray.ArraySize = d3dResourceDesc.DepthOrArraySize;
 		break;
-	case RESOURCE_TEXTURE_CUBE: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize == 6)
+	case TextureType::RESOURCE_TEXTURE_CUBE: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D)(d3dResourceDesc.DepthOrArraySize == 6)
 		d3dShaderResourceViewDesc.Format = d3dResourceDesc.Format;
 		d3dShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 		d3dShaderResourceViewDesc.TextureCube.MipLevels = 1;
 		d3dShaderResourceViewDesc.TextureCube.MostDetailedMip = 0;
 		d3dShaderResourceViewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		break;
-	case RESOURCE_BUFFER: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
-		d3dShaderResourceViewDesc.Format = m_pdxgiBufferFormats[nIndex];
+	case TextureType::RESOURCE_BUFFER: //(d3dResourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
+		d3dShaderResourceViewDesc.Format = m_BufferFormat;
 		d3dShaderResourceViewDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 		d3dShaderResourceViewDesc.Buffer.FirstElement = 0;
-		d3dShaderResourceViewDesc.Buffer.NumElements = m_pnBufferElements[nIndex];
+		d3dShaderResourceViewDesc.Buffer.NumElements = m_BufferElements;
 		d3dShaderResourceViewDesc.Buffer.StructureByteStride = 0;
 		d3dShaderResourceViewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 		break;
@@ -191,31 +196,59 @@ CMaterial::CMaterial()
 {
 }
 
-CMaterial::~CMaterial()
+CMaterial::CMaterial(const int& nProperty)
 {
-	if (m_pTexture) m_pTexture->Release();
+	m_TextureProperties.reserve(nProperty);
 }
 
-void CMaterial::SetTexture(CTexture* pTexture)
+CMaterial::~CMaterial()
 {
-	if (m_pTexture) m_pTexture->Release();
-	m_pTexture = pTexture;
-	if (m_pTexture) m_pTexture->AddRef();
+	if (m_pShadingModel)
+		delete m_pShadingModel;
 }
 
 void CMaterial::ReleaseUploadBuffers()
 {
-	if (m_pTexture) m_pTexture->ReleaseUploadBuffers();
+	for (auto& Property : m_TextureProperties)
+		Property.ReleaseUploadBuffers();
+}
+
+void CMaterial::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
+{
+	for (auto& Property : m_TextureProperties)
+		Property.CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
+}
+
+void CMaterial::LoadTexturePropertiesFromFile(std::ifstream& InFile)
+{
+	std::string strToken;
+
+	int nProperties = FBXLoad::ReadFromFile<int>(InFile);
+
+	m_TextureProperties.reserve(nProperties);
+
+	for (int j = 0; j < nProperties; ++j)
+	{
+		FBXLoad::ReadStringFromFile(InFile, strToken); // <Property>:
+		FBXLoad::ReadFromFile<int>(InFile); // index
+		FBXLoad::ReadStringFromFile(InFile, strToken); //TextureChannelName
+		FBXLoad::ReadStringFromFile(InFile, strToken); //strPropertyName
+		if (strToken != "Null")
+		{
+			m_TextureProperties.emplace_back(InFile, strToken);
+		}
+	}
+}
+
+void CMaterial::AddTexturePropertyFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
+{
+	m_TextureProperties.emplace_back(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
 }
 
 void CMaterial::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	if (m_pTexture) m_pTexture->UpdateShaderVariables(pd3dCommandList);
-}
-
-void CMaterial::ReleaseShaderVariables()
-{
-	if (m_pTexture) m_pTexture->ReleaseShaderVariables();
+	for (auto& Property : m_TextureProperties)
+		Property.UpdateShaderVariables(pd3dCommandList);
 }
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -231,8 +264,7 @@ CGameObject::CGameObject()
 CGameObject::~CGameObject()
 {
 	if (m_pMesh) m_pMesh->Release();
-	if (m_ppMaterials) for (int i = 0; i < m_nMaterials; ++i) m_ppMaterials[i]->Release();
-
+	for (auto& p : m_Materials) p->Release();
 }
 
 void CGameObject::SetMesh(CMesh* pMesh)
@@ -240,21 +272,20 @@ void CGameObject::SetMesh(CMesh* pMesh)
 	if (m_pMesh)
 	{
 		m_pMesh->Release();
-		m_pMesh = pMesh;
-		if (pMesh) pMesh->AddRef();
 	}
-	else
-	{
-		m_pMesh = pMesh;
-		if (pMesh) pMesh->AddRef();
-	}
+	m_pMesh = pMesh;
+	if (pMesh) pMesh->AddRef();
 }
 
-void CGameObject::SetMaterial(int nMaterial, CMaterial* pMaterial)
+void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 {
-	if (m_ppMaterials[nMaterial]) m_ppMaterials[nMaterial]->Release();
-	m_ppMaterials[nMaterial] = pMaterial;
-	if (m_ppMaterials[nMaterial]) m_ppMaterials[nMaterial]->AddRef();
+	if (m_Materials.size() == index)
+	{
+		m_Materials.emplace_back(pMaterial);
+	}
+	else 
+		m_Materials[index] = pMaterial;
+	m_Materials[index]->AddRef();
 }
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
@@ -270,6 +301,15 @@ void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandLi
 	XMFLOAT4X4 xmf4x4World;
 	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
 	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &xmf4x4World, 0);
+}
+
+void CGameObject::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
+{
+	for (auto& Material : m_Materials)
+		Material->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
+
+	if (m_pChild) m_pChild->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
+	if (m_pSibling) m_pSibling->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
 }
 
 void CGameObject::Animate(float fTimeElapsed)
@@ -300,11 +340,8 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	if (!m_pParent && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
 
-	if(m_ppMaterials)
-		for (int i = 0; i < m_nMaterials; ++i)
-		{
-			m_ppMaterials[i]->UpdateShaderVariables(pd3dCommandList);
-		}
+	for(auto& p : m_Materials)
+		p->UpdateShaderVariables(pd3dCommandList);
 
 	if (m_pMesh) 
 	{
@@ -320,10 +357,8 @@ void CGameObject::ReleaseUploadBuffers()
 {
 	if (m_pMesh) m_pMesh->ReleaseUploadBuffers();
 
-	for (int i = 0; i < m_nMaterials; i++)
-	{
-		if (m_ppMaterials[i]) m_ppMaterials[i]->ReleaseUploadBuffers();
-	}
+	for (auto& p : m_Materials)
+		p->ReleaseUploadBuffers();
 }
 
 void CGameObject::SetPosition(const float& x, const float& y, const float& z)
@@ -408,6 +443,52 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if (m_pSibling) m_pSibling->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
+void CGameObject::LoadMaterialFromFile(std::ifstream& InFile)
+{
+	int nMaterials = FBXLoad::ReadFromFile<int>(InFile);
+	m_Materials.reserve(nMaterials);
+
+	std::string strToken;
+
+	for (int i = 0; i < nMaterials; ++i)
+	{
+		FBXLoad::ReadFromFile<int>(InFile);
+
+		FBXLoad::ReadStringFromFile(InFile, strToken);
+
+		CMaterial* pMaterial = new CMaterial; //TODO: Material의 이름으로 중복이 있는지 체크해야함
+
+		pMaterial->SetName(strToken);
+
+		FBXLoad::ReadStringFromFile(InFile, strToken); // <TextureProperties>: 
+
+		pMaterial->LoadTexturePropertiesFromFile(InFile);
+
+		m_Materials.emplace_back(pMaterial);
+
+		FBXLoad::ReadStringFromFile(InFile, strToken); // </TextureProperties>
+
+		FBXLoad::ReadStringFromFile(InFile, strToken); // <ShadingModel>:
+
+		FBXLoad::ReadStringFromFile(InFile, strToken); // name
+		std::string strName = strToken;
+
+		FBXLoad::ReadStringFromFile(InFile, strToken); // <Phong>: or <Lambert>:, <Unknown>
+		if (strToken == "<Phong>:")
+		{
+			CShadingModel* pShadingModel = new CPhongModel;
+			pShadingModel->LoadShadingModelFromFile(InFile);
+		}
+		else if (strToken == "<Lambert>:")
+		{
+			CShadingModel* pShadingModel = new CLambertModel;
+			pShadingModel->LoadShadingModelFromFile(InFile);
+
+		}
+		FBXLoad::ReadStringFromFile(InFile, strToken); // </Materials>
+	}
+}
+
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	std::ifstream& InFile, int& nFrames)
 {
@@ -450,6 +531,10 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 			pMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
 			rvalue->SetMesh(pMesh);
 		}
+		else if (strToken == "<Materials>:")
+		{
+			rvalue->LoadMaterialFromFile(InFile);
+		}
 		else if (strToken == "<Children>:")
 		{
 			int nChildren = FBXLoad::ReadFromFile<int>(InFile);
@@ -470,7 +555,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, ID3D12RootSignature* pd3dGraphicsRootSignature, LPCTSTR pFileName, int nWidth, int nLength, int nBlockWidth, int nBlockLength, XMFLOAT3 xmf3Scale, XMFLOAT4 xmf4Color)
@@ -485,19 +570,14 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	CHeightMapGridMesh* pHeightMapGridMesh = new CHeightMapGridMesh(pd3dDevice, pd3dCommandList, 0, 0, nBlockWidth, nBlockLength, xmf3Scale, xmf4Color, m_pHeightMapImage);
 	SetMesh(pHeightMapGridMesh);
 	
-	CTexture* pTerrainTexture = new CTexture(3, RESOURCE_TEXTURE2D, 0, 1);
+	CMaterial* pTerrainMaterial = new CMaterial(2);
 
-	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"../Resource/Terrain/Base_Texture.dds", RESOURCE_TEXTURE2D, 0);
-	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"../Resource/Terrain/Detail_Texture_7.dds", RESOURCE_TEXTURE2D, 1);
-	pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"../Resource/Terrain/HeightMap(Alpha).dds", RESOURCE_TEXTURE2D, 2);
+	pTerrainMaterial->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Terrain/Base_Texture.dds", TextureType::RESOURCE_TEXTURE2D, 3);
+	pTerrainMaterial->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Terrain/Detail_Texture_7.dds", TextureType::RESOURCE_TEXTURE2D, 6);
+	//pTerrainTexture->LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, L"../Resource/Terrain/HeightMap(Alpha).dds", TextureType::RESOURCE_TEXTURE2D, 2);
 
-	CMaterial* pTerrainMaterial = new CMaterial();
-	pTerrainMaterial->SetTexture(pTerrainTexture);
 	pTerrainMaterial->SetShader((int)ShaderNum::Terrain);
 
-	m_nMaterials = 1;
-	m_ppMaterials = new CMaterial*[m_nMaterials];
-	m_ppMaterials[0] = NULL;
 	SetMaterial(0, pTerrainMaterial);
 
 }
@@ -526,3 +606,102 @@ int CHeightMapTerrain::GetRawImageLength()
 	return(m_pHeightMapImage->GetHeightMapLength());
 }
 
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||| <CTextureProperty> ||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+CTextureProperty::CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
+{
+	m_Textures.emplace_back();
+	m_Textures.back().LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
+}
+
+CTextureProperty::CTextureProperty(std::ifstream& InFile, const std::string& strName) : m_PropertyName(strName)
+{
+	std::string strToken;
+	FBXLoad::ReadStringFromFile(InFile, strToken);
+	if(strToken == "<Textures>:")
+		LoadTexturePropertyFromFile(InFile);
+}
+
+void CTextureProperty::LoadTexturePropertyFromFile(std::ifstream& InFile)
+{
+	int nTextures = FBXLoad::ReadFromFile<int>(InFile);
+	m_Textures.reserve(nTextures);
+	for (int i = 0; i < nTextures; ++i)
+	{
+		m_Textures.emplace_back(InFile);
+	}
+
+}
+
+void CTextureProperty::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	for (auto& Texture : m_Textures)
+		Texture.UpdateShaderVariable(pd3dCommandList);
+}
+
+void CTextureProperty::ReleaseUploadBuffers()
+{
+	for (auto& Texture : m_Textures)
+		Texture.ReleaseUploadBuffer();
+}
+
+void CTextureProperty::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
+{
+	m_Textures[0].CreateShaderResourceView(pd3dDevice, pDescriptorManager);
+}
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||| <CPhongModel> ||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+void CPhongModel::LoadShadingModelFromFile(std::ifstream& InFile)
+{
+	m_Ambient.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Ambient.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Ambient.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_Diffuse.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Diffuse.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Diffuse.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_Specular.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Specular.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Specular.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_Emissive.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Emissive.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Emissive.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_TransparencyFactor = FBXLoad::ReadFromFile<float>(InFile);
+	m_Shininess = FBXLoad::ReadFromFile<float>(InFile);
+	m_ReflectionFactor = FBXLoad::ReadFromFile<float>(InFile);
+
+}
+
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||| <CLambertModel> |||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+void CLambertModel::LoadShadingModelFromFile(std::ifstream& InFile)
+{
+	m_Ambient.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Ambient.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Ambient.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_Diffuse.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Diffuse.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Diffuse.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_Emissive.x = FBXLoad::ReadFromFile<float>(InFile);
+	m_Emissive.y = FBXLoad::ReadFromFile<float>(InFile);
+	m_Emissive.z = FBXLoad::ReadFromFile<float>(InFile);
+
+	m_TransparencyFactor = FBXLoad::ReadFromFile<float>(InFile);
+}
