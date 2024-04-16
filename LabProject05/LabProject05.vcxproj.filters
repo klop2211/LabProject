@@ -31,6 +31,9 @@
     <Filter Include="DescriptorManager">
       <UniqueIdentifier>{c828a261-6bf1-44ea-a179-b3fdd5e92d70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Material">
+      <UniqueIdentifier>{9119f1dc-f994-44fd-8a51-1ccce108ea60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -90,6 +93,12 @@
     <ClInclude Include="DescriptorManager.h">
       <Filter>DescriptorManager</Filter>
     </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Material</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -136,6 +145,12 @@
     </ClCompile>
     <ClCompile Include="DescriptorManager.cpp">
       <Filter>DescriptorManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Material</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

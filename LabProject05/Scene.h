@@ -75,9 +75,6 @@ protected:
 	std::vector<CGameObject*> m_Objects;
 	int	m_nObjects = 0;
 
-	ID3D12Resource* m_pd3dcbGameObjects = NULL;
-	UINT8* m_pcbMappedGameObjects = NULL;
-
 	// Light °ü¸®
 	LIGHTS* m_pLights = NULL;
 

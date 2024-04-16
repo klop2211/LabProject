@@ -195,11 +195,6 @@ void CScene::ReleaseShaderVariables()
 		m_pd3dcbLights->Unmap(0, NULL);
 		m_pd3dcbLights->Release();
 	}
-	if (m_pd3dcbGameObjects)
-	{
-		m_pd3dcbGameObjects->Unmap(0, NULL);
-		m_pd3dcbGameObjects->Release();
-	}
 }
 
 void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
