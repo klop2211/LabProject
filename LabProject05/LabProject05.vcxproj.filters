@@ -99,6 +99,9 @@
     <ClInclude Include="Material.h">
       <Filter>Material</Filter>
     </ClInclude>
+    <ClInclude Include="NetworkProtocol.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
