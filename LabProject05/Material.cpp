@@ -12,21 +12,21 @@ CTextureProperty::CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_Textures.back().LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
 }
 
-CTextureProperty::CTextureProperty(std::ifstream& InFile, const std::string& strName) : m_PropertyName(strName)
+CTextureProperty::CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, const std::string& strName) : m_PropertyName(strName)
 {
 	std::string strToken;
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 	if (strToken == "<Textures>:")
-		LoadTexturePropertyFromFile(InFile);
+		LoadTexturePropertyFromFile(pd3dDevice, pd3dCommandList, InFile);
 }
 
-void CTextureProperty::LoadTexturePropertyFromFile(std::ifstream& InFile)
+void CTextureProperty::LoadTexturePropertyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	int nTextures = FBXLoad::ReadFromFile<int>(InFile);
 	m_Textures.reserve(nTextures);
 	for (int i = 0; i < nTextures; ++i)
 	{
-		m_Textures.emplace_back(InFile);
+		m_Textures.emplace_back(pd3dDevice, pd3dCommandList, InFile);
 	}
 
 }
@@ -45,7 +45,8 @@ void CTextureProperty::ReleaseUploadBuffers()
 
 void CTextureProperty::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
 {
-	m_Textures[0].CreateShaderResourceView(pd3dDevice, pDescriptorManager);
+	if(m_Textures.size())
+		m_Textures[0].CreateShaderResourceView(pd3dDevice, pDescriptorManager);
 }
 
 
@@ -131,7 +132,7 @@ void CMaterial::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorM
 		Property.CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
 }
 
-void CMaterial::LoadTexturePropertiesFromFile(std::ifstream& InFile)
+void CMaterial::LoadTexturePropertiesFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	std::string strToken;
 
@@ -147,7 +148,7 @@ void CMaterial::LoadTexturePropertiesFromFile(std::ifstream& InFile)
 		FBXLoad::ReadStringFromFile(InFile, strToken); //strPropertyName
 		if (strToken != "Null")
 		{
-			m_TextureProperties.emplace_back(InFile, strToken);
+			m_TextureProperties.emplace_back(pd3dDevice, pd3dCommandList, InFile, strToken);
 		}
 	}
 }

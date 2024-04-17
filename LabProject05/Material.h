@@ -22,10 +22,10 @@ public:
 	// dds 파일로 텍스처 직접 추가
 	CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 	// fbx 파일을 익스포트한 bin 파일 로드
-	CTextureProperty(std::ifstream& InFile, const std::string& strName);
+	CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, const std::string& strName);
 	~CTextureProperty() {}
 
-	void LoadTexturePropertyFromFile(std::ifstream& InFile);
+	void LoadTexturePropertyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
@@ -116,7 +116,7 @@ public:
 
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
 
-	void LoadTexturePropertiesFromFile(std::ifstream& InFile);
+	void LoadTexturePropertiesFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
 	void AddTexturePropertyFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 

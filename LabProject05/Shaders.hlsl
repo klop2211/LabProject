@@ -87,10 +87,55 @@ float4 PSSkinAnimationDiffused(VS_SKIN_ANIMATION_DIFFUSED_OUTPUT input) : SV_TAR
     return (float4(0.0, 1.0, 0.0, 1.0));
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+Texture2D gtxtDiffuseColor : register(t0);
+SamplerState gssWrap : register(s0);
+
+struct VS_STANDARD_INPUT
+{
+    float3 position : POSITION;
+    float2 uv : TEXCOORD;
+    int4 indices : BONEINDEX;
+    float4 weights : BONEWEIGHT;
+
+};
+
+struct VS_STANDARD_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
+{
+    VS_STANDARD_OUTPUT output;
+
+    float3 positionW = float3(0.0f, 0.0f, 0.0f);
+    for (int i = 0; i < MAX_VERTEX_INFLUENCES; i++)
+    {
+        positionW += input.weights[i] * mul(mul(float4(input.position, 1.0f), gpmtxBoneOffsets[input.indices[i]]), gpmtxBoneTransforms[input.indices[i]]).xyz;
+    }
+    
+    output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
+    output.uv = input.uv;
+    return (output);
+}
+
+float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
+{
+    float4 Color = gtxtDiffuseColor.Sample(gssWrap, input.uv);
+        
+    return (Color);
+}
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //#define _WITH_VERTEX_LIGHTING
 
 
@@ -140,7 +185,6 @@ float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
 
 Texture2D gtxtTerrainTexture : register(t17);
 Texture2D gtxtDetailTexture : register(t18);
-SamplerState gssWrap : register(s0);
 
 struct VS_TERRAIN_INPUT
 {

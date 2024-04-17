@@ -73,7 +73,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 {
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
 
-	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[3];
+	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[4];
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	pd3dDescriptorRanges[0].RegisterSpace = 0;
 	pd3dDescriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -92,7 +92,13 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[2].BaseShaderRegister = 18; //Texture(base)
 	pd3dDescriptorRanges[2].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[7];
+	pd3dDescriptorRanges[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	pd3dDescriptorRanges[3].RegisterSpace = 0;
+	pd3dDescriptorRanges[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	pd3dDescriptorRanges[3].BaseShaderRegister = 0; //Texture(DiffuseColor)
+	pd3dDescriptorRanges[3].NumDescriptors = 1;
+
+	D3D12_ROOT_PARAMETER pd3dRootParameters[8];
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 0; //Camera
 	pd3dRootParameters[0].Descriptor.RegisterSpace = 0;
@@ -129,6 +135,10 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[6].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[2];
 	pd3dRootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	pd3dRootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	pd3dRootParameters[7].DescriptorTable.NumDescriptorRanges = 1; //DiffuseColor Texuture
+	pd3dRootParameters[7].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[3];
+	pd3dRootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 
 	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs;
@@ -231,7 +241,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_nShaders = 2;			// 조명 O, X 각각 1개씩
 	m_ppShaders = new CShader*[m_nShaders];
 
-	m_ppShaders[0] = new CAnimationWireframeShader;
+	m_ppShaders[0] = new CStandardShader;
 	//m_ppShaders[1] = new CIlluminatedShader;
 	m_ppShaders[1] = new CTerrainShader;
 
@@ -241,7 +251,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_nObjects = 2;		// Player + Terrain
 
 	m_pDescriptorManager = new CDescriptorManager;
-	m_pDescriptorManager->SetDescriptors(1 + 2); // 조명(cbv), 텍스처
+	m_pDescriptorManager->SetDescriptors(1 + 4); // 조명(cbv), 텍스처
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = m_pDescriptorManager->GetDescriptors();		
@@ -268,7 +278,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	m_Objects[0] = (CGameObject*)m_pPlayer;
-	m_Objects[0]->SetShader(3);
+	m_Objects[0]->SetShader(4);
 	m_Objects[0]->SetPosition(500, m_pTerrain->GetHeight(500, 500), 500);
 
 

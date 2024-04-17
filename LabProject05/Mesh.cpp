@@ -107,6 +107,28 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 
 			delete[] pVertices;
 		}
+		else if (strToken == "<UVs>:")
+		{
+			FBXLoad::ReadFromFile<int>(InFile); // nControlPoints
+			FBXLoad::ReadFromFile<int>(InFile); // UVs Per Polygon's Vertex
+
+			FBXLoad::ReadStringFromFile(InFile, strToken); // "<UV>:"
+
+			FBXLoad::ReadFromFile<int>(InFile); //index?
+			
+			XMFLOAT2* pUVs = new XMFLOAT2[m_nVertices];
+
+			FBXLoad::ReadFromFile<XMFLOAT2>(InFile, pUVs, m_nVertices);
+
+			m_pd3dUVBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pUVs,
+				sizeof(XMFLOAT2) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT,
+				D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
+
+			m_d3dUVBufferView.BufferLocation = m_pd3dUVBuffer->GetGPUVirtualAddress();
+			m_d3dUVBufferView.StrideInBytes = sizeof(XMFLOAT2);
+			m_d3dUVBufferView.SizeInBytes = sizeof(XMFLOAT2) * m_nVertices;
+
+		}
 		else if (strToken == "<Polygons>:")
 		{
 			int nPolygons = FBXLoad::ReadFromFile<int>(InFile);
@@ -149,8 +171,19 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 				delete[] ppIndices;
 			}
 		}
-
 	}
+	CreateInputBufferView();
+}
+
+void CMesh::CreateInputBufferView()
+{
+	if (m_pd3dVertexBuffer)
+		m_d3dInputBufferViews.emplace_back(m_d3dVertexBufferView);
+	if (m_pd3dUVBuffer)
+		m_d3dInputBufferViews.emplace_back(m_d3dUVBufferView);
+
+	//TODO: 텍스처 관련 버퍼 추가(normal, bitangent, tangent)
+
 }
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -474,9 +507,7 @@ void CSkinMesh::SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 void CSkinMesh::OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	//TODO: 텍스처 관련 버퍼 추가(UV, normal, bitangent, tangent)
-	D3D12_VERTEX_BUFFER_VIEW pVertexBufferViews[3] = { m_d3dVertexBufferView, m_BoneIndicesBufferView, m_BoneWeightBufferView };
-	pd3dCommandList->IASetVertexBuffers(m_nSlot, 3, pVertexBufferViews);
+	pd3dCommandList->IASetVertexBuffers(m_nSlot, m_d3dInputBufferViews.size(), m_d3dInputBufferViews.data());
 }
 
 void CSkinMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
@@ -494,7 +525,7 @@ void CSkinMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList
 
 		for (int j = 0; j < m_BoneFrameCaches.size(); j++)
 		{
-			XMStoreFloat4x4(&m_pxmf4x4MappedSkinningBoneTransforms[j], XMMatrixTranspose(XMLoadFloat4x4(&m_BoneFrameCaches[j]->GetWorldMT())));
+			XMStoreFloat4x4(&m_pxmf4x4MappedSkinningBoneTransforms[j], XMMatrixTranspose(XMLoadFloat4x4(&m_BoneFrameCaches[j]->GetWorldMatrix())));
 		}
 	}
 
@@ -512,4 +543,12 @@ void CSkinMesh::ReleaseUploadBuffers()
 
 	if (m_pBoneWeightUploadBuffer) m_pBoneWeightUploadBuffer->Release();
 	m_pBoneWeightUploadBuffer = NULL;
+}
+
+void CSkinMesh::CreateInputBufferView()
+{
+	CMesh::CreateInputBufferView();
+
+	m_d3dInputBufferViews.emplace_back(m_BoneIndicesBufferView);
+	m_d3dInputBufferViews.emplace_back(m_BoneWeightBufferView);
 }

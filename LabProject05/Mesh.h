@@ -107,8 +107,10 @@ public:
 };
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||| <CMesh> ||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 class CMesh
 {
 public:
@@ -129,14 +131,20 @@ public:
 	int GetType() { return m_nType; }
 
 protected:
-	ID3D12Resource					*m_pd3dVertexBuffer = NULL;
-	ID3D12Resource					*m_pd3dVertexUploadBuffer = NULL;
+	ID3D12Resource* m_pd3dVertexBuffer = NULL;
+	ID3D12Resource* m_pd3dVertexUploadBuffer = NULL;
 
-	ID3D12Resource					**m_ppd3dIndexBuffers = NULL;
-	ID3D12Resource					**m_ppd3dIndexUploadBuffers = NULL;
+	ID3D12Resource* m_pd3dUVBuffer = NULL;
+	ID3D12Resource* m_pd3dUVUploadBuffer = NULL;
+
+	ID3D12Resource** m_ppd3dIndexBuffers = NULL;
+	ID3D12Resource** m_ppd3dIndexUploadBuffers = NULL;
 
 	D3D12_VERTEX_BUFFER_VIEW		m_d3dVertexBufferView;
+	D3D12_VERTEX_BUFFER_VIEW		m_d3dUVBufferView;
 	D3D12_INDEX_BUFFER_VIEW*		m_pd3dIndexBufferViews;
+
+	std::vector<D3D12_VERTEX_BUFFER_VIEW> m_d3dInputBufferViews;
 
 	D3D12_PRIMITIVE_TOPOLOGY		m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	UINT							m_nSlot = 0;
@@ -160,10 +168,12 @@ public:
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) {}
 
 	void LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& pInFile);
+
+	virtual void CreateInputBufferView();
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//||||||||||||||||||||||||||||||||||||||||||||||||| <CSkinMesh> |||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||| <CSkinMesh> ||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 #define SKINNED_ANIMATION_BONES 128
@@ -183,6 +193,8 @@ public:
 
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void ReleaseUploadBuffers();
+
+	virtual void CreateInputBufferView();
 
 private:
 	std::vector<std::string> m_BoneNames;

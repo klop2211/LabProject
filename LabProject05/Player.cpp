@@ -194,7 +194,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	SetShader((int)ShaderNum::AnimationWireframe);
+	SetShader((int)ShaderNum::Standard);
 }
 
 void CEllenPlayer::OnPrepareRender()

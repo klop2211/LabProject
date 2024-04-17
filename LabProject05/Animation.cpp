@@ -175,9 +175,9 @@ void CAnimationSet::Animate(const float& fPosition, const float& fTrackWeight)
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
-			Frame->m_xmf3BlendedScale = Vector3::Add(Frame->m_xmf3BlendedScale, Frame->m_xmf3Scale, fTrackWeight);
-			Frame->m_xmf3BlendedRotation = Vector3::Add(Frame->m_xmf3BlendedRotation, Frame->m_xmf3Rotation, fTrackWeight);
-			Frame->m_xmf3BlendedTranslation = Vector3::Add(Frame->m_xmf3BlendedTranslation, Frame->m_xmf3Translation, fTrackWeight);
+			Frame->SetBlendedScale(Vector3::Add(Frame->GetBlendedScale(), Frame->GetScale(), fTrackWeight));
+			Frame->SetBlendedRotation(Vector3::Add(Frame->GetBlendedRotation(), Frame->GetRotation(), fTrackWeight));
+			Frame->SetBlendedTranslation(Vector3::Add(Frame->GetBlendedTranslation(), Frame->GetTranslation(), fTrackWeight));
 		}
 	}
 
@@ -190,10 +190,7 @@ void CAnimationSet::UpdateMatrix()
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
-			XMMATRIX S = XMMatrixScaling(Frame->m_xmf3BlendedScale.x, Frame->m_xmf3BlendedScale.y, Frame->m_xmf3BlendedScale.z);
-			XMMATRIX R = XMMatrixMultiply(XMMatrixMultiply(XMMatrixRotationX(Frame->m_xmf3BlendedRotation.x), XMMatrixRotationY(Frame->m_xmf3BlendedRotation.y)), XMMatrixRotationZ(Frame->m_xmf3BlendedRotation.z));
-			XMMATRIX T = XMMatrixTranslation(Frame->m_xmf3BlendedTranslation.x, Frame->m_xmf3BlendedTranslation.y, Frame->m_xmf3BlendedTranslation.z);
-			XMStoreFloat4x4(&Frame->m_xmf4x4ToParent, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
+			Frame->UpdateMatrixByBlendedSRT();
 		}
 	}
 	
@@ -245,8 +242,11 @@ void CAnimationLayer::UpdateFrameCachesSRT(const float& fPosition)
 	for (int i = 0 ; i < m_Curves.size(); ++i)
 	{
 		CGameObject* pFrameCache = m_FrameCaches[i];
-		m_Curves[i].GetAnimatedSRT(fPosition, m_fWeight,
-			&pFrameCache->m_xmf3Scale, &pFrameCache->m_xmf3Rotation, &pFrameCache->m_xmf3Translation);
+		XMFLOAT3 S, R, T;
+		m_Curves[i].GetAnimatedSRT(fPosition, m_fWeight, &S, &R, &T);
+		pFrameCache->SetScale(S);
+		pFrameCache->SetRotation(R);
+		pFrameCache->SetTranslation(T);
 	}
 }
 

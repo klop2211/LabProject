@@ -150,6 +150,14 @@ XMFLOAT3 CGameObject::GetRight()
 	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4ToParent._11, m_xmf4x4ToParent._12, m_xmf4x4ToParent._13)));
 }
 
+void CGameObject::UpdateMatrixByBlendedSRT()
+{
+	XMMATRIX S = XMMatrixScaling(m_xmf3BlendedScale.x, m_xmf3BlendedScale.y, m_xmf3BlendedScale.z);
+	XMMATRIX R = XMMatrixMultiply(XMMatrixMultiply(XMMatrixRotationX(m_xmf3BlendedRotation.x), XMMatrixRotationY(m_xmf3BlendedRotation.y)), XMMatrixRotationZ(m_xmf3BlendedRotation.z));
+	XMMATRIX T = XMMatrixTranslation(m_xmf3BlendedTranslation.x, m_xmf3BlendedTranslation.y, m_xmf3BlendedTranslation.z);
+	XMStoreFloat4x4(&m_xmf4x4ToParent, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
+}
+
 void CGameObject::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
 {
 	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
@@ -200,7 +208,7 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if (m_pSibling) m_pSibling->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
-void CGameObject::LoadMaterialFromFile(std::ifstream& InFile)
+void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	int nMaterials = FBXLoad::ReadFromFile<int>(InFile);
 	m_Materials.reserve(nMaterials);
@@ -209,6 +217,9 @@ void CGameObject::LoadMaterialFromFile(std::ifstream& InFile)
 
 	for (int i = 0; i < nMaterials; ++i)
 	{
+
+		FBXLoad::ReadStringFromFile(InFile, strToken);
+
 		FBXLoad::ReadFromFile<int>(InFile);
 
 		FBXLoad::ReadStringFromFile(InFile, strToken);
@@ -219,7 +230,7 @@ void CGameObject::LoadMaterialFromFile(std::ifstream& InFile)
 
 		FBXLoad::ReadStringFromFile(InFile, strToken); // <TextureProperties>: 
 
-		pMaterial->LoadTexturePropertiesFromFile(InFile);
+		pMaterial->LoadTexturePropertiesFromFile(pd3dDevice, pd3dCommandList, InFile);
 
 		m_Materials.emplace_back(pMaterial);
 
@@ -290,7 +301,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 		}
 		else if (strToken == "<Materials>:")
 		{
-			rvalue->LoadMaterialFromFile(InFile);
+			rvalue->LoadMaterialFromFile(pd3dDevice, pd3dCommandList, InFile);
 		}
 		else if (strToken == "<Children>:")
 		{

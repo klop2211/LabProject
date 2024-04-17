@@ -11,13 +11,13 @@ CTexture::CTexture()
 
 }
 
-CTexture::CTexture(std::ifstream& InFile)
+CTexture::CTexture(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	std::string strToken;
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 
 	if (strToken == "<Texture>:")
-		LoadTextureFromFile(InFile);
+		LoadTextureFromFile(pd3dDevice, pd3dCommandList, InFile);
 }
 
 CTexture::~CTexture()
@@ -51,7 +51,7 @@ void CTexture::ReleaseShaderVariables()
 
 }
 
-void CTexture::LoadTextureFromFile(std::ifstream& InFile)
+void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	FBXLoad::ReadFromFile<int>(InFile); //index
 
@@ -64,6 +64,10 @@ void CTexture::LoadTextureFromFile(std::ifstream& InFile)
 
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 	m_strTextureFileName = strToken;
+	m_strTextureFileName = "../Resource/Model/Texture/" + m_strTextureFileName.substr(0, m_strTextureFileName.size() - 3) + "dds";
+
+	//TODO: 루트마라미터 인덱스 관련 상수 정리
+	LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, m_strTextureFileName, TextureType::RESOURCE_TEXTURE2D, 7); 
 
 	m_UVScale.x = FBXLoad::ReadFromFile<float>(InFile);
 	m_UVScale.y = FBXLoad::ReadFromFile<float>(InFile);

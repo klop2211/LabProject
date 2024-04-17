@@ -866,7 +866,7 @@ void WriteMesh(FbxMesh *pfbxMesh)
 	{
 		WriteControlPoints(pfbxMesh, nControlPoints);
 
-		//WriteControlPointUVs(pfbxMesh, nControlPoints);
+		WriteControlPointUVs(pfbxMesh, nControlPoints);
 		//WriteControlPointNormals(pfbxMesh, nControlPoints);
 		//WriteControlPointTangents(pfbxMesh, nControlPoints);
 		//WriteControlPointBiTangents(pfbxMesh, nControlPoints);
@@ -1063,7 +1063,7 @@ void WriteHierarchy(int *pnFrame, FbxNode *pfbxNode)
 			WriteMesh(pfbxMesh);
 			WriteString("</Mesh>");
 
-			//WriteMaterials(pfbxMesh);
+			WriteMaterials(pfbxMesh);
 			//WriteTexture(pfbxMesh);
 		}
 	}
