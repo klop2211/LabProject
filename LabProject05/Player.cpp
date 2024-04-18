@@ -129,8 +129,12 @@ void CPlayer::Update(float elapsed_time)
 	if (orient_rotation_to_movement_)
 	{
 		//TODO: 회전 방향을 최단 각도로 해봅시다
-		float yaw = Vector3::Angle(look_vector(), movement_component_->direction_vector());
-		if(yaw > 0.1)
+		XMFLOAT3 v = look_vector(), d = movement_component_->direction_vector(), u = XMFLOAT3(0.f,1.f,0.f);
+		float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+		float yaw = Vector3::Angle(v, d);
+		if (result > 0)
+			yaw *= -1;
+		if(!IsZero(yaw))
 			rotation_component_->Rotate(0.f, yaw * 6.f * elapsed_time, 0.f);
 	}
 
