@@ -19,6 +19,15 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
+
+int g_myid;
+SOCKET g_server_socket;
+SOCKADDR_IN g_server_a;
+std::string avatar_name;
+WSAOVERLAPPED g_wsaover;
+
+
+//#define ENTERIP
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -42,6 +51,49 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_LABPROJECT05));
 
     MSG msg;
+
+    //==============================================
+    // 서버 초기화 작업
+    //==============================================
+
+    std::cout << "Enter User Name : ";
+    //std::cin >> avatar_name;
+    avatar_name = "Temp01";
+#ifdef ENTERIP
+    char SERVER_ADDR[BUFSIZE];
+    std::cout << "\nEnter IP Address : ";
+    std::cin.getline(SERVER_ADDR, BUFSIZE);
+#endif
+    char SERVER_ADDR[BUFSIZE] = "127.0.0.1";
+    
+    int res;
+    std::wcout.imbue(std::locale("korean"));
+    WSADATA WSAData;
+    res = WSAStartup(MAKEWORD(2, 2), &WSAData);
+    if(0 != res)
+    {
+        print_error("WSAStartup", WSAGetLastError());
+    }
+    g_server_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+    g_server_a.sin_family = AF_INET;
+    g_server_a.sin_port = htons(PORT);
+
+    inet_pton(AF_INET, SERVER_ADDR, &g_server_a.sin_addr);
+    res = connect(g_server_socket, reinterpret_cast<sockaddr*>(&g_server_a), sizeof(g_server_a));
+    if (SOCKET_ERROR == res)
+    {
+        print_error("Connect", WSAGetLastError());
+        closesocket(g_server_socket);
+        WSACleanup();
+    }
+
+    // 해당 로그인 부분은 로그인 서버 완성시 그쪽으로 옮겨질 코드
+    CS_LOGIN_PACKET p;
+    p.size = sizeof(p);
+    p.type = CS_LOGIN;
+    strcpy_s(p.name, avatar_name.c_str());
+    send_packet(&p);
+    
 
     while (1)
     {

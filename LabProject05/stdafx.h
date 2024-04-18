@@ -72,10 +72,11 @@ using Microsoft::WRL::ComPtr;
 
 //#define _WITH_SWAPCHAIN_FULLSCREEN_STATE
 
-//================ Network header ================
+//================ Network =======================
+#include <iostream>
 #include <WS2tcpip.h>
 #include <MSWSock.h>
-
+#include "NetworkProtocol.h"
 
 #pragma comment(lib, "WS2_32.lib")
 #pragma comment(lib, "MSWSock.lib")
@@ -86,6 +87,19 @@ constexpr int MAX_USER = 4;
 
 enum COMP_TYPE { OP_ACCEPT, OP_RECV, OP_SEND };
 enum class S_STATE { ST_FREE, ST_ALLOC, ST_INGAME };
+
+
+extern int g_myid;
+extern SOCKET g_server_socket;
+extern SOCKADDR_IN g_server_a;
+extern std::string avatar_name;
+extern WSAOVERLAPPED g_wsaover;
+
+void print_error(const char* msg, int err_no);
+void send_packet(void* packet);
+void process_data(char* net_buf, size_t io_byte);
+
+
 //================================================
 
 
