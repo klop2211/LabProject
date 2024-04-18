@@ -4,6 +4,8 @@
 //TODO: 구글 명명법으로 작업 시작
 class CRotationComponent : public CComponent
 {
+	float rotate_speed_ = 360.f; // degree/s
+	
 	bool orient_rotation_to_movement_ = false;
 
 	bool use_pitch_ = true;
@@ -18,6 +20,7 @@ public:
 	CRotationComponent() {}
 	CRotationComponent(CGameObject* owner) : CComponent(owner) {}
 
+	float yaw() const { return yaw_; }
 	void set_pitch(const float& value) { pitch_ = value; }
 	void set_yaw(const float& value) { yaw_ = value; }
 	void set_roll(const float& value) { roll_ = value; }
