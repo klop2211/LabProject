@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "Animation.h"
 #include "MovementComponent.h"
+#include "RotationComponent.h"
 #include "Camera.h"
 #include "Mesh.h"
 
@@ -15,11 +16,7 @@
 
 CPlayer::CPlayer()
 {
-	m_pCamera = NULL;
-
-	m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	camera_ = NULL;
 
 	m_fSpeed = 0.f;
 
@@ -41,46 +38,62 @@ CPlayer::~CPlayer()
 {
 	ReleaseShaderVariables();
 
-	if (m_pCamera) delete m_pCamera;
+	if (camera_) delete camera_;
 }
 
 void CPlayer::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	if (m_pCamera) m_pCamera->CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	if (camera_) camera_->CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
 void CPlayer::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	if (m_pCamera) m_pCamera->UpdateShaderVariables(pd3dCommandList);
+	if (camera_) camera_->UpdateShaderVariables(pd3dCommandList);
 }
 
 void CPlayer::ReleaseShaderVariables()
 {
-	if (m_pCamera) m_pCamera->ReleaseShaderVariables();
+	if (camera_) camera_->ReleaseShaderVariables();
 }
 
 void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTime)
 {
-	switch (m_pCamera->GetMode())
+	switch (camera_->GetMode())
 	{
 	case CameraMode::GHOST:
-		((CGhostCamera*)m_pCamera)->Move(dwDirection, fElapsedTime);
+		((CGhostCamera*)camera_)->Move(dwDirection, fElapsedTime);
 		break;
 	case CameraMode::THIRD_PERSON:
 	case CameraMode::FIRST_PERSON:
 	{
-		XMFLOAT3 xmf3Direction = XMFLOAT3(0.f, 0.f, 0.f);
+		XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 		if (dwDirection)
 		{
-			if (dwDirection & DIR_FORWARD) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Look);
-			if (dwDirection & DIR_BACKWARD) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Look, -1.f);
-			if (dwDirection & DIR_LEFT) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Right, -1.f);
-			if (dwDirection & DIR_RIGHT) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Right);
-			if (dwDirection & DIR_UP) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Up);
-			if (dwDirection & DIR_DOWN) xmf3Direction = Vector3::Add(xmf3Direction, m_xmf3Up, -1.f);
+			if (orient_rotation_to_movement_)
+			{
+				float yaw = camera_->GetYaw();
+
+				if (dwDirection & DIR_BACKWARD) yaw += 180;
+				if (dwDirection & DIR_LEFT) yaw -= 90;
+				if (dwDirection & DIR_RIGHT) yaw += 90;
+
+				rotation_component_->set_yaw(yaw);
+				rotation_component_->Update(0.f);
+				direction_vector = look_vector();
+			}
+			else
+			{
+				XMFLOAT3 look = look_vector(), right = right_vector();
+				if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
+				if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
+				if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
+				if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
+			}
 		}
-		if (m_pMovementComponent)
-			m_pMovementComponent->SetDirection(xmf3Direction);
+		if (movement_component_)
+		{
+			movement_component_->set_direction_vector(direction_vector);
+		}
 	}
 		break;
 	default:
@@ -89,50 +102,32 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 
 }
 
-void CPlayer::OnRotate()
+void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time)
 {
-	m_bRotate = true;
-	if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
+	if (camera_) camera_->Rotate(delta_xy.y, delta_xy.x, 0.f);
+
+	if (camera_->GetMode() == CameraMode::GHOST) return;
+
+	if (orient_rotation_to_movement_) return;
+
+	// 플레이어의 default 회전은 roll 회전을 하지 않음
+	if (rotation_component_)
+		rotation_component_->Rotate(delta_xy.y, delta_xy.x, 0.f);
+}
+
+void CPlayer::Update(float elapsed_time)
+{
+	if (movement_component_)
+		movement_component_->Update(elapsed_time);
+
+	if (rotation_component_)
+		rotation_component_->Update(elapsed_time);
+
+	if (camera_->GetMode() == CameraMode::THIRD_PERSON)
 	{
-		CThirdPersonCamera* pCamera = (CThirdPersonCamera*)m_pCamera;
-		pCamera->ResetFromPlayer();
+		camera_->Update(elapsed_time);
 	}
-}
-
-void CPlayer::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
-{
-	if (m_pCamera) m_pCamera->Rotate(fPitch, fYaw, fRoll);
-
-	if (!m_bRotate) return;
-
-	m_fPitch += fPitch;
-	m_fYaw += fYaw;
-	m_fRoll += fRoll;
-
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.f), XMConvertToRadians(fYaw), XMConvertToRadians(0.f));
-	m_xmf3Look = Vector3::TransformNormal(m_xmf3Look, mtxRotate);
-	m_xmf3Right = Vector3::CrossProduct(m_xmf3Up, m_xmf3Look, true);
-	m_xmf3Up = Vector3::CrossProduct(m_xmf3Look, m_xmf3Right, true);
-
-}
-
-void CPlayer::Update(float fTimeElapsed)
-{
-	if (m_pMovementComponent)
-		m_pMovementComponent->Update(fTimeElapsed);
-
-	if (m_pCamera->GetMode() == CameraMode::THIRD_PERSON)
-	{
-		m_pCamera->Update(fTimeElapsed);
-	}
-	m_pCamera->RegenerateViewMatrix();
-}
-
-void CPlayer::OnPrepareRender()
-{
-	m_xmf4x4ToParent._11 = m_xmf3Right.x; m_xmf4x4ToParent._12 = m_xmf3Right.y; m_xmf4x4ToParent._13 = m_xmf3Right.z;
-	m_xmf4x4ToParent._21 = m_xmf3Up.x; m_xmf4x4ToParent._22 = m_xmf3Up.y; m_xmf4x4ToParent._23 = m_xmf3Up.z;
-	m_xmf4x4ToParent._31 = m_xmf3Look.x; m_xmf4x4ToParent._32 = m_xmf3Look.y; m_xmf4x4ToParent._33 = m_xmf3Look.z;
+	camera_->RegenerateViewMatrix();
 }
 
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
@@ -151,7 +146,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) 
 {
 	m_xmf4x4World = Matrix4x4::Identity();
-	m_xmf4x4ToParent = Matrix4x4::Identity();
+	to_parent_matrix_ = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
 	std::ifstream InFile("../Resource/Model/Mawang_Zup.bin", std::ios::binary);
@@ -188,24 +183,20 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	m_fSpeed = 1000.f;
 
-	m_pMovementComponent = new CMovementComponent((CGameObject*)this, XMFLOAT3(0.f,0.f,0.f), m_fSpeed);
+	movement_component_ = new CMovementComponent((CGameObject*)this, XMFLOAT3(0.f,0.f,0.f), m_fSpeed);
+	rotation_component_ = new CRotationComponent((CGameObject*)this);
+
+	rotation_component_->set_use_pitch(false);
+
+	axis_transform_matrix_ = new XMFLOAT4X4
+	(	1,0,0,0,
+		0,0,-1,0,
+		0,1,0,0,
+		0,0,0,1 );
 
 	SetCamera(pCamera);
 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	SetShader((int)ShaderNum::Standard);
-}
-
-void CEllenPlayer::OnPrepareRender()
-{
-	CPlayer::OnPrepareRender();
-	XMFLOAT4X4 xmf4x4AxisTransform = XMFLOAT4X4
-	{	1,0,0,0,
-		0,0,-1,0,
-		0,1,0,0,
-		0,0,0,1 };
-
-	m_xmf4x4ToParent = Matrix4x4::Multiply(xmf4x4AxisTransform, m_xmf4x4ToParent);
-
 }

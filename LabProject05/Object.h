@@ -22,13 +22,17 @@ class CGameObject
 {	
 protected:
 	std::vector<CMaterial*> m_Materials;
+	
+	// 모델의 좌표축이 다이렉트 환경과 다를 경우 사용되는 행렬로 루트 오브젝트의 to_parent 행렬 앞에 이 행렬을 곱해준다(UpdateTransform 함수 참조)
+	XMFLOAT4X4* axis_transform_matrix_;
+
 
 	XMFLOAT4X4 m_xmf4x4World; // 최종적으로 셰이더에 입력되는 행렬(ToParent 행렬과 부모의 World 행렬의 곱의 결과이다)
 
 	//Heirarchy 구조 관련 변수
 	std::string m_strFrameName;
 
-	XMFLOAT4X4 m_xmf4x4ToParent; 
+	XMFLOAT4X4 to_parent_matrix_;
 
 	XMFLOAT3 m_xmf3Scale;
 	XMFLOAT3 m_xmf3Rotation;
@@ -55,11 +59,18 @@ public:
 
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
+	void set_look_vector(const float& x, const float& y, const float& z);
+	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
+	void set_right_vector(const float& x, const float& y, const float& z);
+	void set_right_vector(const XMFLOAT3& right) { set_right_vector(right.x, right.y, right.z); }
+	void set_up_vector(const float& x, const float& y, const float& z);
+	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
+	void set_position_vector(const float& x, const float& y, const float& z);
+	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
+
 	virtual void SetMesh(CMesh* pMesh);
 	void SetShader(const int& nShader) { m_nShader = nShader; }
 	void SetMaterial(const int& index, CMaterial* pMaterial);
-	void SetPosition(const float& x, const float& y, const float& z);
-	void SetPosition(XMFLOAT3 xmf3Position);
 	void SetChild(CGameObject* pChild);
 	void SetBlendedScale(const XMFLOAT3& xmf3Value) { m_xmf3BlendedScale = xmf3Value; }
 	void SetBlendedRotation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedRotation = xmf3Value; }
@@ -68,10 +79,11 @@ public:
 	void SetRotation(const XMFLOAT3& xmf3Value) { m_xmf3Rotation = xmf3Value; }
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
 
-	XMFLOAT3 GetPosition();
-	XMFLOAT3 GetLook();
-	XMFLOAT3 GetUp();
-	XMFLOAT3 GetRight();
+	XMFLOAT3 position_vector() const;
+	XMFLOAT3 look_vector() const;
+	XMFLOAT3 up_vector() const;
+	XMFLOAT3 right_vector() const;
+
 	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
 	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
 	XMFLOAT3 GetRotation() const { return m_xmf3Rotation; }
@@ -81,10 +93,6 @@ public:
 	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
 
 	void UpdateMatrixByBlendedSRT();
-
-	//TODO: Rotation Component를 제작해서 사용하자
-	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
-	void Rotate(XMFLOAT3* pxmf3Axis, float fAngle);
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);

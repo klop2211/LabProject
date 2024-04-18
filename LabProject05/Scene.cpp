@@ -227,8 +227,8 @@ void CScene::AnimateObjects(float fTimeElapsed)
 
 	if (m_pLights)
 	{
-		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->GetPosition();
-		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->GetLookVector();
+		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->position_vector();
+		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->look_vector();
 	}
 }
 
@@ -279,7 +279,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	m_Objects[0] = (CGameObject*)m_pPlayer;
 	m_Objects[0]->SetShader(4);
-	m_Objects[0]->SetPosition(500, m_pTerrain->GetHeight(500, 500), 500);
+	m_Objects[0]->set_position_vector(500, m_pTerrain->GetHeight(500, 500), 500);
 
 
 	m_Objects[1] = (CGameObject*)m_pTerrain;

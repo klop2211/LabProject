@@ -3,15 +3,11 @@
 #include "Object.h"
 
 class CMovementComponent;
+class CRotationComponent;
 
 class CPlayer : public CGameObject
 {
 protected:
-	XMFLOAT3					m_xmf3Right;
-	XMFLOAT3					m_xmf3Up;
-	XMFLOAT3					m_xmf3Look;
-
-	bool						m_bRotate = true;
 	float           			m_fPitch;
 	float           			m_fYaw;
 	float           			m_fRoll;
@@ -27,18 +23,18 @@ protected:
 	LPVOID						m_pPlayerUpdatedContext;
 	LPVOID						m_pCameraUpdatedContext;
 
-	CCamera* m_pCamera = NULL;
+	CCamera* camera_ = NULL;
 
 	//Components
-	CMovementComponent* m_pMovementComponent = NULL;
+	CMovementComponent* movement_component_ = NULL;
+	CRotationComponent* rotation_component_ = NULL;
+
+	bool orient_rotation_to_movement_ = true;
+
 
 public:
 	CPlayer();
 	virtual ~CPlayer();
-
-	XMFLOAT3 GetLookVector() { return(m_xmf3Look); }
-	XMFLOAT3 GetUpVector() { return(m_xmf3Up); }
-	XMFLOAT3 GetRightVector() { return(m_xmf3Right); }
 
 	void SetFriction(float fFriction) { m_fFriction = fFriction; }
 	void SetGravity(const XMFLOAT3& xmf3Gravity) { m_xmf3Gravity = xmf3Gravity; }
@@ -51,15 +47,11 @@ public:
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
 
-	void InputActionMove(const DWORD& dwDirection, const float& fElapsedTime);
+	void InputActionMove(const DWORD& dwDirection, const float& elapsed_time);
+	void InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time);
 
-	CCamera *GetCamera() { return(m_pCamera); }
-	void SetCamera(CCamera *pCamera) { m_pCamera = pCamera; }
-
-	bool IsRotate() const { return m_bRotate; }
-	void OnRotate();
-	void OffRotate() { m_bRotate = false; }
-	virtual void Rotate(const float& fPitch, const float& fYaw, const float& fRoll);
+	CCamera *GetCamera() { return(camera_); }
+	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }
 
 	void Update(float fTimeElapsed);
 
@@ -76,7 +68,7 @@ public:
 	CCamera* OnChangeCamera(DWORD nNewCameraMode, DWORD nCurrentCameraMode);
 
 	virtual CCamera* ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed) { return(NULL); }
-	virtual void OnPrepareRender();
+	virtual void OnPrepareRender() {}
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
 };
@@ -85,8 +77,6 @@ class CEllenPlayer : public CPlayer
 {
 public:
 	CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-
-	virtual void OnPrepareRender();
 };
 
 

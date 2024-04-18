@@ -2,25 +2,25 @@
 #include "MovementComponent.h"
 #include "Object.h"
 
-CMovementComponent::CMovementComponent(CGameObject* pOwner, const XMFLOAT3& xmf3Direction, const float& fVelocity) 
-	: CComponent(pOwner), m_xmf3Direction(xmf3Direction), m_fVelocity(fVelocity)
+CMovementComponent::CMovementComponent(CGameObject* owner, const XMFLOAT3& direction, const float& velocity) 
+	: CComponent(owner), direction_vector_(direction), velocity_(velocity)
 {
 
 }
 
 void CMovementComponent::Update(const float& fElapsedTime)
 {
-
-	m_xmf3Direction = Vector3::Normalize(m_xmf3Direction);
-	XMFLOAT3 xmf3NewPosition = Vector3::Add(m_pOwner->GetPosition(), m_xmf3Direction, fElapsedTime * m_fVelocity);
+	direction_vector_ = Vector3::Normalize(direction_vector_);
+	XMFLOAT3 xmf3NewPosition = Vector3::Add(owner_->position_vector(), direction_vector_, fElapsedTime * velocity_);
 
 	if (m_bGravity)
 	{
+		//TODO: 중력 구현하기
 		//float tt = fElapsedTime * fElapsedTime;
 		//float temp = fElapsedTime * m_fGravityVelocity + (float)0.5 * m_fGravityAcceleration * tt;
 		//xmf3NewPosition = Vector3::Add(xmf3NewPosition, m_cxmf3GravityDirection, temp);
 		//m_fGravityVelocity += fElapsedTime * m_fGravityAcceleration;
 	}
 
-	m_pOwner->SetPosition(xmf3NewPosition);
+	owner_->set_position_vector(xmf3NewPosition);
 }
