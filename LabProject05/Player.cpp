@@ -69,16 +69,31 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 		XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 		if (dwDirection)
 		{
-			XMFLOAT3 look = look_vector(), up = up_vector(), right = right_vector();
-			if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
-			if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
-			if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
-			if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
-			if (dwDirection & DIR_UP) direction_vector = Vector3::Add(direction_vector, up);
-			if (dwDirection & DIR_DOWN) direction_vector = Vector3::Add(direction_vector, up, -1.f);
+			if (orient_rotation_to_movement_)
+			{
+				float yaw = camera_->GetYaw();
+
+				if (dwDirection & DIR_BACKWARD) yaw += 180;
+				if (dwDirection & DIR_LEFT) yaw -= 90;
+				if (dwDirection & DIR_RIGHT) yaw += 90;
+
+				rotation_component_->set_yaw(yaw);
+				rotation_component_->Update(0.f);
+				direction_vector = look_vector();
+			}
+			else
+			{
+				XMFLOAT3 look = look_vector(), right = right_vector();
+				if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
+				if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
+				if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
+				if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
+			}
 		}
 		if (movement_component_)
+		{
 			movement_component_->set_direction_vector(direction_vector);
+		}
 	}
 		break;
 	default:
@@ -92,6 +107,8 @@ void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_t
 	if (camera_) camera_->Rotate(delta_xy.y, delta_xy.x, 0.f);
 
 	if (camera_->GetMode() == CameraMode::GHOST) return;
+
+	if (orient_rotation_to_movement_) return;
 
 	// 플레이어의 default 회전은 roll 회전을 하지 않음
 	if (rotation_component_)

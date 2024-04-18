@@ -18,6 +18,9 @@ public:
 	CRotationComponent() {}
 	CRotationComponent(CGameObject* owner) : CComponent(owner) {}
 
+	void set_pitch(const float& value) { pitch_ = value; }
+	void set_yaw(const float& value) { yaw_ = value; }
+	void set_roll(const float& value) { roll_ = value; }
 	void set_use_pitch(const bool& value) { use_pitch_ = value; }
 	void set_use_yaw(const bool& value) { use_yaw_ = value; }
 	void set_use_roll(const bool& value) { use_roll_ = value; }

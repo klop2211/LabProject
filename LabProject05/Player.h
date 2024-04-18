@@ -4,7 +4,6 @@
 
 class CMovementComponent;
 class CRotationComponent;
-class CCharacterMovementComponent;
 
 class CPlayer : public CGameObject
 {
@@ -27,9 +26,11 @@ protected:
 	CCamera* camera_ = NULL;
 
 	//Components
-	CCharacterMovementComponent* character_movement_component_ = NULL;
 	CMovementComponent* movement_component_ = NULL;
 	CRotationComponent* rotation_component_ = NULL;
+
+	bool orient_rotation_to_movement_ = true;
+
 
 public:
 	CPlayer();

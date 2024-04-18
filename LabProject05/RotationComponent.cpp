@@ -9,6 +9,7 @@ void CRotationComponent::Rotate(const float& pitch, const float& yaw, const floa
 	roll_ += roll;
 }
 
+//TODO: 시간값을 사용해서 부드러운 회전 구현
 void CRotationComponent::Update(const float& elapsed_time)
 {
 	XMMATRIX P = XMMatrixIdentity(), Y = XMMatrixIdentity(), R = XMMatrixIdentity();

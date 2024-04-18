@@ -17,6 +17,7 @@ class CMovementComponent : public CComponent
 
 public:
 	CMovementComponent() {}
+	CMovementComponent(CGameObject* owner) : CComponent(owner) {}
 	CMovementComponent(CGameObject* pOwner, const XMFLOAT3& xmf3Direction, const float& fVelocity);
 	~CMovementComponent() {}
 
