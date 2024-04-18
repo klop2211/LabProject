@@ -5,11 +5,11 @@ class CGameObject;
 class CComponent
 {
 protected:
-	CGameObject* m_pOwner = nullptr;
+	CGameObject* owner_ = nullptr;
 
 public:
 	CComponent() {}
-	CComponent(CGameObject* pOwner) { m_pOwner = pOwner; }
+	CComponent(CGameObject* pOwner) { owner_ = pOwner; }
 	~CComponent() {}
 	
 	virtual void Update(const float& fElapsedTime) {}

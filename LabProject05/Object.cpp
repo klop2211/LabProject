@@ -14,7 +14,7 @@
 
 CGameObject::CGameObject()
 {
-	m_xmf4x4ToParent = Matrix4x4::Identity();
+	to_parent_matrix_ = Matrix4x4::Identity();
 	m_xmf4x4World = Matrix4x4::Identity();
 }
 
@@ -22,6 +22,22 @@ CGameObject::~CGameObject()
 {
 	if (m_pMesh) m_pMesh->Release();
 	for (auto& p : m_Materials) p->Release();
+	if (axis_transform_matrix_) delete axis_transform_matrix_;
+}
+
+void CGameObject::set_look_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._31 = x, to_parent_matrix_._32 = y, to_parent_matrix_._33 = z;
+}
+
+void CGameObject::set_right_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._11 = x, to_parent_matrix_._12 = y, to_parent_matrix_._13 = z;
+}
+
+void CGameObject::set_up_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._21 = x, to_parent_matrix_._22 = y, to_parent_matrix_._23 = z;
 }
 
 void CGameObject::SetMesh(CMesh* pMesh)
@@ -47,7 +63,13 @@ void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 {
-	m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(m_xmf4x4ToParent, *pxmf4x4Parent) : m_xmf4x4ToParent;
+	if (axis_transform_matrix_)
+	{
+		XMFLOAT4X4 mat = Matrix4x4::Multiply(*axis_transform_matrix_, to_parent_matrix_);
+		m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(mat, *pxmf4x4Parent) : mat;
+	}
+	else
+		m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(to_parent_matrix_, *pxmf4x4Parent) : to_parent_matrix_;
 
 	if (m_pSibling) m_pSibling->UpdateTransform(pxmf4x4Parent);
 	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
@@ -118,36 +140,32 @@ void CGameObject::ReleaseUploadBuffers()
 		p->ReleaseUploadBuffers();
 }
 
-void CGameObject::SetPosition(const float& x, const float& y, const float& z)
+void CGameObject::set_position_vector(const float& x, const float& y, const float& z)
 {
-	m_xmf4x4ToParent._41 = x;
-	m_xmf4x4ToParent._42 = y;
-	m_xmf4x4ToParent._43 = z;
+	to_parent_matrix_._41 = x;
+	to_parent_matrix_._42 = y;
+	to_parent_matrix_._43 = z;
 }
 
-void CGameObject::SetPosition(XMFLOAT3 xmf3Position)
+
+XMFLOAT3 CGameObject::position_vector() const
 {
-	SetPosition(xmf3Position.x, xmf3Position.y, xmf3Position.z);
+	return(XMFLOAT3(to_parent_matrix_._41, to_parent_matrix_._42, to_parent_matrix_._43));
 }
 
-XMFLOAT3 CGameObject::GetPosition()
+XMFLOAT3 CGameObject::look_vector() const
 {
-	return(XMFLOAT3(m_xmf4x4ToParent._41, m_xmf4x4ToParent._42, m_xmf4x4ToParent._43));
+	return(Vector3::Normalize(XMFLOAT3(to_parent_matrix_._31, to_parent_matrix_._32, to_parent_matrix_._33)));
 }
 
-XMFLOAT3 CGameObject::GetLook()
+XMFLOAT3 CGameObject::up_vector() const
 {
-	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4ToParent._31, m_xmf4x4ToParent._32, m_xmf4x4ToParent._33)));
+	return(Vector3::Normalize(XMFLOAT3(to_parent_matrix_._21, to_parent_matrix_._22, to_parent_matrix_._23)));
 }
 
-XMFLOAT3 CGameObject::GetUp()
+XMFLOAT3 CGameObject::right_vector() const
 {
-	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4ToParent._21, m_xmf4x4ToParent._22, m_xmf4x4ToParent._23)));
-}
-
-XMFLOAT3 CGameObject::GetRight()
-{
-	return(Vector3::Normalize(XMFLOAT3(m_xmf4x4ToParent._11, m_xmf4x4ToParent._12, m_xmf4x4ToParent._13)));
+	return(Vector3::Normalize(XMFLOAT3(to_parent_matrix_._11, to_parent_matrix_._12, to_parent_matrix_._13)));
 }
 
 void CGameObject::UpdateMatrixByBlendedSRT()
@@ -155,19 +173,7 @@ void CGameObject::UpdateMatrixByBlendedSRT()
 	XMMATRIX S = XMMatrixScaling(m_xmf3BlendedScale.x, m_xmf3BlendedScale.y, m_xmf3BlendedScale.z);
 	XMMATRIX R = XMMatrixMultiply(XMMatrixMultiply(XMMatrixRotationX(m_xmf3BlendedRotation.x), XMMatrixRotationY(m_xmf3BlendedRotation.y)), XMMatrixRotationZ(m_xmf3BlendedRotation.z));
 	XMMATRIX T = XMMatrixTranslation(m_xmf3BlendedTranslation.x, m_xmf3BlendedTranslation.y, m_xmf3BlendedTranslation.z);
-	XMStoreFloat4x4(&m_xmf4x4ToParent, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
-}
-
-void CGameObject::Rotate(const float& fPitch, const float& fYaw, const float& fRoll)
-{
-	XMMATRIX mtxRotate = XMMatrixRotationRollPitchYaw(XMConvertToRadians(fPitch), XMConvertToRadians(fYaw), XMConvertToRadians(fRoll));
-	m_xmf4x4ToParent = Matrix4x4::Multiply(mtxRotate, m_xmf4x4ToParent);
-}
-
-void CGameObject::Rotate(XMFLOAT3* pxmf3Axis, float fAngle)
-{
-	XMMATRIX mtxRotate = XMMatrixRotationAxis(XMLoadFloat3(pxmf3Axis), XMConvertToRadians(fAngle));
-	m_xmf4x4ToParent = Matrix4x4::Multiply(mtxRotate, m_xmf4x4ToParent);
+	XMStoreFloat4x4(&to_parent_matrix_, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 }
 
 void CGameObject::SetChild(CGameObject* pChild)
@@ -274,7 +280,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 		FBXLoad::ReadStringFromFile(InFile, strToken);
 		if (strToken == "<Transform>:")
 		{
-			rvalue->m_xmf4x4ToParent = FBXLoad::ReadFromFile<XMFLOAT4X4>(InFile);
+			rvalue->to_parent_matrix_ = FBXLoad::ReadFromFile<XMFLOAT4X4>(InFile);
 
 			rvalue->m_xmf3Scale = FBXLoad::ReadFromFile<XMFLOAT3>(InFile);
 			rvalue->m_xmf3Rotation = FBXLoad::ReadFromFile<XMFLOAT3>(InFile);

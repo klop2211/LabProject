@@ -79,7 +79,7 @@ private:
 	CGameTimer					m_GameTimer;
 
 	CScene						*m_pScene = NULL;
-	CPlayer						*m_pPlayer = NULL;
+	CPlayer						*player_ = NULL;
 	CCamera						*m_pCamera = NULL;
 
 	POINT						m_ptOldCursorPos;

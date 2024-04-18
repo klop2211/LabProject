@@ -99,6 +99,9 @@
     <ClInclude Include="Material.h">
       <Filter>Material</Filter>
     </ClInclude>
+    <ClInclude Include="RotationComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -151,6 +154,9 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Material</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationComponent.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

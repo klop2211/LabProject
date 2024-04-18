@@ -36,7 +36,7 @@ CGameFramework::CGameFramework()
 	m_nWndClientHeight = FRAME_BUFFER_HEIGHT;
 
 	m_pScene = NULL;
-	m_pPlayer = NULL;
+	player_ = NULL;
 
 	_tcscpy_s(m_pszFrameRate, _T("LabProject ("));
 }
@@ -347,13 +347,11 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 		case WM_RBUTTONDOWN:
-			m_pPlayer->OffRotate();
 		case WM_LBUTTONDOWN:
 			::SetCapture(hWnd);
 			::GetCursorPos(&m_ptOldCursorPos);
 			break;
 		case WM_RBUTTONUP:
-			m_pPlayer->OnRotate();
 		case WM_LBUTTONUP:
 			::ReleaseCapture();
 			break;
@@ -393,8 +391,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					CCamera* pCamera = new CGhostCamera(m_pCamera);
 					delete m_pCamera;
 					m_pCamera = pCamera;
-					m_pPlayer->SetCamera(m_pCamera);
-					m_pPlayer->OffRotate();
+					player_->SetCamera(m_pCamera);
 				}
 					break;
 				case VK_RETURN:
@@ -481,12 +478,12 @@ void CGameFramework::BuildObjects()
 
 	m_pCamera = new CThirdPersonCamera;
 	CEllenPlayer* pEllenPlayer = new CEllenPlayer(m_pd3dDevice, m_pd3dCommandList, m_pCamera);
-	m_pPlayer = pEllenPlayer;
-	m_pCamera->SetPlayer(m_pPlayer);
+	player_ = pEllenPlayer;
+	m_pCamera->SetPlayer(player_);
 	((CThirdPersonCamera*)m_pCamera)->ResetFromPlayer();
 
 	m_pScene = new CScene;
-	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, m_pPlayer);
+	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice, m_pd3dCommandList, player_);
 
 
 	m_pd3dCommandList->Close();
@@ -496,14 +493,14 @@ void CGameFramework::BuildObjects()
 	WaitForGpuComplete();
 
 	if (m_pScene) m_pScene->ReleaseUploadBuffers();
-	if (m_pPlayer) m_pPlayer->ReleaseUploadBuffers();
+	if (player_) player_->ReleaseUploadBuffers();
 
 	m_GameTimer.Reset();
 }
 
 void CGameFramework::ReleaseObjects()
 {
-	//if (m_pPlayer) delete m_pPlayer;
+	//if (player_) delete player_;
 
 	if (m_pScene) m_pScene->ReleaseObjects();
 	if (m_pScene) delete m_pScene;
@@ -524,28 +521,21 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_DOWN;
 
-		float cxDelta = 0.0f, cyDelta = 0.0f;
+		XMFLOAT2 delta_xy = XMFLOAT2(0.f, 0.f);
 		POINT ptCursorPos;
 		if (GetCapture() == m_hWnd)
 		{
 			SetCursor(NULL);
 			GetCursorPos(&ptCursorPos);
-			cxDelta = (float)(ptCursorPos.x - m_ptOldCursorPos.x) * 0.3f;
-			cyDelta = (float)(ptCursorPos.y - m_ptOldCursorPos.y) * 0.3f;
+			delta_xy.x = (float)(ptCursorPos.x - m_ptOldCursorPos.x) * 0.3f;
+			delta_xy.y = (float)(ptCursorPos.y - m_ptOldCursorPos.y) * 0.3f;
 			SetCursorPos(m_ptOldCursorPos.x, m_ptOldCursorPos.y);
 		}
 
-		if ((cxDelta != 0.0f) || (cyDelta != 0.0f))
-		{
-			if (cxDelta || cyDelta)
-			{
-				m_pPlayer->Rotate(cyDelta, cxDelta, 0.0f);
-			}
-		}
-
-		m_pPlayer->InputActionMove(dwDirection, m_GameTimer.GetTimeElapsed());
+		player_->InputActionRotate(delta_xy, m_GameTimer.GetTimeElapsed());
+		player_->InputActionMove(dwDirection, m_GameTimer.GetTimeElapsed());
 	}
-	m_pPlayer->Update(m_GameTimer.GetTimeElapsed());
+	player_->Update(m_GameTimer.GetTimeElapsed());
 }
 
 void CGameFramework::AnimateObjects()
