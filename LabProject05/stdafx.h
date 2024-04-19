@@ -19,6 +19,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <array>
 
 #include <wrl.h>
 #include <shellapi.h>

@@ -40,49 +40,49 @@ public:
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 private:
-	HINSTANCE					m_hInstance;
-	HWND						m_hWnd; 
+	HINSTANCE					hinstance_;
+	HWND						hwnd_; 
 
-	int							m_nWndClientWidth;
-	int							m_nWndClientHeight;
+	int							client_width_;
+	int							client_height_;
         
-	IDXGIFactory4				*m_pdxgiFactory = NULL;
-	IDXGISwapChain3				*m_pdxgiSwapChain = NULL;
-	ID3D12Device				*m_pd3dDevice = NULL;
+	IDXGIFactory4				*dxgi_factory_ = NULL;
+	IDXGISwapChain3				*dxgi_swap_chain_ = NULL;
+	ID3D12Device				*d3d12_device_ = NULL;
 
-	bool						m_bMsaa4xEnable = false;
-	UINT						m_nMsaa4xQualityLevels = 0;
+	bool						msaa_4x_enable_ = false;
+	UINT						msaa_4x_quality_levels_ = 0;
 
-	static const UINT			m_nSwapChainBuffers = 2;
-	UINT						m_nSwapChainBufferIndex;
+	static const UINT			swap_chain_buffers_ = 2;
+	UINT						swap_chain_buffer_index_;
 
-	ID3D12Resource				*m_ppd3dSwapChainBackBuffers[m_nSwapChainBuffers];
-	ID3D12DescriptorHeap		*m_pd3dRtvDescriptorHeap = NULL;
-	UINT						m_nRtvDescriptorIncrementSize;
+	std::array<ID3D12Resource*, swap_chain_buffers_> d3d12_swap_chain_back_buffers_;
+	ID3D12DescriptorHeap		*d3d12_render_target_descriptor_heap_ = NULL;
+	UINT						render_target_view_descriptor_increment_size_;
 
-	ID3D12Resource				*m_pd3dDepthStencilBuffer = NULL;
-	ID3D12DescriptorHeap		*m_pd3dDsvDescriptorHeap = NULL;
-	UINT						m_nDsvDescriptorIncrementSize;
+	ID3D12Resource				*d3d12_depth_stencil_buffer_ = NULL;
+	ID3D12DescriptorHeap		*d3d12_depth_stencil_descriptor_heap_ = NULL;
+	UINT						depth_stencil_view_descriptor_increment_size_;
 
-	ID3D12CommandAllocator		*m_pd3dCommandAllocator = NULL;
-	ID3D12CommandQueue			*m_pd3dCommandQueue = NULL;
-	ID3D12GraphicsCommandList	*m_pd3dCommandList = NULL;
+	ID3D12CommandAllocator		*d3d12_command_allocator_ = NULL;
+	ID3D12CommandQueue			*d3d12_command_queue_ = NULL;
+	ID3D12GraphicsCommandList	*d3d12_command_list_ = NULL;
 
-	ID3D12Fence					*m_pd3dFence = NULL;
-	UINT64						m_nFenceValues[m_nSwapChainBuffers];
-	HANDLE						m_hFenceEvent;
+	ID3D12Fence					*d3d12_fence_ = NULL;
+	std::array<UINT64, swap_chain_buffers_>	d3d12_fence_valeues_;
+	HANDLE						fence_event_handle_;
 
 #if defined(_DEBUG)
 	ID3D12Debug					*m_pd3dDebugController;
 #endif
 
-	CGameTimer					m_GameTimer;
+	CGameTimer					game_timer_;
 
-	CScene						*m_pScene = NULL;
+	CScene						*scene_ = NULL;
 	CPlayer						*player_ = NULL;
-	CCamera						*m_pCamera = NULL;
+	CCamera						*camera_ = NULL;
 
-	POINT						m_ptOldCursorPos;
+	POINT						old_cursor_position_;
 
 	_TCHAR						m_pszFrameRate[50];
 };

@@ -72,18 +72,17 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 			movement_component_->set_velocity(speed_);
 			if (orient_rotation_to_movement_)
 			{
-				//TODO: 입력 방향만 구해봅시다
+				// 카메라의 yaw 회전만 가져와서 사용
 				float yaw = camera_->GetYaw();
-
-				if (dwDirection & DIR_BACKWARD) yaw += 180;
-				if (dwDirection & DIR_LEFT) yaw -= 90;
-				if (dwDirection & DIR_RIGHT) yaw += 90;
-
 				XMMATRIX R = XMMatrixRotationRollPitchYaw(0.f, XMConvertToRadians(yaw), 0.f);
-				XMFLOAT3 look = XMFLOAT3(0.f,0.f,1.f);
+				XMFLOAT3 look = XMFLOAT3(0.f, 0.f, 1.f), up = XMFLOAT3(0.f, 1.f, 0.f);
 				XMStoreFloat3(&look, XMVector3TransformCoord(XMLoadFloat3(&look), R));
+				XMFLOAT3 right = Vector3::CrossProduct(up, look);
 
-				direction_vector = look;
+				if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
+				if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
+				if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
+				if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
 			}
 			else
 			{
@@ -128,9 +127,10 @@ void CPlayer::Update(float elapsed_time)
 
 	if (orient_rotation_to_movement_)
 	{
-		//TODO: 회전 방향을 최단 각도로 해봅시다
+		// 벡터의 삼중적을 활용한 최단 방향 회전 
 		XMFLOAT3 v = look_vector(), d = movement_component_->direction_vector(), u = XMFLOAT3(0.f,1.f,0.f);
 		float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
 		float yaw = Vector3::Angle(v, d);
 		if (result > 0)
 			yaw *= -1;
@@ -201,7 +201,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	speed_ = 1000.f;
 
-	movement_component_ = new CMovementComponent((CGameObject*)this, XMFLOAT3(0.f,0.f,0.f), speed_);
+	movement_component_ = new CMovementComponent((CGameObject*)this);
 	rotation_component_ = new CRotationComponent((CGameObject*)this);
 
 	rotation_component_->set_use_pitch(false);

@@ -1,5 +1,7 @@
 #pragma once
 
+#define TEXTURE_FILE_ROOT "../Resource/Model/Texture/"
+
 enum class TextureType
 {
 	NONE = 0,

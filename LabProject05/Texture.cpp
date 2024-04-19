@@ -64,8 +64,8 @@ void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 	m_strTextureFileName = strToken;
-	m_strTextureFileName = "../Resource/Model/Texture/" + m_strTextureFileName.substr(0, m_strTextureFileName.size() - 3) + "dds";
-
+	m_strTextureFileName = TEXTURE_FILE_ROOT + m_strTextureFileName.substr(0, m_strTextureFileName.size() - 3) + "dds";
+	
 	//TODO: 루트마라미터 인덱스 관련 상수 정리
 	LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, m_strTextureFileName, TextureType::RESOURCE_TEXTURE2D, 7); 
 
