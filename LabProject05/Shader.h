@@ -40,7 +40,7 @@ public:
 
 protected:
 	ID3D12PipelineState** m_ppd3dPipelineStates = NULL;
-	int								m_nPipelineStates = 0;
+	int					m_nPipelineStates = 0;
 
 };
 

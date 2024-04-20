@@ -68,7 +68,7 @@ protected:
 	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
 
 	// Shader 包府
-	CShader** m_ppShaders = NULL;
+	std::vector<CShader*> m_Shaders;
 	int	m_nShaders = 0;
 
 	// GameObject 包府

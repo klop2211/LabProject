@@ -24,6 +24,8 @@ CTexture::~CTexture()
 {
 	if (m_pd3dTexture)
 		m_pd3dTexture->Release();
+	if (m_pd3dTextureUploadBuffer) 
+		m_pd3dTextureUploadBuffer->Release();
 }
 
 void CTexture::SetRootParameterIndex(UINT nRootParameterIndex)

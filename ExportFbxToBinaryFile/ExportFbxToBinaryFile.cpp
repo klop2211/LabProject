@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
 	FbxString pfbxstrModelFilePath("../Resource/Model/Mawang_Zup.fbx");
-	char *pszWriteFileName = "../Resource/Model/Mawang_Zup.bin";
+	char *pszWriteFileName = "../Resource/Model/Mawang_Model.bin";
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");
@@ -103,13 +103,13 @@ int main(int argc, char** argv)
 	WriteHierarchy(pfbxModelScene);
 	WriteString("</Hierarchy>");
 
-	WriteString("<Animation>");
-#ifdef _WITH_SEPARATED_ANIMATIONS
-	WriteAnimation(ppfbxAnimationScenes, nSeparatedAnimations);
-#else
-	WriteAnimation(pfbxModelScene);
-#endif
-	WriteString("</Animation>");
+//	WriteString("<Animation>");
+//#ifdef _WITH_SEPARATED_ANIMATIONS
+//	WriteAnimation(ppfbxAnimationScenes, nSeparatedAnimations);
+//#else
+//	WriteAnimation(pfbxModelScene);
+//#endif
+//	WriteString("</Animation>");
 
 	::fclose(gpBinaryFile);
     DestroySdkObjects(pfbxSdkManager, bResult);

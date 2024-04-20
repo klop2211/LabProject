@@ -1,6 +1,7 @@
 ﻿// LabProject05.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
-
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
 #include "stdafx.h"
 #include "LabProject05.h"
 #include "GameFramework.h"

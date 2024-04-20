@@ -20,6 +20,7 @@
 #include <fstream>
 #include <vector>
 #include <array>
+#include <memory>
 
 #include <wrl.h>
 #include <shellapi.h>

@@ -167,7 +167,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	to_parent_matrix_ = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/Mawang_Zup.bin", std::ios::binary);
+	std::ifstream InFile("../Resource/Model/Mawang_Stretching.bin", std::ios::binary);
 
 	std::string strToken;
 
@@ -197,7 +197,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 
 	m_pAnimationController->SetFrameCaches(this);
 
-	m_pChild->PrepareSkinning(pd3dDevice, pd3dCommandList, m_pChild);
+	child_->PrepareSkinning(pd3dDevice, pd3dCommandList, child_);
 
 	speed_ = 1000.f;
 

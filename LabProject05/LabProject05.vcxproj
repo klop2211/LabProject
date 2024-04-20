@@ -137,6 +137,7 @@
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="LabProject05.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="Mawang.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MovementComponent.h" />
     <ClInclude Include="Object.h" />
@@ -159,6 +160,7 @@
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="LabProject05.cpp" />
     <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Mawang.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MovementComponent.cpp" />
     <ClCompile Include="Object.cpp" />

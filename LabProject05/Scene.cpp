@@ -13,7 +13,6 @@ CScene::CScene()
 
 CScene::~CScene()
 {
-
 }
 
 
@@ -239,14 +238,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
 	m_nShaders = 2;			// 조명 O, X 각각 1개씩
-	m_ppShaders = new CShader*[m_nShaders];
+	m_Shaders.reserve(m_nShaders);
 
-	m_ppShaders[0] = new CStandardShader;
+	m_Shaders.emplace_back(new CStandardShader);
 	//m_ppShaders[1] = new CIlluminatedShader;
-	m_ppShaders[1] = new CTerrainShader;
+	m_Shaders.emplace_back(new CTerrainShader);
 
-	for(int i = 0; i < m_nShaders; ++i)
-		m_ppShaders[i]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	for(auto& shader : m_Shaders)
+		shader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 
 	m_nObjects = 2;		// Player + Terrain
 
@@ -292,11 +291,16 @@ void CScene::ReleaseObjects()
 {
 	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
 
-	// 0번 객체는 플레이어 객체 GameFramework에서 삭제함
 	for (auto& pObject : m_Objects)
 	{
 		delete pObject;
 		pObject = NULL;
+	}
+
+	for (auto& shader : m_Shaders)
+	{
+		shader->Release();
+		shader = NULL;
 	}
 
 	if (m_pDescriptorManager) delete m_pDescriptorManager;
@@ -314,10 +318,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
-	//m_pPlayer->OnPrepareRender();
-
 	UpdateShaderVariables(pd3dCommandList);
-
 
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
 	//pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dMaterialsCbvGPUDescriptorHandle);
@@ -331,10 +332,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 	for (int i = 0; i < m_nShaders; i++)
 	{
-		m_ppShaders[i]->Render(pd3dCommandList);
+		m_Shaders[i]->Render(pd3dCommandList);
 		for (auto& pObject: m_Objects)
 		{
-			if (pObject->CheckShader(m_ppShaders[i]->GetShaderNum()))
+			if (pObject->CheckShader(m_Shaders[i]->GetShaderNum()))
 			{
 				pObject->Render(pd3dCommandList, pCamera);
 			}

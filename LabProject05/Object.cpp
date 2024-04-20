@@ -23,6 +23,9 @@ CGameObject::~CGameObject()
 	if (m_pMesh) m_pMesh->Release();
 	for (auto& p : m_Materials) p->Release();
 	if (axis_transform_matrix_) delete axis_transform_matrix_;
+
+	if (child_) child_->Release();
+	if (sibling_) sibling_->Release();
 }
 
 void CGameObject::set_look_vector(const float& x, const float& y, const float& z)
@@ -71,8 +74,8 @@ void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 	else
 		m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(to_parent_matrix_, *pxmf4x4Parent) : to_parent_matrix_;
 
-	if (m_pSibling) m_pSibling->UpdateTransform(pxmf4x4Parent);
-	if (m_pChild) m_pChild->UpdateTransform(&m_xmf4x4World);
+	if (sibling_) sibling_->UpdateTransform(pxmf4x4Parent);
+	if (child_) child_->UpdateTransform(&m_xmf4x4World);
 }
 
 void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
@@ -87,8 +90,8 @@ void CGameObject::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescripto
 	for (auto& Material : m_Materials)
 		Material->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
 
-	if (m_pChild) m_pChild->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
-	if (m_pSibling) m_pSibling->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
+	if (child_) child_->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
+	if (sibling_) sibling_->CreateShaderResourceViews(pd3dDevice, pDescriptorManager);
 }
 
 void CGameObject::Animate(float fTimeElapsed)
@@ -99,8 +102,8 @@ void CGameObject::Animate(float fTimeElapsed)
 		m_pAnimationController->Animate(fTimeElapsed, this);
 	}
 
-	if (m_pSibling) m_pSibling->Animate(fTimeElapsed);
-	if (m_pChild) m_pChild->Animate(fTimeElapsed);
+	if (sibling_) sibling_->Animate(fTimeElapsed);
+	if (child_) child_->Animate(fTimeElapsed);
 }
 
 void CGameObject::ResetAnimatedSRT()
@@ -109,14 +112,14 @@ void CGameObject::ResetAnimatedSRT()
 	m_xmf3BlendedRotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	m_xmf3BlendedTranslation = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	if (m_pSibling) m_pSibling->ResetAnimatedSRT();
-	if (m_pChild) m_pChild->ResetAnimatedSRT();
+	if (sibling_) sibling_->ResetAnimatedSRT();
+	if (child_) child_->ResetAnimatedSRT();
 
 }
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	if (!m_pParent && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
+	if (!parent_ && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
 
 	for(auto& p : m_Materials)
@@ -128,8 +131,8 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 		m_pMesh->Render(pd3dCommandList);
 	}
 
-	if (m_pChild) m_pChild->Render(pd3dCommandList);
-	if (m_pSibling) m_pSibling->Render(pd3dCommandList);
+	if (child_) child_->Render(pd3dCommandList);
+	if (sibling_) sibling_->Render(pd3dCommandList);
 }
 
 void CGameObject::ReleaseUploadBuffers()
@@ -180,16 +183,16 @@ void CGameObject::SetChild(CGameObject* pChild)
 {
 	if (pChild)
 	{
-		pChild->m_pParent = this;
+		pChild->parent_ = this;
 	}
-	if (m_pChild)
+	if (child_)
 	{
-		if (pChild) pChild->m_pSibling = m_pChild->m_pSibling;
-		m_pChild->m_pSibling = pChild;
+		if (pChild) pChild->sibling_ = child_->sibling_;
+		child_->sibling_ = pChild;
 	}
 	else
 	{
-		m_pChild = pChild;
+		child_ = pChild;
 	}
 }
 
@@ -198,8 +201,8 @@ CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
 	if (m_strFrameName == strFrameName) return this;
 
 	CGameObject* pFrameObject = NULL;
-	if (m_pSibling) if (pFrameObject = m_pSibling->FindFrame(strFrameName)) return(pFrameObject);
-	if (m_pChild) if (pFrameObject = m_pChild->FindFrame(strFrameName)) return(pFrameObject);
+	if (sibling_) if (pFrameObject = sibling_->FindFrame(strFrameName)) return(pFrameObject);
+	if (child_) if (pFrameObject = child_->FindFrame(strFrameName)) return(pFrameObject);
 
 	return NULL;
 }
@@ -210,8 +213,8 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if(pSkinMesh)
 		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
 
-	if (m_pChild) m_pChild->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
-	if (m_pSibling) m_pSibling->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
+	if (child_) child_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
+	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
 void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)

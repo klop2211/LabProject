@@ -34,6 +34,9 @@
     <Filter Include="Material">
       <UniqueIdentifier>{9119f1dc-f994-44fd-8a51-1ccce108ea60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects\Monsters">
+      <UniqueIdentifier>{7ced9294-e1d6-4c4b-8062-33afee4aebd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -102,6 +105,9 @@
     <ClInclude Include="RotationComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="Mawang.h">
+      <Filter>Objects\Monsters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -157,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="RotationComponent.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Mawang.cpp">
+      <Filter>Objects\Monsters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

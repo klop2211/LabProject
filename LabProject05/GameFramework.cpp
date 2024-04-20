@@ -493,7 +493,7 @@ void CGameFramework::BuildObjects()
 	WaitForGpuComplete();
 
 	if (scene_) scene_->ReleaseUploadBuffers();
-	if (player_) player_->ReleaseUploadBuffers();
+	//if (player_) player_->ReleaseUploadBuffers();
 
 	game_timer_.Reset();
 }
@@ -504,6 +504,7 @@ void CGameFramework::ReleaseObjects()
 
 	if (scene_) scene_->ReleaseObjects();
 	if (scene_) delete scene_;
+	if (camera_) delete camera_;
 }
 
 void CGameFramework::ProcessInput()

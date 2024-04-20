@@ -183,7 +183,7 @@ class CSkinMesh : public CMesh
 {
 public:
 	CSkinMesh();
-	~CSkinMesh() {}
+	~CSkinMesh() ;
 
 	void LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
@@ -199,21 +199,21 @@ public:
 private:
 	std::vector<std::string> m_BoneNames;
 
-	ID3D12Resource* m_pBoneOffsetBuffer = NULL;
-	ID3D12Resource* m_pBoneOffsetUploadBuffer = NULL;
+	ID3D12Resource* bone_offset_buffer_ = NULL;
+	ID3D12Resource* bone_offset_upload_buffer_ = NULL;
 
-	ID3D12Resource* m_pBoneIndicesBuffer = NULL;
-	ID3D12Resource* m_pBoneIndicesUploadBuffer = NULL;
-	D3D12_VERTEX_BUFFER_VIEW m_BoneIndicesBufferView;
+	ID3D12Resource* bone_index_buffer_ = NULL;
+	ID3D12Resource* bone_index_upload_buffer_ = NULL;
+	D3D12_VERTEX_BUFFER_VIEW bone_index_buffer_view_;
 
-	ID3D12Resource* m_pBoneWeightBuffer = NULL;
-	ID3D12Resource* m_pBoneWeightUploadBuffer = NULL;
+	ID3D12Resource* bone_weight_buffer_ = NULL;
+	ID3D12Resource* bone_weight_upload_buffer_ = NULL;
 	D3D12_VERTEX_BUFFER_VIEW m_BoneWeightBufferView;
 
 	std::vector<CGameObject*> m_BoneFrameCaches;
 
-	ID3D12Resource* m_pSkinningBoneTransforms = NULL;
-	XMFLOAT4X4* m_pxmf4x4MappedSkinningBoneTransforms = NULL;
+	ID3D12Resource* skinning_bone_transforms_ = NULL;
+	XMFLOAT4X4* mapped_skinning_bone_transforms_;
 
 	int m_nBones;
 };

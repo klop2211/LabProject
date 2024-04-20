@@ -9,7 +9,6 @@
 
 class CCamera;
 class CMesh;
-class CGameObject;
 class CDescriptorManager;
 class CMaterial;
 class CAnimationController;
@@ -20,12 +19,14 @@ class CAnimationController;
 
 class CGameObject
 {	
+private:
+	int reference_count_ = 0;
+
 protected:
 	std::vector<CMaterial*> m_Materials;
 	
 	// 모델의 좌표축이 다이렉트 환경과 다를 경우 사용되는 행렬로 루트 오브젝트의 to_parent 행렬 앞에 이 행렬을 곱해준다(UpdateTransform 함수 참조)
 	XMFLOAT4X4* axis_transform_matrix_;
-
 
 	XMFLOAT4X4 m_xmf4x4World; // 최종적으로 셰이더에 입력되는 행렬(ToParent 행렬과 부모의 World 행렬의 곱의 결과이다)
 
@@ -42,9 +43,9 @@ protected:
 	XMFLOAT3 m_xmf3BlendedRotation;
 	XMFLOAT3 m_xmf3BlendedTranslation;
 
-	CGameObject* m_pParent = NULL;
-	CGameObject* m_pChild = NULL;
-	CGameObject* m_pSibling = NULL;
+	CGameObject* parent_ = NULL;
+	CGameObject* child_ = NULL;
+	CGameObject* sibling_ = NULL;
 
 	CMesh* m_pMesh = NULL;
 
@@ -56,6 +57,9 @@ protected:
 public:
 	CGameObject();
 	~CGameObject();
+
+	void AddRef() { reference_count_++; }
+	void Release() { reference_count_--; if (reference_count_ <= 0) delete this; }
 
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
@@ -148,3 +152,4 @@ public:
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
 
 };
+
