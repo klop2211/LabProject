@@ -96,10 +96,10 @@ void CGameObject::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescripto
 
 void CGameObject::Animate(float fTimeElapsed)
 {
-	if (m_pAnimationController)
+	if (animation_controller_)
 	{
 		ResetAnimatedSRT();
-		m_pAnimationController->Animate(fTimeElapsed, this);
+		animation_controller_->Animate(fTimeElapsed, this);
 	}
 
 	if (sibling_) sibling_->Animate(fTimeElapsed);
@@ -119,7 +119,7 @@ void CGameObject::ResetAnimatedSRT()
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	if (!parent_ && !m_pAnimationController)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
+	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
 
 	for(auto& p : m_Materials)
@@ -179,11 +179,11 @@ void CGameObject::UpdateMatrixByBlendedSRT()
 	XMStoreFloat4x4(&to_parent_matrix_, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 }
 
-void CGameObject::SetChild(CGameObject* pChild)
+void CGameObject::set_child(CGameObject* pChild)
 {
 	if (pChild)
 	{
-		pChild->parent_ = this;
+		pChild->set_parent(this);
 	}
 	if (child_)
 	{
@@ -194,6 +194,29 @@ void CGameObject::SetChild(CGameObject* pChild)
 	{
 		child_ = pChild;
 	}
+}
+
+void CGameObject::set_sibling(CGameObject* ptr)
+{
+	if (ptr)
+	{
+		if(parent_)
+			ptr->parent_ = parent_;
+		if (sibling_)
+		{
+			sibling_->set_sibling(ptr);
+		}
+		else
+		{
+			sibling_ = ptr;
+		}
+	}
+}
+
+void CGameObject::set_parent(CGameObject* ptr)
+{
+	parent_ = ptr;
+	if (sibling_) sibling_->set_parent(ptr);
 }
 
 CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
@@ -266,6 +289,65 @@ void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	}
 }
 
+CModelInfo& CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& model_file_name)
+{
+	std::string token;
+
+	CGameObject* frame_root = NULL;
+
+	//Heirarchy
+	std::ifstream file(model_file_name, std::ios::binary);
+
+	FBXLoad::ReadStringFromFile(file, token);
+
+	int frames = 0;
+	while (token != "</Hierarchy>")
+	{
+		FBXLoad::ReadStringFromFile(file, token);
+		if (token == "<Frame>:")
+		{
+			CGameObject* frame;
+			frame = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, file, frames);
+			if(!frame_root) 
+				frame_root = frame;
+			else
+				frame_root->set_sibling(frame);
+		}
+	}
+
+	//Animations
+	FBXLoad::ReadStringFromFile(file, token);
+
+	CAnimationController* animation_controller = NULL;
+
+	if (token == "<Animation>")
+	{
+		animation_controller = CGameObject::LoadAnimationFromFile(file, frame_root);
+
+		FBXLoad::ReadStringFromFile(file, token);
+	}
+
+	frame_root->PrepareSkinning(pd3dDevice, pd3dCommandList, frame_root);
+
+	CModelInfo rvalue;
+
+	rvalue.heirarchy_root = frame_root;
+	rvalue.animation_controller = animation_controller;
+
+	return rvalue;
+}
+
+CAnimationController* CGameObject::LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object)
+{
+	CAnimationController* rvalue = new CAnimationController;
+
+	rvalue->LoadAnimationFromFile(file);
+
+	//rvalue->SetFrameCaches(root_object);
+
+	return rvalue;
+}
+
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 	std::ifstream& InFile, int& nFrames)
 {
@@ -321,7 +403,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 				if (strToken == "<Frame>:")
 				{
 					CGameObject* pChild = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames);
-					if (pChild) rvalue->SetChild(pChild);
+					if (pChild) rvalue->set_child(pChild);
 				}
 			}
 		}

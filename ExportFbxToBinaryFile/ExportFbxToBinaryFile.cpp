@@ -39,8 +39,8 @@ int main(int argc, char** argv)
 //	char *pszWriteFileName = "Eagle.bin";
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
-	FbxString pfbxstrModelFilePath("../Resource/Model/Mawang_Zup.fbx");
-	char *pszWriteFileName = "../Resource/Model/Mawang_Model.bin";
+	FbxString pfbxstrModelFilePath("../Resource/Model/Player_Model.fbx");
+	char *pszWriteFileName = "../Resource/Model/Player_Model.bin";
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");
@@ -49,15 +49,16 @@ int main(int argc, char** argv)
     FbxScene *pfbxModelScene = FbxScene::Create(pfbxSdkManager, pfbxstrModelFilePath);
 	bool bResult = LoadScene(pfbxSdkManager, pfbxModelScene, pfbxstrModelFilePath.Buffer());
 
-//#define _WITH_SEPARATED_ANIMATIONS
+#define _WITH_SEPARATED_ANIMATIONS
 
 #ifdef _WITH_SEPARATED_ANIMATIONS
-	const int nSeparatedAnimations = 3;
+	const int nSeparatedAnimations = 4;
 	FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];
 	FbxScene *ppfbxAnimationScenes[nSeparatedAnimations];
-	pfbxstrAnimationFilePaths[0] = "Lion@IdleBreathe.fbx";
-	pfbxstrAnimationFilePaths[1] = "Lion@Walk.fbx";
-	pfbxstrAnimationFilePaths[2] = "Lion@Run.fbx";
+	pfbxstrAnimationFilePaths[0] = "../Resource/Model/Player_Idle.fbx";
+	pfbxstrAnimationFilePaths[1] = "../Resource/Model/Player_Roll.fbx";
+	pfbxstrAnimationFilePaths[2] = "../Resource/Model/Player_Run.fbx";
+	pfbxstrAnimationFilePaths[3] = "../Resource/Model/Player_Walk.fbx";
 
 	//const int nSeparatedAnimations = 3;
 	//FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];
@@ -103,13 +104,13 @@ int main(int argc, char** argv)
 	WriteHierarchy(pfbxModelScene);
 	WriteString("</Hierarchy>");
 
-//	WriteString("<Animation>");
-//#ifdef _WITH_SEPARATED_ANIMATIONS
-//	WriteAnimation(ppfbxAnimationScenes, nSeparatedAnimations);
-//#else
-//	WriteAnimation(pfbxModelScene);
-//#endif
-//	WriteString("</Animation>");
+	WriteString("<Animation>");
+#ifdef _WITH_SEPARATED_ANIMATIONS
+	WriteAnimation(ppfbxAnimationScenes, nSeparatedAnimations);
+#else
+	WriteAnimation(pfbxModelScene);
+#endif
+	WriteString("</Animation>");
 
 	::fclose(gpBinaryFile);
     DestroySdkObjects(pfbxSdkManager, bResult);

@@ -167,37 +167,13 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	to_parent_matrix_ = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
-	std::ifstream InFile("../Resource/Model/Mawang_Stretching.bin", std::ios::binary);
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/mawang_stretching.bin");
+	
+	set_child(model.heirarchy_root);
 
-	std::string strToken;
+	animation_controller_ = model.animation_controller;
 
-	FBXLoad::ReadStringFromFile(InFile, strToken);
-
-	int nFrames = 0;
-	while (strToken != "</Hierarchy>") 
-	{
-		FBXLoad::ReadStringFromFile(InFile, strToken);
-		if (strToken == "<Frame>:") 
-		{
-			pGameObject = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames);
-			SetChild(pGameObject);
-		}
-	}
-
-	FBXLoad::ReadStringFromFile(InFile, strToken);
-
-	if (strToken == "<Animation>")
-	{
-		m_pAnimationController = new CAnimationController;
-		m_pAnimationController->LoadAnimationFromFile(InFile);
-
-		FBXLoad::ReadStringFromFile(InFile, strToken);
-
-	}
-
-	m_pAnimationController->SetFrameCaches(this);
-
-	child_->PrepareSkinning(pd3dDevice, pd3dCommandList, child_);
+	animation_controller_->SetFrameCaches(this);
 
 	speed_ = 1000.f;
 

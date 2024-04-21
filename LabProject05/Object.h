@@ -12,6 +12,13 @@ class CMesh;
 class CDescriptorManager;
 class CMaterial;
 class CAnimationController;
+class CGameObject;
+
+struct CModelInfo
+{
+	CGameObject* heirarchy_root;
+	CAnimationController* animation_controller;
+};
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> ||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -52,7 +59,7 @@ protected:
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;
 
-	CAnimationController* m_pAnimationController = NULL;
+	CAnimationController* animation_controller_ = NULL;
 
 public:
 	CGameObject();
@@ -71,11 +78,14 @@ public:
 	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
+	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
+	void set_child(CGameObject* pChild);
+	void set_sibling(CGameObject* ptr);
+	void set_parent(CGameObject* ptr);
 
 	virtual void SetMesh(CMesh* pMesh);
 	void SetShader(const int& nShader) { m_nShader = nShader; }
 	void SetMaterial(const int& index, CMaterial* pMaterial);
-	void SetChild(CGameObject* pChild);
 	void SetBlendedScale(const XMFLOAT3& xmf3Value) { m_xmf3BlendedScale = xmf3Value; }
 	void SetBlendedRotation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedRotation = xmf3Value; }
 	void SetBlendedTranslation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedTranslation = xmf3Value; }
@@ -116,6 +126,9 @@ public:
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
+	static CModelInfo& LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
+		const std::string& heirarchy_file_name);
+	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		std::ifstream& InFile, int& nFrames);
 
