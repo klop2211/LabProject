@@ -167,13 +167,15 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	to_parent_matrix_ = Matrix4x4::Identity();
 	CGameObject* pGameObject = NULL;
 	
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/mawang_stretching.bin");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
 	
 	set_child(model.heirarchy_root);
 
 	animation_controller_ = model.animation_controller;
 
 	animation_controller_->SetFrameCaches(this);
+
+	animation_controller_->EnableTrack(0);
 
 	speed_ = 1000.f;
 
@@ -193,4 +195,14 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	SetShader((int)ShaderNum::Standard);
+}
+
+void CEllenPlayer::Update(float fTimeElapsed)
+{
+	CPlayer::Update(fTimeElapsed);
+
+	if (IsZero(movement_component_->velocity()))
+		animation_controller_->ChangeAnimation(0);
+	else
+		animation_controller_->ChangeAnimation(2);
 }

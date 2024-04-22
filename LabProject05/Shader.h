@@ -1,6 +1,5 @@
 #pragma once
 
-
 enum class ShaderNum{ Diffused=0, Illuminated, Terrain, AnimationWireframe, Standard };
 
 class CShader

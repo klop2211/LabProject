@@ -53,7 +53,7 @@ public:
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }
 
-	void Update(float fTimeElapsed);
+	virtual void Update(float fTimeElapsed);
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
@@ -77,6 +77,8 @@ class CEllenPlayer : public CPlayer
 {
 public:
 	CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
+
+	virtual void Update(float fTimeElapsed);
 };
 
 

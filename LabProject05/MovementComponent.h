@@ -22,6 +22,8 @@ public:
 	~CMovementComponent() {}
 
 	XMFLOAT3 direction_vector()const { return direction_vector_; }
+	float velocity() const { return velocity_; }
+
 	void set_velocity(const float& value) { velocity_ = value; }
 	void set_direction_vector(const float& x, const float& y, const float& z) { set_direction_vector(XMFLOAT3(x, y, z)); }
 	void set_direction_vector(const XMFLOAT3& xmf3Value) { direction_vector_ = xmf3Value; }

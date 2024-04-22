@@ -37,7 +37,7 @@ public:
 	void UpdateFrameCachesSRT(const float& fPosition);
 
 private:
-	float m_fWeight;
+	float weight_;
 
 	std::vector<CAnimationCurve> m_Curves;
 	std::vector<CGameObject*> m_FrameCaches;
@@ -76,21 +76,27 @@ public:
 	CAnimationTrack(std::ifstream& InFile);
 	~CAnimationTrack();
 
-	bool IsEnable() { return m_bEnable; }
+	bool IsEnable() { return enable_; }
+
+	void set_enable(const bool& value) { enable_ = value; }
+	void set_weight(const float& value) { weight_ = value; }
+
+	void AddWeight(const float& value);
 
 	void Animate(const float& fElapsedTime);
 
 	void SetFrameCaches(CGameObject* pRootObject);
 	void UpdateMatrix();
 
+
 private:
 	void UpdatePosition(const float& fElapsedTime);
 
 	float m_fPosition;
 	float m_fSpeed;
-	float m_fWeight;
+	float weight_;
 
-	bool m_bEnable;
+	bool enable_;
 
 	AnimationLoopType m_LoopType;
 
@@ -109,10 +115,21 @@ public:
 
 	void SetFrameCaches(CGameObject* pRootObject);
 
+	void EnableTrack(const int& index);
+
+	void ChangeAnimation(const int& index);
+
 private:
+	const float animation_blend_speed_ = 1.f; // 애니메이션 교체시 교체 속도 단위 once/s
+
+	bool is_animation_chainging_ = false;
+
+	int prev_index_;
+	int curr_index_;
 
 	float m_fTime;
 
-	std::vector<CAnimationTrack> m_Tracks;
+	std::vector<CAnimationTrack> animation_tracks_;
+
 };
 
