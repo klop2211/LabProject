@@ -289,7 +289,7 @@ void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 	}
 }
 
-CModelInfo& CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& model_file_name)
+CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& model_file_name)
 {
 	std::string token;
 

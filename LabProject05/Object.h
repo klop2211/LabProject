@@ -126,7 +126,7 @@ public:
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
-	static CModelInfo& LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
+	static CModelInfo LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		const std::string& heirarchy_file_name);
 	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,

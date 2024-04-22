@@ -37,7 +37,10 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* pRoot
 		animation_tracks_[prev_index_].AddWeight(-animation_blend_speed_ * elapsed_time);
 		animation_tracks_[curr_index_].AddWeight(animation_blend_speed_ * elapsed_time);
 		if (!animation_tracks_[prev_index_].IsEnable())
+		{
 			is_animation_chainging_ = false;
+			animation_tracks_[prev_index_].Start();
+		}
 	}
 
 	for (auto& track : animation_tracks_)
@@ -76,15 +79,17 @@ void CAnimationController::ChangeAnimation(const int& index)
 {
 	if (curr_index_ == index)
 		return;
+
 	EnableTrack(index);
-	animation_tracks_[index].set_weight(0.1f);
+	animation_tracks_[prev_index_].Stop();
+	animation_tracks_[index].set_weight(1.f - animation_tracks_[prev_index_].weight());
 	is_animation_chainging_ = true;
 }
 
 CAnimationTrack::CAnimationTrack()
 {
 	m_fPosition = 0.f;
-	m_fSpeed = 1.f;
+	speed_ = 1.f;
 	enable_ = false;
 	weight_ = 1.0f;
 
@@ -152,7 +157,7 @@ void CAnimationTrack::UpdateMatrix()
 
 void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 {
-	m_fPosition += (fElapsedTime * m_fSpeed);
+	m_fPosition += (fElapsedTime * speed_);
 
 	if (m_pAnimationSet->GetEndTime() < m_fPosition)
 	{

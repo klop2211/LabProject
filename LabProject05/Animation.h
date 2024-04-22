@@ -81,6 +81,8 @@ public:
 	void set_enable(const bool& value) { enable_ = value; }
 	void set_weight(const float& value) { weight_ = value; }
 
+	float weight() const { return weight_; }
+
 	void AddWeight(const float& value);
 
 	void Animate(const float& fElapsedTime);
@@ -88,12 +90,14 @@ public:
 	void SetFrameCaches(CGameObject* pRootObject);
 	void UpdateMatrix();
 
+	void Stop() { speed_ = 0.f; }
+	void Start() { speed_ = 1.f; }
 
 private:
 	void UpdatePosition(const float& fElapsedTime);
 
 	float m_fPosition;
-	float m_fSpeed;
+	float speed_;
 	float weight_;
 
 	bool enable_;
@@ -120,7 +124,7 @@ public:
 	void ChangeAnimation(const int& index);
 
 private:
-	const float animation_blend_speed_ = 1.f; // 애니메이션 교체시 교체 속도 단위 once/s
+	const float animation_blend_speed_ = 3.f; // 애니메이션 교체시 교체 속도 단위 once/s
 
 	bool is_animation_chainging_ = false;
 
