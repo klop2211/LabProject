@@ -202,7 +202,7 @@ void CEllenPlayer::Update(float fTimeElapsed)
 	CPlayer::Update(fTimeElapsed);
 
 	if (IsZero(movement_component_->velocity()))
-		animation_controller_->ChangeAnimation(0);
+		animation_controller_->ChangeAnimation(1);
 	else
 		animation_controller_->ChangeAnimation(2);
 }

@@ -39,7 +39,6 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* pRoot
 		if (!animation_tracks_[prev_index_].IsEnable())
 		{
 			is_animation_chainging_ = false;
-			animation_tracks_[prev_index_].Start();
 		}
 	}
 
@@ -80,9 +79,11 @@ void CAnimationController::ChangeAnimation(const int& index)
 	if (curr_index_ == index)
 		return;
 
+	// 해당 애니메이션 트랙으로 전환
 	EnableTrack(index);
-	animation_tracks_[prev_index_].Stop();
+	// 현재 애니메이션을 이전 애니메이션 weight의 남은 부분 만큼 설정
 	animation_tracks_[index].set_weight(1.f - animation_tracks_[prev_index_].weight());
+	// 애니메이션 전환 트리거를 true로 설정
 	is_animation_chainging_ = true;
 }
 

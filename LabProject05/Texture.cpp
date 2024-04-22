@@ -104,6 +104,7 @@ void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 void CTexture::ReleaseUploadBuffer()
 {
 	m_pd3dTextureUploadBuffer->Release();
+	m_pd3dTextureUploadBuffer = NULL;
 }
 
 void CTexture::CreateShaderResourceView(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
@@ -120,6 +121,7 @@ void CTexture::LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 {
 	m_ResourceType = nResourceType;
 	m_RootParameterIndex = nRootParameterIndex;
+	
 	std::wstring wstrFileName;
 	wstrFileName.assign(strFileName.begin(), strFileName.end());
 	m_pd3dTexture = ::CreateTextureResourceFromDDSFile(pd3dDevice, pd3dCommandList, wstrFileName.c_str(), &m_pd3dTextureUploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ/*D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE*/);

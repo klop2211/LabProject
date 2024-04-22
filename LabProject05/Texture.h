@@ -120,8 +120,8 @@ private:
 	// Render ฐüทร
 	TextureType m_ResourceType;
 
-	ID3D12Resource* m_pd3dTexture;
-	ID3D12Resource* m_pd3dTextureUploadBuffer;
+	ID3D12Resource* m_pd3dTexture = NULL;
+	ID3D12Resource* m_pd3dTextureUploadBuffer = NULL;
 
 	UINT m_RootParameterIndex;
 
