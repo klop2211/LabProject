@@ -108,6 +108,9 @@
     <ClInclude Include="Mawang.h">
       <Filter>Objects\Monsters</Filter>
     </ClInclude>
+    <ClInclude Include="AnimationCallbackHandler.h">
+      <Filter>Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -166,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="Mawang.cpp">
       <Filter>Objects\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationCallbackHandler.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

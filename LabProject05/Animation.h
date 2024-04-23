@@ -69,6 +69,12 @@ private:
 
 enum class AnimationLoopType{ Once, Repeat };
 
+struct CallbackKey
+{
+	float time = 0.f;
+	void* callback_data = NULL;
+};
+
 class CAnimationTrack
 {
 public:
@@ -84,6 +90,7 @@ public:
 	float weight() const { return weight_; }
 
 	void AddWeight(const float& value);
+	void AddCallbackKey(const float& time, void* data);
 
 	void Animate(const float& fElapsedTime);
 
@@ -105,6 +112,8 @@ private:
 	AnimationLoopType m_LoopType;
 
 	CAnimationSet* m_pAnimationSet;
+
+	std::vector<CallbackKey> callback_keys_;
 };
 
 class CAnimationController
@@ -122,6 +131,8 @@ public:
 	void EnableTrack(const int& index);
 
 	void ChangeAnimation(const int& index);
+
+	void SetCallbackKey(const int& index, const float& time, void* data);
 
 private:
 	const float animation_blend_speed_ = 3.f; // 애니메이션 교체시 교체 속도 단위 once/s
