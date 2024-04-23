@@ -10,6 +10,7 @@
 #include "RotationComponent.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "AnimationCallbackFunc.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -205,4 +206,9 @@ void CEllenPlayer::Update(float fTimeElapsed)
 		animation_controller_->ChangeAnimation(1);
 	else
 		animation_controller_->ChangeAnimation(2);
+}
+
+void CEllenPlayer::SetAnimationCallbackKey(const float& index, const float& time, const CAnimationCallbackFunc& func)
+{
+	animation_controller_->SetCallbackKey(index, time, func);
 }

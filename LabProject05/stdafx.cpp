@@ -183,3 +183,44 @@ ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12Graphics
 
 	return(pd3dTexture);
 }
+
+// WAV 파일을 로드하는 함수
+std::vector<uint8_t> LoadWavFile(const std::string& filename, WAVEFORMATEX& waveFormat) {
+	std::ifstream file(filename, std::ios::binary);
+	if (!file) {
+		return {};
+	}
+
+	// RIFF 헤더 읽기
+	char riffHeader[12];
+	file.read(riffHeader, sizeof(riffHeader));
+
+	// "RIFF" 및 "WAVE" 확인
+	if (std::string(riffHeader, 4) != "RIFF" || std::string(riffHeader + 8, 4) != "WAVE") {
+		return {};
+	}
+
+	// "fmt " 청크 읽기
+	char fmtHeader[8];
+	file.read(fmtHeader, sizeof(fmtHeader));
+	uint32_t fmtSize = *reinterpret_cast<uint32_t*>(fmtHeader + 4);
+
+	file.read(reinterpret_cast<char*>(&waveFormat), fmtSize);
+
+	// "data" 청크로 이동
+	char dataHeader[8];
+	while (true) {
+		file.read(dataHeader, sizeof(dataHeader));
+		if (std::string(dataHeader, 4) == "data") {
+			break;
+		}
+		file.seekg(*reinterpret_cast<uint32_t*>(dataHeader + 4), std::ios::cur);
+	}
+
+	uint32_t dataSize = *reinterpret_cast<uint32_t*>(dataHeader + 4);
+
+	std::vector<uint8_t> data(dataSize);
+	file.read(reinterpret_cast<char*>(data.data()), dataSize);
+
+	return data;
+}

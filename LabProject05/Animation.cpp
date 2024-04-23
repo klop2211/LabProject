@@ -87,14 +87,16 @@ void CAnimationController::ChangeAnimation(const int& index)
 	is_animation_chainging_ = true;
 }
 
-void CAnimationController::SetCallbackKey(const int& index, const float& time, void* data)
+void CAnimationController::SetCallbackKey(const int& index, const float& time, const CAnimationCallbackFunc& callback_func)
 {
-	animation_tracks_[index].AddCallbackKey(time, data);
+	animation_tracks_[index].AddCallbackKey(time, callback_func);
 }
+
+const float CAnimationTrack::callback_check_time_ = 1.f / 60.f;
 
 CAnimationTrack::CAnimationTrack()
 {
-	m_fPosition = 0.f;
+	position_ = 0.f;
 	speed_ = 1.f;
 	enable_ = false;
 	weight_ = 1.0f;
@@ -144,16 +146,22 @@ void CAnimationTrack::AddWeight(const float& value)
 		weight_ = 1.f;
 }
 
-void CAnimationTrack::AddCallbackKey(const float& time, void* data)
+void CAnimationTrack::AddCallbackKey(const float& time, const CAnimationCallbackFunc& func)
 {
-	callback_keys_.emplace_back(time, data);
+	callback_keys_.emplace_back(time, func);
 }
 
 void CAnimationTrack::Animate(const float& fElapsedTime)
 {
 	UpdatePosition(fElapsedTime);
 
-	if (m_pAnimationSet) m_pAnimationSet->Animate(m_fPosition, weight_);
+	for (auto& callback_key : callback_keys_)
+	{
+		if (callback_check_time_ + callback_key.time > position_ && position_ > callback_key.time - callback_check_time_)
+			callback_key.callback_func();
+	}
+
+	if (m_pAnimationSet) m_pAnimationSet->Animate(position_, weight_);
 }
 
 void CAnimationTrack::SetFrameCaches(CGameObject* pRootObject)
@@ -168,11 +176,11 @@ void CAnimationTrack::UpdateMatrix()
 
 void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 {
-	m_fPosition += (fElapsedTime * speed_);
+	position_ += (fElapsedTime * speed_);
 
-	if (m_pAnimationSet->GetEndTime() < m_fPosition)
+	if (m_pAnimationSet->GetEndTime() < position_)
 	{
-		m_fPosition = 0.f;
+		position_ = 0.f;
 
 		if (m_LoopType == AnimationLoopType::Once) enable_ = false;
 	}

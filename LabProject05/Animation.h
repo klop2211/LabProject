@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AnimationCallbackFunc.h"
+
 class CGameObject;
 
 class CAnimationCurve
@@ -72,7 +74,7 @@ enum class AnimationLoopType{ Once, Repeat };
 struct CallbackKey
 {
 	float time = 0.f;
-	void* callback_data = NULL;
+	CAnimationCallbackFunc callback_func;
 };
 
 class CAnimationTrack
@@ -90,7 +92,7 @@ public:
 	float weight() const { return weight_; }
 
 	void AddWeight(const float& value);
-	void AddCallbackKey(const float& time, void* data);
+	void AddCallbackKey(const float& time, const CAnimationCallbackFunc& callback_func);
 
 	void Animate(const float& fElapsedTime);
 
@@ -103,7 +105,10 @@ public:
 private:
 	void UpdatePosition(const float& fElapsedTime);
 
-	float m_fPosition;
+	// 콜백을 체크하는 시간 callback_key.time +- callback_check_time
+	static const float callback_check_time_;
+
+	float position_;
 	float speed_;
 	float weight_;
 
@@ -132,7 +137,7 @@ public:
 
 	void ChangeAnimation(const int& index);
 
-	void SetCallbackKey(const int& index, const float& time, void* data);
+	void SetCallbackKey(const int& index, const float& time, const CAnimationCallbackFunc& callback_func);
 
 private:
 	const float animation_blend_speed_ = 3.f; // 애니메이션 교체시 교체 속도 단위 once/s

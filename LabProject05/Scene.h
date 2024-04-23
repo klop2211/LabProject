@@ -7,6 +7,7 @@ class CTexture;
 class CCamera;
 class CHeightMapTerrain;
 class CDescriptorManager;
+class CAudioManager;
 
 struct LIGHT
 {
@@ -47,7 +48,7 @@ public:
 	// Srv »ý¼º
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice);
 
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer);
+	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer, CAudioManager* audio_manager);
 	void ReleaseObjects();
 
 	void BuildLightsAndMaterials();
@@ -88,6 +89,9 @@ protected:
 
 	// Descriptor
 	CDescriptorManager* m_pDescriptorManager = NULL;
+
+	// AudioManager
+	CAudioManager* audio_manager_ = NULL;
 
 };
 

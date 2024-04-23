@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Player.h"
+#include "AudioManager.h"
 
 
 CGameFramework::CGameFramework()
@@ -49,6 +50,8 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 {
 	hinstance_ = hInstance;
 	hwnd_ = hMainWnd;
+
+	audio_manager_ = new CAudioManager();
 
 	CreateDirect3DDevice();
 	CreateCommandQueueAndList();
@@ -483,7 +486,7 @@ void CGameFramework::BuildObjects()
 	((CThirdPersonCamera*)camera_)->ResetFromPlayer();
 
 	scene_ = new CScene;
-	if (scene_) scene_->BuildObjects(d3d12_device_, d3d12_command_list_, player_);
+	if (scene_) scene_->BuildObjects(d3d12_device_, d3d12_command_list_, player_, audio_manager_);
 
 
 	d3d12_command_list_->Close();

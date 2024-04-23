@@ -4,6 +4,7 @@
 
 class CMovementComponent;
 class CRotationComponent;
+class CAnimationCallbackFunc;
 
 class CPlayer : public CGameObject
 {
@@ -79,6 +80,8 @@ public:
 	CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
 	virtual void Update(float fTimeElapsed);
+
+	void SetAnimationCallbackKey(const float& index, const float& time, const CAnimationCallbackFunc& func);
 };
 
 

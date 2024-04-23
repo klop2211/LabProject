@@ -5,6 +5,7 @@
 class CScene;
 class CPlayer;
 class CCamera;
+class CAudioManager;
 
 class CGameFramework
 {
@@ -81,6 +82,8 @@ private:
 	CScene						*scene_ = NULL;
 	CPlayer						*player_ = NULL;
 	CCamera						*camera_ = NULL;
+
+	CAudioManager* audio_manager_ = NULL;
 
 	POINT						old_cursor_position_;
 
