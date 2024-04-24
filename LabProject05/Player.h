@@ -81,7 +81,7 @@ public:
 
 	virtual void Update(float fTimeElapsed);
 
-	void SetAnimationCallbackKey(const float& index, const float& time, const CAnimationCallbackFunc& func);
+	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
 };
 
 

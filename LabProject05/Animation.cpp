@@ -87,7 +87,7 @@ void CAnimationController::ChangeAnimation(const int& index)
 	is_animation_chainging_ = true;
 }
 
-void CAnimationController::SetCallbackKey(const int& index, const float& time, const CAnimationCallbackFunc& callback_func)
+void CAnimationController::SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func)
 {
 	animation_tracks_[index].AddCallbackKey(time, callback_func);
 }
@@ -146,7 +146,7 @@ void CAnimationTrack::AddWeight(const float& value)
 		weight_ = 1.f;
 }
 
-void CAnimationTrack::AddCallbackKey(const float& time, const CAnimationCallbackFunc& func)
+void CAnimationTrack::AddCallbackKey(const float& time, CAnimationCallbackFunc* func)
 {
 	callback_keys_.emplace_back(time, func);
 }
@@ -158,7 +158,7 @@ void CAnimationTrack::Animate(const float& fElapsedTime)
 	for (auto& callback_key : callback_keys_)
 	{
 		if (callback_check_time_ + callback_key.time > position_ && position_ > callback_key.time - callback_check_time_)
-			callback_key.callback_func();
+			callback_key();
 	}
 
 	if (m_pAnimationSet) m_pAnimationSet->Animate(position_, weight_);

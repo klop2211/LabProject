@@ -1,14 +1,41 @@
 #pragma once
 
+class CVoiceCallback : public IXAudio2VoiceCallback
+{
+	bool is_play_ = false;
+
+public:
+	CVoiceCallback() {}
+	~CVoiceCallback() {}
+
+	//Called when the voice has just finished playing a contiguous audio stream.
+	void OnStreamEnd() {}
+
+	//Unused methods are stubs
+	void OnVoiceProcessingPassEnd() { }
+	void OnVoiceProcessingPassStart(UINT32 SamplesRequired) { }
+	void OnBufferEnd(void* pBufferContext) { is_play_ = false; }
+	void OnBufferStart(void* pBufferContext) { is_play_ = true; }
+	void OnLoopEnd(void* pBufferContext) {    }
+	void OnVoiceError(void* pBufferContext, HRESULT Error) { }
+
+	bool IsPlay() { return is_play_; }
+};
+
 class CAudioTrack
 {
-	WAVEFORMATEX wave_format_;
+	static CVoiceCallback voice_callback_;
+
+	WAVEFORMATEXTENSIBLE wave_format_;
 
 	IXAudio2SourceVoice* ix_source_voice_;
 
+
 	XAUDIO2_BUFFER buffer_;
 
+
 public:
+	CAudioTrack() {}
 	CAudioTrack(IXAudio2* ix_audio, const std::string& file_name);
 	~CAudioTrack();
 
@@ -30,7 +57,12 @@ public:
 	CAudioManager();
 	~CAudioManager();
 
-	bool IsTrack(const std::string& track_name) { return audio_tracks_.count(track_name); }
+	bool IsTrack(const std::string& track_name) 
+	{ 
+		if (audio_tracks_.empty())
+			return false;
+		return audio_tracks_.count(track_name); 
+	}
 
 	void AddTrack(const std::string& track_name);
 

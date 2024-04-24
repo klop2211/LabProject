@@ -4,15 +4,14 @@ class CAudioManager;
 
 class CAnimationCallbackFunc
 {
-	CAnimationCallbackFunc* func_ = NULL;
+	//CAnimationCallbackFunc* func_ = NULL;
 
 public:
 	CAnimationCallbackFunc() {}
-	CAnimationCallbackFunc(CAnimationCallbackFunc* func) : func_(func) {}
 	~CAnimationCallbackFunc();
 
 	virtual void Util() {}
-	void operator()() { func_->Util(); }
+	void operator()() { Util(); }
 };
 
 

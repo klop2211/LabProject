@@ -4,8 +4,6 @@
 
 CAnimationCallbackFunc::~CAnimationCallbackFunc()
 {
-	if (func_)
-		delete func_;
 }
 
 CSoundCallbackFunc::CSoundCallbackFunc(CAudioManager* audio_manager, const std::string& track_name) : audio_manager_(audio_manager), track_name_(track_name)

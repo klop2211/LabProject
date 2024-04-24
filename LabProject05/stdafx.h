@@ -74,16 +74,42 @@ using Microsoft::WRL::ComPtr;
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
 
+//wav 파일 로드 관련
+#ifdef _XBOX //Big-Endian
+#define fourccRIFF 'RIFF'
+#define fourccDATA 'data'
+#define fourccFMT 'fmt '
+#define fourccWAVE 'WAVE'
+#define fourccXWMA 'XWMA'
+#define fourccDPDS 'dpds'
+#endif
+
+#ifndef _XBOX //Little-Endian
+#define fourccRIFF 'FFIR'
+#define fourccDATA 'atad'
+#define fourccFMT ' tmf'
+#define fourccWAVE 'EVAW'
+#define fourccXWMA 'AMWX'
+#define fourccDPDS 'sdpd'
+#endif
+
+struct AudioData
+{
+	BYTE* data;
+	DWORD size;
+};
+bool FindChunk(std::ifstream& hFile, DWORD fourcc, DWORD& dwChunkSize, DWORD& dwChunkDataPosition);
+bool ReadChunkData(std::ifstream& hFile, void* buffer, DWORD buffersize, DWORD bufferoffset);
+AudioData LoadWavFile(const std::string& filename, WAVEFORMATEXTENSIBLE& waveFormat);
+
 
 //#define _WITH_SWAPCHAIN_FULLSCREEN_STATE
-
 
 extern UINT gnCbvSrvDescriptorIncrementSize;
 
 extern ID3D12Resource* CreateBufferResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nBytes, D3D12_HEAP_TYPE d3dHeapType = D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, ID3D12Resource** ppd3dUploadBuffer = NULL);
 extern ID3D12Resource* CreateTextureResourceFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const wchar_t* pszFileName, ID3D12Resource** ppd3dUploadBuffer, D3D12_RESOURCE_STATES d3dResourceStates = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, UINT nWidth, UINT nHeight, UINT nElements, UINT nMipLevels, DXGI_FORMAT dxgiFormat, D3D12_RESOURCE_FLAGS d3dResourceFlags, D3D12_RESOURCE_STATES d3dResourceStates, D3D12_CLEAR_VALUE* pd3dClearValue);
-std::vector<uint8_t> LoadWavFile(const std::string& filename, WAVEFORMATEX& waveFormat);
 
 #define RANDOM_COLOR			XMFLOAT4(rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX), rand() / float(RAND_MAX))
 

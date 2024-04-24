@@ -74,7 +74,11 @@ enum class AnimationLoopType{ Once, Repeat };
 struct CallbackKey
 {
 	float time = 0.f;
-	CAnimationCallbackFunc callback_func;
+	CAnimationCallbackFunc* callback_func;
+
+	CallbackKey(const float& t, CAnimationCallbackFunc* func) { time = t, callback_func = func; }
+
+	void operator()() { callback_func->Util(); }
 };
 
 class CAnimationTrack
@@ -92,7 +96,7 @@ public:
 	float weight() const { return weight_; }
 
 	void AddWeight(const float& value);
-	void AddCallbackKey(const float& time, const CAnimationCallbackFunc& callback_func);
+	void AddCallbackKey(const float& time, CAnimationCallbackFunc* callback_func);
 
 	void Animate(const float& fElapsedTime);
 
@@ -137,7 +141,7 @@ public:
 
 	void ChangeAnimation(const int& index);
 
-	void SetCallbackKey(const int& index, const float& time, const CAnimationCallbackFunc& callback_func);
+	void SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func);
 
 private:
 	const float animation_blend_speed_ = 3.f; // 애니메이션 교체시 교체 속도 단위 once/s

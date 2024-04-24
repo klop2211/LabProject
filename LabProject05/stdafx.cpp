@@ -184,43 +184,113 @@ ID3D12Resource* CreateTexture2DResource(ID3D12Device* pd3dDevice, ID3D12Graphics
 	return(pd3dTexture);
 }
 
-// WAV 파일을 로드하는 함수
-std::vector<uint8_t> LoadWavFile(const std::string& filename, WAVEFORMATEX& waveFormat) {
-	std::ifstream file(filename, std::ios::binary);
-	if (!file) {
-		return {};
-	}
+HRESULT FindChunk(HANDLE hFile, DWORD fourcc, DWORD& dwChunkSize, DWORD& dwChunkDataPosition)
+{
+	HRESULT hr = S_OK;
+	if (INVALID_SET_FILE_POINTER == SetFilePointer(hFile, 0, NULL, FILE_BEGIN))
+		return HRESULT_FROM_WIN32(GetLastError());
 
-	// RIFF 헤더 읽기
-	char riffHeader[12];
-	file.read(riffHeader, sizeof(riffHeader));
+	DWORD dwChunkType;
+	DWORD dwChunkDataSize;
+	DWORD dwRIFFDataSize = 0;
+	DWORD dwFileType;
+	DWORD bytesRead = 0;
+	DWORD dwOffset = 0;
 
-	// "RIFF" 및 "WAVE" 확인
-	if (std::string(riffHeader, 4) != "RIFF" || std::string(riffHeader + 8, 4) != "WAVE") {
-		return {};
-	}
+	while (hr == S_OK)
+	{
+		DWORD dwRead;
+		if (0 == ReadFile(hFile, &dwChunkType, sizeof(DWORD), &dwRead, NULL))
+			hr = HRESULT_FROM_WIN32(GetLastError());
 
-	// "fmt " 청크 읽기
-	char fmtHeader[8];
-	file.read(fmtHeader, sizeof(fmtHeader));
-	uint32_t fmtSize = *reinterpret_cast<uint32_t*>(fmtHeader + 4);
+		if (0 == ReadFile(hFile, &dwChunkDataSize, sizeof(DWORD), &dwRead, NULL))
+			hr = HRESULT_FROM_WIN32(GetLastError());
 
-	file.read(reinterpret_cast<char*>(&waveFormat), fmtSize);
-
-	// "data" 청크로 이동
-	char dataHeader[8];
-	while (true) {
-		file.read(dataHeader, sizeof(dataHeader));
-		if (std::string(dataHeader, 4) == "data") {
+		switch (dwChunkType)
+		{
+		case fourccRIFF:
+			dwRIFFDataSize = dwChunkDataSize;
+			dwChunkDataSize = 4;
+			if (0 == ReadFile(hFile, &dwFileType, sizeof(DWORD), &dwRead, NULL))
+				hr = HRESULT_FROM_WIN32(GetLastError());
 			break;
+
+		default:
+			if (INVALID_SET_FILE_POINTER == SetFilePointer(hFile, dwChunkDataSize, NULL, FILE_CURRENT))
+				return HRESULT_FROM_WIN32(GetLastError());
 		}
-		file.seekg(*reinterpret_cast<uint32_t*>(dataHeader + 4), std::ios::cur);
+
+		dwOffset += sizeof(DWORD) * 2;
+
+		if (dwChunkType == fourcc)
+		{
+			dwChunkSize = dwChunkDataSize;
+			dwChunkDataPosition = dwOffset;
+			return S_OK;
+		}
+
+		dwOffset += dwChunkDataSize;
+
+		if (bytesRead >= dwRIFFDataSize) return S_FALSE;
+
 	}
 
-	uint32_t dataSize = *reinterpret_cast<uint32_t*>(dataHeader + 4);
+	return S_OK;
 
-	std::vector<uint8_t> data(dataSize);
-	file.read(reinterpret_cast<char*>(data.data()), dataSize);
+}
 
-	return data;
+HRESULT ReadChunkData(HANDLE hFile, void* buffer, DWORD buffersize, DWORD bufferoffset)
+{
+	HRESULT hr = S_OK;
+	if (INVALID_SET_FILE_POINTER == SetFilePointer(hFile, bufferoffset, NULL, FILE_BEGIN))
+		return HRESULT_FROM_WIN32(GetLastError());
+	DWORD dwRead;
+	if (0 == ReadFile(hFile, buffer, buffersize, &dwRead, NULL))
+		hr = HRESULT_FROM_WIN32(GetLastError());
+	return hr;
+}
+
+// WAV 파일을 로드하는 함수
+AudioData LoadWavFile(const std::string& filename, WAVEFORMATEXTENSIBLE& wave_format) {
+	
+	std::wstring str;
+
+	str.assign(filename.begin(), filename.end());
+
+	HANDLE hFile = CreateFile(
+		str.c_str(),
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+
+	DWORD dwChunkSize;
+	DWORD dwChunkPosition;
+	//check the file type, should be fourccWAVE or 'XWMA'
+	FindChunk(hFile, fourccRIFF, dwChunkSize, dwChunkPosition);
+	DWORD filetype;
+	ReadChunkData(hFile, &filetype, sizeof(DWORD), dwChunkPosition);
+	if (filetype != fourccWAVE)
+	{
+
+	}
+
+	FindChunk(hFile, fourccFMT, dwChunkSize, dwChunkPosition);
+	ReadChunkData(hFile, &wave_format, dwChunkSize, dwChunkPosition);
+
+	//fill out the audio data buffer with the contents of the fourccDATA chunk
+	FindChunk(hFile, fourccDATA, dwChunkSize, dwChunkPosition);
+	BYTE* pDataBuffer = new BYTE[dwChunkSize];
+	ReadChunkData(hFile, pDataBuffer, dwChunkSize, dwChunkPosition);
+
+	AudioData audio_data;
+
+	audio_data.data = pDataBuffer;
+	audio_data.size = dwChunkSize;
+
+	return audio_data;
 }

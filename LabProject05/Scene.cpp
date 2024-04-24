@@ -235,7 +235,7 @@ void CScene::AnimateObjects(float fTimeElapsed)
 
 void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer, CAudioManager* audio_manager)
 {
-	audio_manager_ = audio_manager_;
+	audio_manager_ = audio_manager;
 
 	m_pPlayer = pPlayer;
 
@@ -283,9 +283,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	m_Objects[0] = (CGameObject*)m_pPlayer;
 	m_Objects[0]->SetShader(4);
 	m_Objects[0]->set_position_vector(500, m_pTerrain->GetHeight(500, 500), 500);
-	CSoundCallbackFunc* sound_func = new CSoundCallbackFunc(audio_manager_, "Footstep01");
-	CAnimationCallbackFunc func{ sound_func };
-	((CEllenPlayer*)m_Objects[0])->SetAnimationCallbackKey(2, 0.1, func);
+	((CEllenPlayer*)m_Objects[0])->SetAnimationCallbackKey(2, 0.1, new CSoundCallbackFunc(audio_manager_, "sound"));
+	((CEllenPlayer*)m_Objects[0])->SetAnimationCallbackKey(0, 0.1, new CSoundCallbackFunc(audio_manager_, "test"));
 
 
 	m_Objects[1] = (CGameObject*)m_pTerrain;

@@ -203,12 +203,12 @@ void CEllenPlayer::Update(float fTimeElapsed)
 	CPlayer::Update(fTimeElapsed);
 
 	if (IsZero(movement_component_->velocity()))
-		animation_controller_->ChangeAnimation(1);
+		animation_controller_->ChangeAnimation(0);
 	else
 		animation_controller_->ChangeAnimation(2);
 }
 
-void CEllenPlayer::SetAnimationCallbackKey(const float& index, const float& time, const CAnimationCallbackFunc& func)
+void CEllenPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func)
 {
 	animation_controller_->SetCallbackKey(index, time, func);
 }
