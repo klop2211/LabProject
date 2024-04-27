@@ -3,8 +3,6 @@
 
 const std::string CAudioManager::file_path_ = "../Resource/Sound/";
 
-CVoiceCallback CAudioTrack::voice_callback_;
-
 CAudioManager::CAudioManager()
 {
 	HRESULT comResult;
@@ -43,7 +41,7 @@ CAudioTrack::CAudioTrack(IXAudio2* ix_audio, const std::string& file_name)
 {
 	auto data = ::LoadWavFile(file_name, wave_format_);
 
-	if (FAILED(ix_audio->CreateSourceVoice(&ix_source_voice_, &wave_format_.Format, 0, XAUDIO2_DEFAULT_FREQ_RATIO, (IXAudio2VoiceCallback*)&voice_callback_, NULL, NULL)))
+	if (FAILED(ix_audio->CreateSourceVoice(&ix_source_voice_, &wave_format_.Format)))
 		std::string a{ "fail" };
 
 	buffer_.AudioBytes = data.size;
@@ -60,7 +58,9 @@ CAudioTrack::~CAudioTrack()
 
 void CAudioTrack::Play()
 {
-	if (!voice_callback_.IsPlay())
+	XAUDIO2_VOICE_STATE state;
+	ix_source_voice_->GetState(&state);
+	if (state.BuffersQueued < 1)
 	{
 		ix_source_voice_->SubmitSourceBuffer(&buffer_);
 		ix_source_voice_->Start();

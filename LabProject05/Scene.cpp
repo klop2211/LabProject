@@ -181,55 +181,55 @@ void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 {
 	// 조명정보
 	UINT ncbLightsBytes = ((sizeof(LIGHTS) + 255) & ~255); //256의 배수
-	m_pd3dcbLights = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbLightsBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	d3d12_lights_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbLightsBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
-	m_pd3dcbLights->Map(0, NULL, (void**)&m_pcbMappedLights);
+	d3d12_lights_->Map(0, NULL, (void**)&mapped_lights_);
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC d3dcbvDesc;
-	d3dcbvDesc.BufferLocation = m_pd3dcbLights->GetGPUVirtualAddress();
+	d3dcbvDesc.BufferLocation = d3d12_lights_->GetGPUVirtualAddress();
 	d3dcbvDesc.SizeInBytes = ncbLightsBytes;
-	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, m_pDescriptorManager->GetCbvNextCPUHandle());
-	m_d3dLightsGPUDescriptorStartHandle = m_pDescriptorManager->GetCbvNextGPUHandle();
+	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, descriptor_manager_->GetCbvNextCPUHandle());
+	d3d12_lights_gpu_descriptor_start_handle_ = descriptor_manager_->GetCbvNextGPUHandle();
 
-	m_pDescriptorManager->AddCbvIndex();
+	descriptor_manager_->AddCbvIndex();
 }
 
 void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	::memcpy(m_pcbMappedLights, m_pLights, sizeof(LIGHTS));
+	::memcpy(mapped_lights_, m_pLights, sizeof(LIGHTS));
 }
 
 void CScene::ReleaseShaderVariables()
 {
-	if (m_pd3dcbLights)
+	if (d3d12_lights_)
 	{
-		m_pd3dcbLights->Unmap(0, NULL);
-		m_pd3dcbLights->Release();
+		d3d12_lights_->Unmap(0, NULL);
+		d3d12_lights_->Release();
 	}
 }
 
 void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 {
-	for (auto& Object : m_Objects)
-		Object->CreateShaderResourceViews(pd3dDevice, m_pDescriptorManager);
+	for (auto& Object : objects_)
+		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 }
 
 void CScene::ReleaseUploadBuffers()
 {
-	for (auto& pObject : m_Objects) pObject->ReleaseUploadBuffers();
+	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
 }
 
 void CScene::AnimateObjects(float fTimeElapsed)
 {
-	m_pPlayer->OnPrepareRender();
+	player_->OnPrepareRender();
 
-	for (auto& pObject : m_Objects) 
+	for (auto& pObject : objects_) 
 		pObject->Animate(fTimeElapsed);
 
 	if (m_pLights)
 	{
-		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->position_vector();
-		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->look_vector();
+		m_pLights->m_pLights[1].m_xmf3Position = player_->position_vector();
+		m_pLights->m_pLights[1].m_xmf3Direction = player_->look_vector();
 	}
 }
 
@@ -237,27 +237,25 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 {
 	audio_manager_ = audio_manager;
 
-	m_pPlayer = pPlayer;
+	player_ = pPlayer;
 
-	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
+	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	m_nShaders = 2;			// 조명 O, X 각각 1개씩
-	m_Shaders.reserve(m_nShaders);
+	int shader_num = 2;			// 조명 O, X 각각 1개씩
+	shaders_.reserve(shader_num);
 
-	m_Shaders.emplace_back(new CStandardShader);
-	//m_ppShaders[1] = new CIlluminatedShader;
-	m_Shaders.emplace_back(new CTerrainShader);
+	shaders_.emplace_back(new CStandardShader);
+	shaders_.emplace_back(new CTerrainShader);
 
-	for(auto& shader : m_Shaders)
-		shader->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	for(auto& shader : shaders_)
+		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
 
-	m_nObjects = 2;		// Player + Terrain
 
-	m_pDescriptorManager = new CDescriptorManager;
-	m_pDescriptorManager->SetDescriptors(1 + 4); // 조명(cbv), 텍스처
+	descriptor_manager_ = new CDescriptorManager;
+	descriptor_manager_->SetDescriptors(1 + 4); // 조명(cbv), 텍스처
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
-	d3dDescriptorHeapDesc.NumDescriptors = m_pDescriptorManager->GetDescriptors();		
+	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -265,51 +263,50 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	ID3D12DescriptorHeap* pd3dDescritorHeap;
 	pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&pd3dDescritorHeap);
 
-	m_pDescriptorManager->SetDesriptorHeap(pd3dDescritorHeap);
-	m_pDescriptorManager->Initialization(1);
+	descriptor_manager_->SetDesriptorHeap(pd3dDescritorHeap);
+	descriptor_manager_->Initialization(1);
 
 	//TODO: Light 관련 차후 수정
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
 	XMFLOAT3 xmf3Scale(18.0f, 6.0f, 18.0f);
-	XMFLOAT4 xmf4Color(0.0f, 0.5f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
+	int object_num = 2;		// Player + Terrain
 
-	m_Objects.resize(m_nObjects);
+	objects_.resize(object_num);
+
+	objects_[0] = (CGameObject*)player_;
+	objects_[0]->SetShader(4);
+	objects_[0]->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
+	((CEllenPlayer*)objects_[0])->SetAnimationCallbackKey(2, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 
 
-	m_Objects[0] = (CGameObject*)m_pPlayer;
-	m_Objects[0]->SetShader(4);
-	m_Objects[0]->set_position_vector(500, m_pTerrain->GetHeight(500, 500), 500);
-	((CEllenPlayer*)m_Objects[0])->SetAnimationCallbackKey(2, 0.1, new CSoundCallbackFunc(audio_manager_, "sound"));
-	((CEllenPlayer*)m_Objects[0])->SetAnimationCallbackKey(0, 0.1, new CSoundCallbackFunc(audio_manager_, "test"));
-
-
-	m_Objects[1] = (CGameObject*)m_pTerrain;
-	m_Objects[1]->SetShader(2);
+	objects_[1] = (CGameObject*)terrain_;
+	objects_[1]->SetShader(2);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 }
 
 void CScene::ReleaseObjects()
 {
-	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
+	if (d3d12_root_signature_) d3d12_root_signature_->Release();
 
-	for (auto& pObject : m_Objects)
+	for (auto& pObject : objects_)
 	{
 		delete pObject;
 		pObject = NULL;
 	}
 
-	for (auto& shader : m_Shaders)
+	for (auto& shader : shaders_)
 	{
 		shader->Release();
 		shader = NULL;
 	}
 
-	if (m_pDescriptorManager) delete m_pDescriptorManager;
+	if (descriptor_manager_) delete descriptor_manager_;
 
 	ReleaseShaderVariables();
 
@@ -318,8 +315,8 @@ void CScene::ReleaseObjects()
 
 void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
-	pd3dCommandList->SetDescriptorHeaps(1, &m_pDescriptorManager->GetDescriptorHeap());
+	pd3dCommandList->SetGraphicsRootSignature(d3d12_root_signature_);
+	pd3dCommandList->SetDescriptorHeaps(1, &descriptor_manager_->GetDescriptorHeap());
 
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
@@ -329,19 +326,19 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
 	//pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dMaterialsCbvGPUDescriptorHandle);
 #else
-	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = d3d12_lights_->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbLightsGpuVirtualAddress); //Lights
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbMaterialsGpuVirtualAddress = m_pd3dcbMaterials->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress);
 #endif
 
-	for (int i = 0; i < m_nShaders; i++)
+	for (int i = 0; i < shaders_.size(); i++)
 	{
-		m_Shaders[i]->Render(pd3dCommandList);
-		for (auto& pObject: m_Objects)
+		shaders_[i]->Render(pd3dCommandList);
+		for (auto& pObject: objects_)
 		{
-			if (pObject->CheckShader(m_Shaders[i]->GetShaderNum()))
+			if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
 			{
 				pObject->Render(pd3dCommandList, pCamera);
 			}

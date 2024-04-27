@@ -144,7 +144,7 @@ public:
 	void SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func);
 
 private:
-	const float animation_blend_speed_ = 3.f; // 애니메이션 교체시 교체 속도 단위 once/s
+	const float animation_blend_speed_ = 5.f; // 애니메이션 교체시 교체 속도 단위 once/s
 
 	bool is_animation_chainging_ = false;
 

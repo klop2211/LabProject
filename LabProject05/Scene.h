@@ -54,7 +54,7 @@ public:
 	void BuildLightsAndMaterials();
 
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
-	ID3D12RootSignature* GetGraphicsRootSignature() { return(m_pd3dGraphicsRootSignature); }
+	ID3D12RootSignature* GetGraphicsRootSignature() { return(d3d12_root_signature_); }
 
 	bool ProcessInput(UCHAR* pKeysBuffer) { return false; }
 	void AnimateObjects(float fTimeElapsed);
@@ -63,32 +63,32 @@ public:
 	void ReleaseUploadBuffers();
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nDescriptorHeapIndex, UINT nRootParameterStartIndex);
 
-	CPlayer* m_pPlayer = NULL;
 
 protected:
-	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
+	ID3D12RootSignature* d3d12_root_signature_ = NULL;
 
 	// Shader 包府
-	std::vector<CShader*> m_Shaders;
-	int	m_nShaders = 0;
+	std::vector<CShader*> shaders_;
 
 	// GameObject 包府
-	std::vector<CGameObject*> m_Objects;
-	int	m_nObjects = 0;
+	std::vector<CGameObject*> objects_;
 
-	// Light 包府
+	//TODO: 炼疙包访 贸府 鞘夸
 	LIGHTS* m_pLights = NULL;
 
-	ID3D12Resource* m_pd3dcbLights = NULL;
-	LIGHTS* m_pcbMappedLights = NULL;
+	ID3D12Resource* d3d12_lights_ = NULL;
+	LIGHTS* mapped_lights_ = NULL;
 
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dLightsGPUDescriptorStartHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE d3d12_lights_gpu_descriptor_start_handle_;
 
 	// Terrain
-	CHeightMapTerrain* m_pTerrain = NULL;
+	CHeightMapTerrain* terrain_ = NULL;
+
+	// Player
+	CPlayer* player_ = NULL;
 
 	// Descriptor
-	CDescriptorManager* m_pDescriptorManager = NULL;
+	CDescriptorManager* descriptor_manager_ = NULL;
 
 	// AudioManager
 	CAudioManager* audio_manager_ = NULL;

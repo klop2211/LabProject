@@ -74,8 +74,13 @@ public:
 
 };
 
+enum class EllenAnimationState { Idle = 0, Roll, Run, Walk };
+
 class CEllenPlayer : public CPlayer
 {
+private:
+	EllenAnimationState animation_state_ = EllenAnimationState::Idle;
+
 public:
 	CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 
