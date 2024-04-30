@@ -210,6 +210,10 @@ void CScene::ReleaseShaderVariables()
 
 void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 {
+	player_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
+	terrain_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
 	for (auto& Object : objects_)
 		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 }
@@ -219,12 +223,18 @@ void CScene::ReleaseUploadBuffers()
 	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
 }
 
-void CScene::AnimateObjects(float fTimeElapsed)
+void CScene::AnimateObjects(float elapsed_time)
 {
-	player_->OnPrepareRender();
+	//player_->OnPrepareRender();
+
+	CollisionCheck();
+
+	player_->Animate(elapsed_time);
+
+	terrain_->Animate(elapsed_time);
 
 	for (auto& pObject : objects_) 
-		pObject->Animate(fTimeElapsed);
+		pObject->Animate(elapsed_time);
 
 	if (m_pLights)
 	{
@@ -270,22 +280,16 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(18.0f, 6.0f, 18.0f);
+	XMFLOAT3 xmf3Scale(400.0f, 40.0f, 400.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+
+
+	player_->SetShader(4);
+	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
+	((CEllenPlayer*)player_)->SetAnimationCallbackKey((int)EllenAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	
-	int object_num = 2;		// Player + Terrain
-
-	objects_.resize(object_num);
-
-	objects_[0] = (CGameObject*)player_;
-	objects_[0]->SetShader(4);
-	objects_[0]->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
-	((CEllenPlayer*)objects_[0])->SetAnimationCallbackKey(2, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
-
-
-	objects_[1] = (CGameObject*)terrain_;
-	objects_[1]->SetShader(2);
+	int object_num = 0; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 }
@@ -293,6 +297,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 void CScene::ReleaseObjects()
 {
 	if (d3d12_root_signature_) d3d12_root_signature_->Release();
+
+	delete player_;
+	player_ = NULL;
+
+	delete terrain_;
+	terrain_ = NULL;
 
 	for (auto& pObject : objects_)
 	{
@@ -343,9 +353,42 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 				pObject->Render(pd3dCommandList, pCamera);
 			}
 		}
+		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
+			player_->Render(pd3dCommandList, pCamera);
+		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
+			terrain_->Render(pd3dCommandList, pCamera);
 	}
 
 
 }
 
+void CScene::UpdateCollisionList()
+{
+	collision_list_.clear();
+
+	for (auto& object : objects_)
+	{
+		if (Vector3::Length(player_->position_vector() - object->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
+			collision_list_.push_back(object);
+	}
+}
+
+void CScene::CollisionCheck()
+{
+	// 지면에 닿아있는지 체크
+	XMFLOAT3 position = player_->position_vector();
+	float terrain_height = terrain_->GetHeight(position.x, position.z);
+	if (position.y > terrain_height)
+		player_->set_is_fall(true);
+	if (IsEqual(position.y, terrain_height))
+		player_->set_is_fall(false);
+	if (position.y < terrain_height)
+	{
+		player_->set_position_vector(position.x, terrain_height, position.z);
+		player_->set_is_fall(false);
+	}
+		
+
+	//TODO: 객체의 OBB를 이용해서 서로 겹치면 밀어내는 기본 충돌처리 구현
+}
 

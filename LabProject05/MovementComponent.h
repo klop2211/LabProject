@@ -11,9 +11,8 @@ class CMovementComponent : public CComponent
 	XMFLOAT3 direction_vector_ = XMFLOAT3(0.f, 0.f, 1.f);
 	float velocity_ = 100.f;
 
-	bool m_bGravity = false;
-	float m_fGravityAcceleration = 980.f;
-	float m_fGravityVelocity = 0.f;
+	float gravity_acceleration_ = 980.f;
+	float gravity_velocity_ = 0.f;
 
 public:
 	CMovementComponent() {}

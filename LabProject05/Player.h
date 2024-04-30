@@ -56,6 +56,8 @@ public:
 
 	virtual void Update(float fTimeElapsed);
 
+	virtual void HandleCollision(CGameObject* other) override {}
+
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
 

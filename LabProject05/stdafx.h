@@ -22,6 +22,7 @@
 #include <array>
 #include <memory>
 #include <unordered_map>
+#include <list>
 
 #include <wrl.h>
 #include <shellapi.h>
@@ -146,7 +147,7 @@ namespace Vector3
 		return(xmf3Result);
 	}
 
-	inline XMFLOAT3 Add(XMFLOAT3& xmf3Vector1, XMFLOAT3& xmf3Vector2, float fScalar)
+	inline XMFLOAT3 Add(const XMFLOAT3& xmf3Vector1, const XMFLOAT3& xmf3Vector2, float fScalar)
 	{
 		XMFLOAT3 xmf3Result;
 		XMStoreFloat3(&xmf3Result, XMLoadFloat3(&xmf3Vector1) + (XMLoadFloat3(&xmf3Vector2) * fScalar));
@@ -323,6 +324,10 @@ namespace Plane
 		return(xmf4Result);
 	}
 }
+
+// xmf 관련 연산자 오버로딩
+inline XMFLOAT3 operator+(const XMFLOAT3& lhs, const XMFLOAT3& rhs) { return Vector3::Add(lhs, rhs); }
+inline XMFLOAT3 operator-(const XMFLOAT3& lhs, const XMFLOAT3& rhs) { return Vector3::Add(lhs, rhs, -1); }
 
 
 namespace FBXLoad

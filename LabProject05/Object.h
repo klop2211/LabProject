@@ -61,6 +61,9 @@ protected:
 
 	CAnimationController* animation_controller_ = NULL;
 
+	// 물리 옵션 적용관련 변수
+	bool is_fall_ = false; //중력의 적용을 받는지
+
 public:
 	CGameObject();
 	~CGameObject();
@@ -70,6 +73,7 @@ public:
 
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
+	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
 	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
 	void set_right_vector(const float& x, const float& y, const float& z);
@@ -97,6 +101,7 @@ public:
 	XMFLOAT3 look_vector() const;
 	XMFLOAT3 up_vector() const;
 	XMFLOAT3 right_vector() const;
+	bool is_fall() const { return is_fall_; }
 
 	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
 	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
@@ -119,13 +124,13 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
-	CGameObject* FindFrame(const std::string& strFrameName);
+	virtual void HandleCollision(CGameObject* other) {}
 
+	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
 
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
-
 	static CModelInfo LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		const std::string& heirarchy_file_name);
 	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
@@ -163,6 +168,8 @@ public:
 	XMFLOAT3 GetScale() { return(m_xmf3Scale); }
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
+
+	virtual void HandleCollision(CGameObject* other) override {}
 
 };
 

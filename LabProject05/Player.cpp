@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "AnimationCallbackFunc.h"
+#include "Material.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -39,7 +40,7 @@ CPlayer::~CPlayer()
 {
 	ReleaseShaderVariables();
 
-	if (camera_) delete camera_;
+	//if (camera_) delete camera_;
 }
 
 void CPlayer::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
@@ -177,6 +178,11 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	animation_controller_->SetFrameCaches(this);
 
 	animation_controller_->EnableTrack(0);
+
+	CMaterial* Material = new CMaterial(1);
+	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.dds", TextureType::RESOURCE_TEXTURE2D, 7);
+
+	SetMaterial(0, Material);
 
 	speed_ = 1000.f;
 

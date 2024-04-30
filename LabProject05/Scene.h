@@ -63,6 +63,9 @@ public:
 	void ReleaseUploadBuffers();
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nDescriptorHeapIndex, UINT nRootParameterStartIndex);
 
+	// 面倒 贸府
+	void UpdateCollisionList();
+	void CollisionCheck();
 
 protected:
 	ID3D12RootSignature* d3d12_root_signature_ = NULL;
@@ -70,8 +73,17 @@ protected:
 	// Shader 包府
 	std::vector<CShader*> shaders_;
 
+	// Terrain
+	CHeightMapTerrain* terrain_ = NULL;
+
+	// Player
+	CPlayer* player_ = NULL;
+
 	// GameObject 包府
 	std::vector<CGameObject*> objects_;
+
+	// 面倒 包府
+	std::list<CGameObject*> collision_list_;
 
 	//TODO: 炼疙包访 贸府 鞘夸
 	LIGHTS* m_pLights = NULL;
@@ -81,11 +93,6 @@ protected:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE d3d12_lights_gpu_descriptor_start_handle_;
 
-	// Terrain
-	CHeightMapTerrain* terrain_ = NULL;
-
-	// Player
-	CPlayer* player_ = NULL;
 
 	// Descriptor
 	CDescriptorManager* descriptor_manager_ = NULL;
