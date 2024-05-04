@@ -9,7 +9,11 @@
 CTextureProperty::CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
 {
 	m_Textures.emplace_back();
-	m_Textures.back().LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
+
+	if (strFileName.substr(strFileName.length() - 3, 3) == "dds")
+		m_Textures.back().LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
+	else
+		m_Textures.back().LoadTextureFromWICFile(pd3dDevice, pd3dCommandList, strFileName, nResourceType, nRootParameterIndex);
 }
 
 CTextureProperty::CTextureProperty(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, const std::string& strName) : m_PropertyName(strName)

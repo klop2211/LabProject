@@ -124,6 +124,7 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 			
 			XMFLOAT2* pUVs = new XMFLOAT2[m_nVertices];
 
+
 			FBXLoad::ReadFromFile<XMFLOAT2>(InFile, pUVs, m_nVertices);
 
 			m_pd3dUVBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, pUVs,

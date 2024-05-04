@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 	//if (fbxSceneSystemUnit.GetScaleFactor() != 1.0) FbxSystemUnit::cm.ConvertScene(pfbxModelScene);
 
 	fbxGeomConverter.Triangulate(pfbxModelScene, true);
-	fbxGeomConverter.RemoveBadPolygonsFromMeshes(pfbxModelScene, NULL);
+	//fbxGeomConverter.RemoveBadPolygonsFromMeshes(pfbxModelScene, NULL);
 		//fbxGeomConverter.SplitMeshesPerMaterial(pfbxModelScene, true);
 
 

@@ -180,7 +180,7 @@ CEllenPlayer::CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* 
 	animation_controller_->EnableTrack(0);
 
 	CMaterial* Material = new CMaterial(1);
-	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.dds", TextureType::RESOURCE_TEXTURE2D, 7);
+	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
 
 	SetMaterial(0, Material);
 

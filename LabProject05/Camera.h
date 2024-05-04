@@ -124,8 +124,9 @@ public:
 class CThirdPersonCamera : public CCamera
 {
 private:
-	const float cfTpsDefaultDistanceOffset = 500.f;
-	const float cfTpsDefaultPitchOffset = 40.f;
+	const float kTpsDefaultDistanceOffset = 500.f;
+	const float kTpsDefaultPitchOffset = 40.f;
+	const float kHeightOffset = 85.f;
 
 	float m_fOffsetDistance;
 	float m_fOffsetPitch;

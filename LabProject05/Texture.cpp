@@ -66,10 +66,10 @@ void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 
 	FBXLoad::ReadStringFromFile(InFile, strToken);
 	m_strTextureFileName = strToken;
-	m_strTextureFileName = TEXTURE_FILE_ROOT + m_strTextureFileName.substr(0, m_strTextureFileName.size() - 3) + "dds";
+	m_strTextureFileName = TEXTURE_FILE_ROOT + m_strTextureFileName.substr(0, m_strTextureFileName.size());
 	
 	//TODO: 루트마라미터 인덱스 관련 상수 정리
-	LoadTextureFromDDSFile(pd3dDevice, pd3dCommandList, m_strTextureFileName, TextureType::RESOURCE_TEXTURE2D, 7); 
+	LoadTextureFromWICFile(pd3dDevice, pd3dCommandList, m_strTextureFileName, TextureType::RESOURCE_TEXTURE2D, 7); 
 
 	m_UVScale.x = FBXLoad::ReadFromFile<float>(InFile);
 	m_UVScale.y = FBXLoad::ReadFromFile<float>(InFile);
@@ -116,6 +116,17 @@ void CTexture::CreateShaderResourceView(ID3D12Device* pd3dDevice, CDescriptorMan
 
 	pDescriptorManager->AddSrvIndex();
 }
+
+void CTexture::LoadTextureFromWICFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
+{
+	m_ResourceType = nResourceType;
+	m_RootParameterIndex = nRootParameterIndex;
+
+	std::wstring wstrFileName;
+	wstrFileName.assign(strFileName.begin(), strFileName.end());
+	m_pd3dTexture = ::CreateTextureResourceFromWICFile(pd3dDevice, pd3dCommandList, wstrFileName.c_str(), &m_pd3dTextureUploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ/*D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE*/);
+}
+
 
 void CTexture::LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex)
 {

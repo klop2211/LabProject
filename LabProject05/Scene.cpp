@@ -7,6 +7,7 @@
 #include "DescriptorManager.h"
 #include "AudioManager.h"
 #include "AnimationCallbackFunc.h"
+#include "Mawang.h"
 
 CScene::CScene()
 {
@@ -149,7 +150,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	d3dSamplerDescs.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	d3dSamplerDescs.MipLODBias = 0;
 	d3dSamplerDescs.MaxAnisotropy = 1;
-	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	d3dSamplerDescs.MinLOD = 0;
 	d3dSamplerDescs.MaxLOD = D3D12_FLOAT32_MAX;
 	d3dSamplerDescs.ShaderRegister = 0;
@@ -262,7 +263,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	descriptor_manager_ = new CDescriptorManager;
-	descriptor_manager_->SetDescriptors(1 + 4); // 조명(cbv), 텍스처
+	descriptor_manager_->SetDescriptors(1 + 5); // 조명(cbv), 텍스처
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
@@ -280,7 +281,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(400.0f, 40.0f, 400.0f);
+	XMFLOAT3 xmf3Scale(40.0f, 10.0f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 
@@ -289,7 +290,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	((CEllenPlayer*)player_)->SetAnimationCallbackKey((int)EllenAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	
-	int object_num = 0; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
+	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
+
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	
+	CGameObject* object = new CMawang(model);
+	objects_.push_back(object);
+	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 }

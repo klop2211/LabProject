@@ -394,6 +394,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					CCamera* pCamera = new CGhostCamera(camera_);
 					delete camera_;
 					camera_ = pCamera;
+					camera_->CreateShaderVariables(d3d12_device_, d3d12_command_list_);
 					player_->SetCamera(camera_);
 				}
 					break;
