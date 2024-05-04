@@ -30,7 +30,7 @@ void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
 	FBXLoad::ReadStringFromFile(InFile, strToken); // </AnimationSets>
 }
 
-void CAnimationController::Animate(const float& elapsed_time, CGameObject* pRootObject)
+void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_object)
 {
 	if (is_animation_chainging_)
 	{
@@ -60,7 +60,7 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* pRoot
 		}
 	}
 
-	pRootObject->UpdateTransform(NULL);
+	root_object->UpdateTransform(NULL);
 }
 
 void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
@@ -94,6 +94,11 @@ void CAnimationController::ChangeAnimation(const int& index)
 	is_animation_chainging_ = true;
 }
 
+void CAnimationController::SetLoopType(const int& index, const AnimationLoopType& type)
+{
+	animation_tracks_[index].set_loop_type(type);
+}
+
 void CAnimationController::SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func)
 {
 	animation_tracks_[index].AddCallbackKey(time, callback_func);
@@ -110,7 +115,7 @@ CAnimationTrack::CAnimationTrack()
 
 	m_pAnimationSet = NULL;
 
-	m_LoopType = AnimationLoopType::Repeat;
+	loop_type_ = AnimationLoopType::Repeat;
 
 }
 
@@ -189,7 +194,7 @@ void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 	{
 		position_ = 0.f;
 
-		if (m_LoopType == AnimationLoopType::Once) enable_ = false;
+		if (loop_type_ == AnimationLoopType::Once) enable_ = false;
 	}
 }
 

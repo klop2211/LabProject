@@ -281,14 +281,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(40.0f, 10.0f, 40.0f);
+	XMFLOAT3 xmf3Scale(40.0f, 0.01f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 
 
 	player_->SetShader(4);
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
-	((CEllenPlayer*)player_)->SetAnimationCallbackKey((int)EllenAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
+	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	
 	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 

@@ -386,6 +386,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case WM_KEYUP:
 			switch (wParam)
 			{
+				case VK_SPACE:
+					player_->InputActionRoll(0);
+				break;
 				case VK_ESCAPE:
 					::PostQuitMessage(0);
 					break;
@@ -481,8 +484,7 @@ void CGameFramework::BuildObjects()
 	d3d12_command_list_->Reset(d3d12_command_allocator_, NULL);
 
 	camera_ = new CThirdPersonCamera;
-	CEllenPlayer* pEllenPlayer = new CEllenPlayer(d3d12_device_, d3d12_command_list_, camera_);
-	player_ = pEllenPlayer;
+	player_ = new CPlayer(d3d12_device_, d3d12_command_list_, camera_);
 	camera_->SetPlayer(player_);
 	((CThirdPersonCamera*)camera_)->ResetFromPlayer();
 
@@ -515,6 +517,7 @@ void CGameFramework::ProcessInput()
 {
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = false;
+	float elapsed_time = game_timer_.GetTimeElapsed();
 	if (GetKeyboardState(pKeysBuffer) && scene_) bProcessedByScene = scene_->ProcessInput(pKeysBuffer);
 	if (!bProcessedByScene)
 	{
@@ -537,10 +540,14 @@ void CGameFramework::ProcessInput()
 			SetCursorPos(old_cursor_position_.x, old_cursor_position_.y);
 		}
 
-		player_->InputActionRotate(delta_xy, game_timer_.GetTimeElapsed());
-		player_->InputActionMove(dwDirection, game_timer_.GetTimeElapsed());
+		player_->InputActionRotate(delta_xy, elapsed_time);
+		player_->InputActionMove(dwDirection, elapsed_time);
+		if(camera_->GetMode() == CameraMode::GHOST) 
+			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
+
 	}
-	player_->Update(game_timer_.GetTimeElapsed());
+	player_->Update(elapsed_time);
+	camera_->Update(elapsed_time);
 }
 
 void CGameFramework::AnimateObjects()

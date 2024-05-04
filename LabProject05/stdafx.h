@@ -186,7 +186,7 @@ namespace Vector3
 		return(m_xmf3Normal);
 	}
 
-	inline float Length(XMFLOAT3& xmf3Vector)
+	inline float Length(const XMFLOAT3& xmf3Vector)
 	{
 		XMFLOAT3 xmf3Result;
 		XMStoreFloat3(&xmf3Result, XMVector3Length(XMLoadFloat3(&xmf3Vector)));
@@ -329,7 +329,7 @@ namespace Plane
 // xmf 관련 연산자 오버로딩
 inline XMFLOAT3 operator+(const XMFLOAT3& lhs, const XMFLOAT3& rhs) { return Vector3::Add(lhs, rhs); }
 inline XMFLOAT3 operator-(const XMFLOAT3& lhs, const XMFLOAT3& rhs) { return Vector3::Add(lhs, rhs, -1); }
-
+inline XMFLOAT3 operator*(const XMFLOAT3& lhs, const float& rhs) { return Vector3::ScalarProduct(lhs, rhs, false); }
 
 namespace FBXLoad
 {

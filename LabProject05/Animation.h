@@ -92,6 +92,7 @@ public:
 
 	void set_enable(const bool& value) { enable_ = value; }
 	void set_weight(const float& value) { weight_ = value; }
+	void set_loop_type(const AnimationLoopType& type) { loop_type_ = type; }
 
 	float weight() const { return weight_; }
 
@@ -118,7 +119,7 @@ private:
 
 	bool enable_;
 
-	AnimationLoopType m_LoopType;
+	AnimationLoopType loop_type_;
 
 	CAnimationSet* m_pAnimationSet;
 
@@ -142,6 +143,10 @@ public:
 	void ChangeAnimation(const int& index);
 
 	void SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func);
+
+	void SetLoopType(const int& index, const AnimationLoopType& type);
+
+	bool IsEnableTrack(const int& index) { return animation_tracks_[index].IsEnable(); }
 
 private:
 	const float animation_blend_speed_ = 5.f; // 애니메이션 교체시 교체 속도 단위 once/s

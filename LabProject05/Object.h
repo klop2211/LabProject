@@ -59,7 +59,9 @@ protected:
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;
 
+	// animation 관련
 	CAnimationController* animation_controller_ = NULL;
+	
 
 	// 물리 옵션 적용관련 변수
 	bool is_fall_ = false; //중력의 적용을 받는지
@@ -102,6 +104,8 @@ public:
 	XMFLOAT3 up_vector() const;
 	XMFLOAT3 right_vector() const;
 	bool is_fall() const { return is_fall_; }
+	CGameObject* child() const { return child_; }
+	CGameObject* sibling() const { return sibling_; }
 
 	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
 	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
