@@ -12,7 +12,7 @@ protected:
 	float           			m_fYaw;
 	float           			m_fRoll;
 
-	float						m_fSpeed; // 단위: m/s
+	float						speed_; // 단위: m/s
 
 	XMFLOAT3					m_xmf3Velocity;
 	XMFLOAT3     				m_xmf3Gravity;

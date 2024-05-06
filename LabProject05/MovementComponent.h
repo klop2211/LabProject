@@ -8,7 +8,7 @@ class CMovementComponent : public CComponent
 {
 	const XMFLOAT3 m_cxmf3GravityDirection = XMFLOAT3(0.f, -1.0f, 0.f);
 
-	XMFLOAT3 direction_vector_ = XMFLOAT3(0.f, 0.f, 0.f);
+	XMFLOAT3 direction_vector_ = XMFLOAT3(0.f, 0.f, 1.f);
 	float velocity_ = 100.f;
 
 	bool m_bGravity = false;
@@ -21,6 +21,8 @@ public:
 	CMovementComponent(CGameObject* pOwner, const XMFLOAT3& xmf3Direction, const float& fVelocity);
 	~CMovementComponent() {}
 
+	XMFLOAT3 direction_vector()const { return direction_vector_; }
+	void set_velocity(const float& value) { velocity_ = value; }
 	void set_direction_vector(const float& x, const float& y, const float& z) { set_direction_vector(XMFLOAT3(x, y, z)); }
 	void set_direction_vector(const XMFLOAT3& xmf3Value) { direction_vector_ = xmf3Value; }
 
