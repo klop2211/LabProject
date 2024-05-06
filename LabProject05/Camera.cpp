@@ -24,6 +24,7 @@ CCamera::CCamera(CCamera *pCamera)
 	if (pCamera)
 	{
 		*this = *pCamera;
+
 	}
 	else
 	{
@@ -45,6 +46,7 @@ CCamera::CCamera(CCamera *pCamera)
 
 CCamera::~CCamera()
 { 
+	ReleaseShaderVariables();
 }
 
 void CCamera::SetViewport(int xTopLeft, int yTopLeft, int nWidth, int nHeight, float fMinZ, float fMaxZ)
@@ -134,6 +136,8 @@ void CCamera::ReleaseShaderVariables()
 		m_pd3dcbCamera->Unmap(0, NULL);
 		m_pd3dcbCamera->Release();
 	}
+
+	m_pd3dcbCamera = NULL;
 }
 
 void CCamera::SetViewportsAndScissorRects(ID3D12GraphicsCommandList *pd3dCommandList)
@@ -189,8 +193,8 @@ CThirdPersonCamera::CThirdPersonCamera() :CCamera()
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
 
-	m_fOffsetDistance = cfTpsDefaultDistanceOffset;
-	m_fOffsetPitch = cfTpsDefaultPitchOffset;
+	m_fOffsetDistance = kTpsDefaultDistanceOffset;
+	m_fOffsetPitch = kTpsDefaultPitchOffset;
 	SetOffset(m_fOffsetDistance, m_fOffsetPitch);
 	m_fPitch = 0;
 	GenerateProjectionMatrix(1.01f, 5000.0f, ASPECT_RATIO, 60.0f);
@@ -199,8 +203,8 @@ CThirdPersonCamera::CThirdPersonCamera() :CCamera()
 CThirdPersonCamera::CThirdPersonCamera(CCamera *pCamera) : CCamera(pCamera)
 {
 	m_CameraMode = CameraMode::THIRD_PERSON;
-	m_fOffsetDistance = cfTpsDefaultDistanceOffset;
-	m_fOffsetPitch = cfTpsDefaultPitchOffset;
+	m_fOffsetDistance = kTpsDefaultDistanceOffset;
+	m_fOffsetPitch = kTpsDefaultPitchOffset;
 	SetOffset(m_fOffsetDistance, m_fOffsetPitch);
 	m_fPitch = 0;
 	if (m_pPlayer) ResetFromPlayer();
@@ -228,7 +232,9 @@ void CThirdPersonCamera::Update(float fTimeElapsed)
 		if (fDistance > 0)
 		{
 			m_xmf3Position = Vector3::Add(m_xmf3Position, xmf3Direction, fDistance);
-			SetLookAt(m_pPlayer->position_vector());
+			XMFLOAT3 look = m_pPlayer->position_vector();
+			look.y += kHeightOffset;
+			SetLookAt(look);
 		}
 	}
 

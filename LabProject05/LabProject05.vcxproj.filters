@@ -34,6 +34,12 @@
     <Filter Include="Material">
       <UniqueIdentifier>{9119f1dc-f994-44fd-8a51-1ccce108ea60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects\Monsters">
+      <UniqueIdentifier>{7ced9294-e1d6-4c4b-8062-33afee4aebd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AudioManager">
+      <UniqueIdentifier>{3d1b832e-3e1e-483c-b847-62ac202fd4f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -99,6 +105,21 @@
     <ClInclude Include="Material.h">
       <Filter>Material</Filter>
     </ClInclude>
+    <ClInclude Include="RotationComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Mawang.h">
+      <Filter>Objects\Monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationCallbackFunc.h">
+      <Filter>Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>AudioManager</Filter>
+    </ClInclude>
+    <ClInclude Include="WICTextureLoader12.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -151,6 +172,21 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Material</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationComponent.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Mawang.cpp">
+      <Filter>Objects\Monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationCallbackFunc.cpp">
+      <Filter>Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>AudioManager</Filter>
+    </ClCompile>
+    <ClCompile Include="WICTextureLoader12.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

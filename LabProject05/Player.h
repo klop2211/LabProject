@@ -4,6 +4,9 @@
 
 class CMovementComponent;
 class CRotationComponent;
+class CAnimationCallbackFunc;
+
+enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk };
 
 class CPlayer : public CGameObject
 {
@@ -31,9 +34,11 @@ protected:
 
 	bool orient_rotation_to_movement_ = true;
 
+	PlayerAnimationState animation_state_ = PlayerAnimationState::Idle;
 
 public:
 	CPlayer();
+	CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual ~CPlayer();
 
 	void SetFriction(float fFriction) { m_fFriction = fFriction; }
@@ -47,13 +52,18 @@ public:
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
 
+	// 입력 처리
 	void InputActionMove(const DWORD& dwDirection, const float& elapsed_time);
 	void InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time);
+	void InputActionRoll(const DWORD& direction);
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }
 
-	void Update(float fTimeElapsed);
+	virtual void Update(float fTimeElapsed);
+	void UpdateAnimationState();
+
+	virtual void HandleCollision(CGameObject* other) override {}
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
@@ -71,12 +81,6 @@ public:
 	virtual void OnPrepareRender() {}
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
+	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
 };
-
-class CEllenPlayer : public CPlayer
-{
-public:
-	CEllenPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
-};
-
 

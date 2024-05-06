@@ -5,7 +5,9 @@
 CAnimationController::CAnimationController()
 {
 	m_fTime = 0.f;
-	m_Tracks.reserve(0);
+	prev_index_ = -1;
+	curr_index_ = -1;
+	animation_tracks_.reserve(0);
 }
 
 void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
@@ -18,27 +20,39 @@ void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
 	if (strToken == "<AnimationSets>:")
 		nAnimationSets = FBXLoad::ReadFromFile<int>(InFile);
 
-	m_Tracks.reserve(nAnimationSets);
+	animation_tracks_.reserve(nAnimationSets);
 
 	for (int i = 0; i < nAnimationSets; ++i)
 	{
-		m_Tracks.emplace_back(InFile);
+		animation_tracks_.emplace_back(InFile);
 	}
 
 	FBXLoad::ReadStringFromFile(InFile, strToken); // </AnimationSets>
 }
 
-void CAnimationController::Animate(const float& fElapsedTime, CGameObject* pRootObject)
+void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_object)
 {
-	for (auto& track : m_Tracks)
+	if (is_animation_chainging_)
 	{
-		if (track.IsEnable())
+		animation_tracks_[prev_index_].AddWeight(-animation_blend_speed_ * elapsed_time);
+		animation_tracks_[curr_index_].AddWeight(animation_blend_speed_ * elapsed_time);
+		if (!animation_tracks_[prev_index_].IsEnable())
 		{
-			track.Animate(fElapsedTime); 
+			animation_tracks_[prev_index_].Start();
+			animation_tracks_[curr_index_].Start();
+			is_animation_chainging_ = false;
 		}
 	}
 
-	for (auto& track : m_Tracks)
+	for (auto& track : animation_tracks_)
+	{
+		if (track.IsEnable())
+		{
+			track.Animate(elapsed_time);
+		}
+	}
+
+	for (auto& track : animation_tracks_)
 	{
 		if (track.IsEnable())
 		{
@@ -46,25 +60,62 @@ void CAnimationController::Animate(const float& fElapsedTime, CGameObject* pRoot
 		}
 	}
 
-	pRootObject->UpdateTransform(NULL);
+	root_object->UpdateTransform(NULL);
 }
 
 void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
 {
-	for (auto& track : m_Tracks)
+	for (auto& track : animation_tracks_)
 		track.SetFrameCaches(pRootObject);
 }
 
+void CAnimationController::EnableTrack(const int& index)
+{
+	prev_index_ = curr_index_;
+	curr_index_ = index;
+	animation_tracks_[index].set_enable(true);
+}
+
+void CAnimationController::ChangeAnimation(const int& index)
+{
+	if (curr_index_ == index)
+		return;
+
+	// 해당 애니메이션 트랙으로 전환
+	EnableTrack(index);
+
+	// 트랙 블렌딩간 일시정지
+	animation_tracks_[prev_index_].Stop();
+	animation_tracks_[index].Stop();
+
+	// 현재 애니메이션을 이전 애니메이션 weight의 남은 부분 만큼 설정
+	animation_tracks_[index].set_weight(1.f - animation_tracks_[prev_index_].weight());
+	// 애니메이션 전환 트리거를 true로 설정
+	is_animation_chainging_ = true;
+}
+
+void CAnimationController::SetLoopType(const int& index, const AnimationLoopType& type)
+{
+	animation_tracks_[index].set_loop_type(type);
+}
+
+void CAnimationController::SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func)
+{
+	animation_tracks_[index].AddCallbackKey(time, callback_func);
+}
+
+const float CAnimationTrack::callback_check_time_ = 1.f / 120.f;
+
 CAnimationTrack::CAnimationTrack()
 {
-	m_fPosition = 0.f;
-	m_fSpeed = 1.f;
-	m_bEnable = true;
-	m_fWeight = 1.0f;
+	position_ = 0.f;
+	speed_ = 1.f;
+	enable_ = false;
+	weight_ = 1.0f;
 
 	m_pAnimationSet = NULL;
 
-	m_LoopType = AnimationLoopType::Repeat;
+	loop_type_ = AnimationLoopType::Repeat;
 
 }
 
@@ -95,11 +146,34 @@ CAnimationTrack::~CAnimationTrack()
 	if (m_pAnimationSet) delete m_pAnimationSet;
 }
 
+void CAnimationTrack::AddWeight(const float& value)
+{
+	weight_ += value;
+	if (weight_ < 0.f)
+	{
+		weight_ = 1.f;
+		enable_ = false;
+	}
+	else if (weight_ > 1.f) 
+		weight_ = 1.f;
+}
+
+void CAnimationTrack::AddCallbackKey(const float& time, CAnimationCallbackFunc* func)
+{
+	callback_keys_.emplace_back(time, func);
+}
+
 void CAnimationTrack::Animate(const float& fElapsedTime)
 {
 	UpdatePosition(fElapsedTime);
 
-	if (m_pAnimationSet) m_pAnimationSet->Animate(m_fPosition, m_fWeight);
+	for (auto& callback_key : callback_keys_)
+	{
+		if (callback_check_time_ + callback_key.time > position_ && position_ > callback_key.time - callback_check_time_)
+			callback_key();
+	}
+
+	if (m_pAnimationSet) m_pAnimationSet->Animate(position_, weight_);
 }
 
 void CAnimationTrack::SetFrameCaches(CGameObject* pRootObject)
@@ -114,13 +188,13 @@ void CAnimationTrack::UpdateMatrix()
 
 void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 {
-	m_fPosition += (fElapsedTime * m_fSpeed);
+	position_ += (fElapsedTime * speed_);
 
-	if (m_pAnimationSet->GetEndTime() < m_fPosition)
+	if (m_pAnimationSet->GetEndTime() < position_)
 	{
-		m_fPosition = 0.f;
+		position_ = 0.f;
 
-		if (m_LoopType == AnimationLoopType::Once) m_bEnable = false;
+		if (loop_type_ == AnimationLoopType::Once) enable_ = false;
 	}
 }
 
@@ -198,7 +272,7 @@ void CAnimationSet::UpdateMatrix()
 
 CAnimationLayer::CAnimationLayer()
 {
-	m_fWeight = 1.f;
+	weight_ = 1.f;
 
 	m_Curves.reserve(0);
 }
@@ -214,7 +288,7 @@ CAnimationLayer::CAnimationLayer(std::ifstream& InFile) : CAnimationLayer()
 
 		int nCurves = FBXLoad::ReadFromFile<int>(InFile);
 
-		m_fWeight = FBXLoad::ReadFromFile<float>(InFile);
+		weight_ = FBXLoad::ReadFromFile<float>(InFile);
 
 		m_Curves.reserve(nCurves);
 		m_FrameCaches.resize(nCurves);
@@ -243,7 +317,7 @@ void CAnimationLayer::UpdateFrameCachesSRT(const float& fPosition)
 	{
 		CGameObject* pFrameCache = m_FrameCaches[i];
 		XMFLOAT3 S, R, T;
-		m_Curves[i].GetAnimatedSRT(fPosition, m_fWeight, &S, &R, &T);
+		m_Curves[i].GetAnimatedSRT(fPosition, weight_, &S, &R, &T);
 		pFrameCache->SetScale(S);
 		pFrameCache->SetRotation(R);
 		pFrameCache->SetTranslation(T);

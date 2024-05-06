@@ -9,10 +9,16 @@
 
 class CCamera;
 class CMesh;
-class CGameObject;
 class CDescriptorManager;
 class CMaterial;
 class CAnimationController;
+class CGameObject;
+
+struct CModelInfo
+{
+	CGameObject* heirarchy_root;
+	CAnimationController* animation_controller;
+};
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> ||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -20,12 +26,14 @@ class CAnimationController;
 
 class CGameObject
 {	
+private:
+	int reference_count_ = 0;
+
 protected:
 	std::vector<CMaterial*> m_Materials;
 	
 	// 모델의 좌표축이 다이렉트 환경과 다를 경우 사용되는 행렬로 루트 오브젝트의 to_parent 행렬 앞에 이 행렬을 곱해준다(UpdateTransform 함수 참조)
 	XMFLOAT4X4* axis_transform_matrix_;
-
 
 	XMFLOAT4X4 m_xmf4x4World; // 최종적으로 셰이더에 입력되는 행렬(ToParent 행렬과 부모의 World 행렬의 곱의 결과이다)
 
@@ -42,23 +50,32 @@ protected:
 	XMFLOAT3 m_xmf3BlendedRotation;
 	XMFLOAT3 m_xmf3BlendedTranslation;
 
-	CGameObject* m_pParent = NULL;
-	CGameObject* m_pChild = NULL;
-	CGameObject* m_pSibling = NULL;
+	CGameObject* parent_ = NULL;
+	CGameObject* child_ = NULL;
+	CGameObject* sibling_ = NULL;
 
 	CMesh* m_pMesh = NULL;
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int m_nShader = -1;
 
-	CAnimationController* m_pAnimationController = NULL;
+	// animation 관련
+	CAnimationController* animation_controller_ = NULL;
+	
+
+	// 물리 옵션 적용관련 변수
+	bool is_fall_ = false; //중력의 적용을 받는지
 
 public:
 	CGameObject();
 	~CGameObject();
 
+	void AddRef() { reference_count_++; }
+	void Release() { reference_count_--; if (reference_count_ <= 0) delete this; }
+
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
+	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
 	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
 	void set_right_vector(const float& x, const float& y, const float& z);
@@ -67,11 +84,14 @@ public:
 	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
+	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
+	void set_child(CGameObject* pChild);
+	void set_sibling(CGameObject* ptr);
+	void set_parent(CGameObject* ptr);
 
 	virtual void SetMesh(CMesh* pMesh);
 	void SetShader(const int& nShader) { m_nShader = nShader; }
 	void SetMaterial(const int& index, CMaterial* pMaterial);
-	void SetChild(CGameObject* pChild);
 	void SetBlendedScale(const XMFLOAT3& xmf3Value) { m_xmf3BlendedScale = xmf3Value; }
 	void SetBlendedRotation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedRotation = xmf3Value; }
 	void SetBlendedTranslation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedTranslation = xmf3Value; }
@@ -83,6 +103,9 @@ public:
 	XMFLOAT3 look_vector() const;
 	XMFLOAT3 up_vector() const;
 	XMFLOAT3 right_vector() const;
+	bool is_fall() const { return is_fall_; }
+	CGameObject* child() const { return child_; }
+	CGameObject* sibling() const { return sibling_; }
 
 	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
 	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
@@ -105,13 +128,16 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
-	CGameObject* FindFrame(const std::string& strFrameName);
+	virtual void HandleCollision(CGameObject* other) {}
 
+	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
 
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
-
+	static CModelInfo LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
+		const std::string& heirarchy_file_name);
+	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		std::ifstream& InFile, int& nFrames);
 
@@ -147,4 +173,7 @@ public:
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
 
+	virtual void HandleCollision(CGameObject* other) override {}
+
 };
+

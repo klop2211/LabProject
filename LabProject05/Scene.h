@@ -7,6 +7,7 @@ class CTexture;
 class CCamera;
 class CHeightMapTerrain;
 class CDescriptorManager;
+class CAudioManager;
 
 struct LIGHT
 {
@@ -47,47 +48,56 @@ public:
 	// Srv 积己
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice);
 
-	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer);
+	void BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer, CAudioManager* audio_manager);
 	void ReleaseObjects();
 
 	void BuildLightsAndMaterials();
 
 	ID3D12RootSignature* CreateGraphicsRootSignature(ID3D12Device* pd3dDevice);
-	ID3D12RootSignature* GetGraphicsRootSignature() { return(m_pd3dGraphicsRootSignature); }
+	ID3D12RootSignature* GetGraphicsRootSignature() { return(d3d12_root_signature_); }
 
 	bool ProcessInput(UCHAR* pKeysBuffer) { return false; }
 	void AnimateObjects(float fTimeElapsed);
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
 
 	void ReleaseUploadBuffers();
-	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CTexture* pTexture, UINT nDescriptorHeapIndex, UINT nRootParameterStartIndex);
 
-	CPlayer* m_pPlayer = NULL;
+	// 面倒 贸府
+	void UpdateCollisionList();
+	void CollisionCheck();
 
 protected:
-	ID3D12RootSignature* m_pd3dGraphicsRootSignature = NULL;
+	ID3D12RootSignature* d3d12_root_signature_ = NULL;
 
 	// Shader 包府
-	CShader** m_ppShaders = NULL;
-	int	m_nShaders = 0;
-
-	// GameObject 包府
-	std::vector<CGameObject*> m_Objects;
-	int	m_nObjects = 0;
-
-	// Light 包府
-	LIGHTS* m_pLights = NULL;
-
-	ID3D12Resource* m_pd3dcbLights = NULL;
-	LIGHTS* m_pcbMappedLights = NULL;
-
-	D3D12_GPU_DESCRIPTOR_HANDLE m_d3dLightsGPUDescriptorStartHandle;
+	std::vector<CShader*> shaders_;
 
 	// Terrain
-	CHeightMapTerrain* m_pTerrain = NULL;
+	CHeightMapTerrain* terrain_ = NULL;
+
+	// Player
+	CPlayer* player_ = NULL;
+
+	// GameObject 包府
+	std::vector<CGameObject*> objects_;
+
+	// 面倒 包府
+	std::list<CGameObject*> collision_list_;
+
+	//TODO: 炼疙包访 贸府 鞘夸
+	LIGHTS* m_pLights = NULL;
+
+	ID3D12Resource* d3d12_lights_ = NULL;
+	LIGHTS* mapped_lights_ = NULL;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE d3d12_lights_gpu_descriptor_start_handle_;
+
 
 	// Descriptor
-	CDescriptorManager* m_pDescriptorManager = NULL;
+	CDescriptorManager* descriptor_manager_ = NULL;
+
+	// AudioManager
+	CAudioManager* audio_manager_ = NULL;
 
 };
 

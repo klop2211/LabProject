@@ -1,5 +1,7 @@
 #pragma once
 
+#define TEXTURE_FILE_ROOT "../Resource/Model/Texture/"
+
 enum class TextureType
 {
 	NONE = 0,
@@ -118,8 +120,8 @@ private:
 	// Render ฐüทร
 	TextureType m_ResourceType;
 
-	ID3D12Resource* m_pd3dTexture;
-	ID3D12Resource* m_pd3dTextureUploadBuffer;
+	ID3D12Resource* m_pd3dTexture = NULL;
+	ID3D12Resource* m_pd3dTextureUploadBuffer = NULL;
 
 	UINT m_RootParameterIndex;
 
@@ -139,6 +141,7 @@ public:
 
 	void LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
+	void LoadTextureFromWICFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 	void LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& strFileName, TextureType nResourceType, UINT nRootParameterIndex);
 
 	void LoadBuffer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, void* pData, UINT nElements, UINT nStride, DXGI_FORMAT ndxgiFormat, UINT nIndex);

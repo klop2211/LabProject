@@ -5,6 +5,9 @@
 #include "Player.h"
 #include "Object.h"
 #include "DescriptorManager.h"
+#include "AudioManager.h"
+#include "AnimationCallbackFunc.h"
+#include "Mawang.h"
 
 CScene::CScene()
 {
@@ -13,7 +16,6 @@ CScene::CScene()
 
 CScene::~CScene()
 {
-
 }
 
 
@@ -148,7 +150,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	d3dSamplerDescs.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	d3dSamplerDescs.MipLODBias = 0;
 	d3dSamplerDescs.MaxAnisotropy = 1;
-	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	d3dSamplerDescs.MinLOD = 0;
 	d3dSamplerDescs.MaxLOD = D3D12_FLOAT32_MAX;
 	d3dSamplerDescs.ShaderRegister = 0;
@@ -180,81 +182,91 @@ void CScene::CreateShaderVariables(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 {
 	// 조명정보
 	UINT ncbLightsBytes = ((sizeof(LIGHTS) + 255) & ~255); //256의 배수
-	m_pd3dcbLights = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbLightsBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
+	d3d12_lights_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbLightsBytes, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
 
-	m_pd3dcbLights->Map(0, NULL, (void**)&m_pcbMappedLights);
+	d3d12_lights_->Map(0, NULL, (void**)&mapped_lights_);
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC d3dcbvDesc;
-	d3dcbvDesc.BufferLocation = m_pd3dcbLights->GetGPUVirtualAddress();
+	d3dcbvDesc.BufferLocation = d3d12_lights_->GetGPUVirtualAddress();
 	d3dcbvDesc.SizeInBytes = ncbLightsBytes;
-	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, m_pDescriptorManager->GetCbvNextCPUHandle());
-	m_d3dLightsGPUDescriptorStartHandle = m_pDescriptorManager->GetCbvNextGPUHandle();
+	pd3dDevice->CreateConstantBufferView(&d3dcbvDesc, descriptor_manager_->GetCbvNextCPUHandle());
+	d3d12_lights_gpu_descriptor_start_handle_ = descriptor_manager_->GetCbvNextGPUHandle();
 
-	m_pDescriptorManager->AddCbvIndex();
+	descriptor_manager_->AddCbvIndex();
 }
 
 void CScene::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
-	::memcpy(m_pcbMappedLights, m_pLights, sizeof(LIGHTS));
+	::memcpy(mapped_lights_, m_pLights, sizeof(LIGHTS));
 }
 
 void CScene::ReleaseShaderVariables()
 {
-	if (m_pd3dcbLights)
+	if (d3d12_lights_)
 	{
-		m_pd3dcbLights->Unmap(0, NULL);
-		m_pd3dcbLights->Release();
+		d3d12_lights_->Unmap(0, NULL);
+		d3d12_lights_->Release();
 	}
 }
 
 void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 {
-	for (auto& Object : m_Objects)
-		Object->CreateShaderResourceViews(pd3dDevice, m_pDescriptorManager);
+	player_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
+	terrain_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
+	for (auto& Object : objects_)
+		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 }
 
 void CScene::ReleaseUploadBuffers()
 {
-	for (auto& pObject : m_Objects) pObject->ReleaseUploadBuffers();
+	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
 }
 
-void CScene::AnimateObjects(float fTimeElapsed)
+void CScene::AnimateObjects(float elapsed_time)
 {
-	m_pPlayer->OnPrepareRender();
+	//player_->OnPrepareRender();
 
-	for (auto& pObject : m_Objects) 
-		pObject->Animate(fTimeElapsed);
+	CollisionCheck();
+
+	player_->Animate(elapsed_time);
+
+	terrain_->Animate(elapsed_time);
+
+	for (auto& pObject : objects_) 
+		pObject->Animate(elapsed_time);
 
 	if (m_pLights)
 	{
-		m_pLights->m_pLights[1].m_xmf3Position = m_pPlayer->position_vector();
-		m_pLights->m_pLights[1].m_xmf3Direction = m_pPlayer->look_vector();
+		m_pLights->m_pLights[1].m_xmf3Position = player_->position_vector();
+		m_pLights->m_pLights[1].m_xmf3Direction = player_->look_vector();
 	}
 }
 
-void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer)
+void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CPlayer* pPlayer, CAudioManager* audio_manager)
 {
-	m_pPlayer = pPlayer;
+	audio_manager_ = audio_manager;
 
-	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
+	player_ = pPlayer;
 
-	m_nShaders = 2;			// 조명 O, X 각각 1개씩
-	m_ppShaders = new CShader*[m_nShaders];
+	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	m_ppShaders[0] = new CStandardShader;
-	//m_ppShaders[1] = new CIlluminatedShader;
-	m_ppShaders[1] = new CTerrainShader;
+	int shader_num = 2;			// 조명 O, X 각각 1개씩
+	shaders_.reserve(shader_num);
 
-	for(int i = 0; i < m_nShaders; ++i)
-		m_ppShaders[i]->CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
+	shaders_.emplace_back(new CStandardShader);
+	shaders_.emplace_back(new CTerrainShader);
 
-	m_nObjects = 2;		// Player + Terrain
+	for(auto& shader : shaders_)
+		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
 
-	m_pDescriptorManager = new CDescriptorManager;
-	m_pDescriptorManager->SetDescriptors(1 + 4); // 조명(cbv), 텍스처
+
+	descriptor_manager_ = new CDescriptorManager;
+	descriptor_manager_->SetDescriptors(1 + 5); // 조명(cbv), 텍스처
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
-	d3dDescriptorHeapDesc.NumDescriptors = m_pDescriptorManager->GetDescriptors();		
+	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
 	d3dDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	d3dDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	d3dDescriptorHeapDesc.NodeMask = 0;
@@ -262,44 +274,56 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	ID3D12DescriptorHeap* pd3dDescritorHeap;
 	pd3dDevice->CreateDescriptorHeap(&d3dDescriptorHeapDesc, __uuidof(ID3D12DescriptorHeap), (void**)&pd3dDescritorHeap);
 
-	m_pDescriptorManager->SetDesriptorHeap(pd3dDescritorHeap);
-	m_pDescriptorManager->Initialization(1);
+	descriptor_manager_->SetDesriptorHeap(pd3dDescritorHeap);
+	descriptor_manager_->Initialization(1);
 
 	//TODO: Light 관련 차후 수정
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(18.0f, 6.0f, 18.0f);
-	XMFLOAT4 xmf4Color(0.0f, 0.5f, 0.0f, 0.0f);
-	m_pTerrain = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, m_pd3dGraphicsRootSignature, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	XMFLOAT3 xmf3Scale(40.0f, 0.01f, 40.0f);
+	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+
+
+	player_->SetShader(4);
+	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
+	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	
+	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
-	m_Objects.resize(m_nObjects);
-
-
-	m_Objects[0] = (CGameObject*)m_pPlayer;
-	m_Objects[0]->SetShader(4);
-	m_Objects[0]->set_position_vector(500, m_pTerrain->GetHeight(500, 500), 500);
-
-
-	m_Objects[1] = (CGameObject*)m_pTerrain;
-	m_Objects[1]->SetShader(2);
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	
+	CGameObject* object = new CMawang(model);
+	objects_.push_back(object);
+	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 }
 
 void CScene::ReleaseObjects()
 {
-	if (m_pd3dGraphicsRootSignature) m_pd3dGraphicsRootSignature->Release();
+	if (d3d12_root_signature_) d3d12_root_signature_->Release();
 
-	// 0번 객체는 플레이어 객체 GameFramework에서 삭제함
-	for (auto& pObject : m_Objects)
+	delete player_;
+	player_ = NULL;
+
+	delete terrain_;
+	terrain_ = NULL;
+
+	for (auto& pObject : objects_)
 	{
 		delete pObject;
 		pObject = NULL;
 	}
 
-	if (m_pDescriptorManager) delete m_pDescriptorManager;
+	for (auto& shader : shaders_)
+	{
+		shader->Release();
+		shader = NULL;
+	}
+
+	if (descriptor_manager_) delete descriptor_manager_;
 
 	ReleaseShaderVariables();
 
@@ -308,40 +332,70 @@ void CScene::ReleaseObjects()
 
 void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
 {
-	pd3dCommandList->SetGraphicsRootSignature(m_pd3dGraphicsRootSignature);
-	pd3dCommandList->SetDescriptorHeaps(1, &m_pDescriptorManager->GetDescriptorHeap());
+	pd3dCommandList->SetGraphicsRootSignature(d3d12_root_signature_);
+	pd3dCommandList->SetDescriptorHeaps(1, &descriptor_manager_->GetDescriptorHeap());
 
 	pCamera->SetViewportsAndScissorRects(pd3dCommandList);
 	pCamera->UpdateShaderVariables(pd3dCommandList);
 
-	//m_pPlayer->OnPrepareRender();
-
 	UpdateShaderVariables(pd3dCommandList);
-
 
 #ifdef _WITH_OBJECT_LIGHT_MATERIAL_DESCRIPTOR_TABLE
 	//pd3dCommandList->SetGraphicsRootDescriptorTable(2, m_d3dMaterialsCbvGPUDescriptorHandle);
 #else
-	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = m_pd3dcbLights->GetGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS d3dcbLightsGpuVirtualAddress = d3d12_lights_->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbLightsGpuVirtualAddress); //Lights
 
 	D3D12_GPU_VIRTUAL_ADDRESS d3dcbMaterialsGpuVirtualAddress = m_pd3dcbMaterials->GetGPUVirtualAddress();
 	pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress);
 #endif
 
-	for (int i = 0; i < m_nShaders; i++)
+	for (int i = 0; i < shaders_.size(); i++)
 	{
-		m_ppShaders[i]->Render(pd3dCommandList);
-		for (auto& pObject: m_Objects)
+		shaders_[i]->Render(pd3dCommandList);
+		for (auto& pObject: objects_)
 		{
-			if (pObject->CheckShader(m_ppShaders[i]->GetShaderNum()))
+			if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
 			{
 				pObject->Render(pd3dCommandList, pCamera);
 			}
 		}
+		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
+			player_->Render(pd3dCommandList, pCamera);
+		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
+			terrain_->Render(pd3dCommandList, pCamera);
 	}
 
 
 }
 
+void CScene::UpdateCollisionList()
+{
+	collision_list_.clear();
+
+	for (auto& object : objects_)
+	{
+		if (Vector3::Length(player_->position_vector() - object->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
+			collision_list_.push_back(object);
+	}
+}
+
+void CScene::CollisionCheck()
+{
+	// 지면에 닿아있는지 체크
+	XMFLOAT3 position = player_->position_vector();
+	float terrain_height = terrain_->GetHeight(position.x, position.z);
+	if (position.y > terrain_height)
+		player_->set_is_fall(true);
+	if (IsEqual(position.y, terrain_height))
+		player_->set_is_fall(false);
+	if (position.y < terrain_height)
+	{
+		player_->set_position_vector(position.x, terrain_height, position.z);
+		player_->set_is_fall(false);
+	}
+		
+
+	//TODO: 객체의 OBB를 이용해서 서로 겹치면 밀어내는 기본 충돌처리 구현
+}
 

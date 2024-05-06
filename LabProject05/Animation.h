@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AnimationCallbackFunc.h"
+
 class CGameObject;
 
 class CAnimationCurve
@@ -37,7 +39,7 @@ public:
 	void UpdateFrameCachesSRT(const float& fPosition);
 
 private:
-	float m_fWeight;
+	float weight_;
 
 	std::vector<CAnimationCurve> m_Curves;
 	std::vector<CGameObject*> m_FrameCaches;
@@ -69,6 +71,16 @@ private:
 
 enum class AnimationLoopType{ Once, Repeat };
 
+struct CallbackKey
+{
+	float time = 0.f;
+	CAnimationCallbackFunc* callback_func;
+
+	CallbackKey(const float& t, CAnimationCallbackFunc* func) { time = t, callback_func = func; }
+
+	void operator()() { callback_func->Util(); }
+};
+
 class CAnimationTrack
 {
 public:
@@ -76,25 +88,42 @@ public:
 	CAnimationTrack(std::ifstream& InFile);
 	~CAnimationTrack();
 
-	bool IsEnable() { return m_bEnable; }
+	bool IsEnable() { return enable_; }
+
+	void set_enable(const bool& value) { enable_ = value; }
+	void set_weight(const float& value) { weight_ = value; }
+	void set_loop_type(const AnimationLoopType& type) { loop_type_ = type; }
+
+	float weight() const { return weight_; }
+
+	void AddWeight(const float& value);
+	void AddCallbackKey(const float& time, CAnimationCallbackFunc* callback_func);
 
 	void Animate(const float& fElapsedTime);
 
 	void SetFrameCaches(CGameObject* pRootObject);
 	void UpdateMatrix();
 
+	void Stop() { speed_ = 0.f; }
+	void Start() { speed_ = 1.f; }
+
 private:
 	void UpdatePosition(const float& fElapsedTime);
 
-	float m_fPosition;
-	float m_fSpeed;
-	float m_fWeight;
+	// 콜백을 체크하는 시간 callback_key.time +- callback_check_time
+	static const float callback_check_time_;
 
-	bool m_bEnable;
+	float position_;
+	float speed_;
+	float weight_;
 
-	AnimationLoopType m_LoopType;
+	bool enable_;
+
+	AnimationLoopType loop_type_;
 
 	CAnimationSet* m_pAnimationSet;
+
+	std::vector<CallbackKey> callback_keys_;
 };
 
 class CAnimationController
@@ -109,10 +138,27 @@ public:
 
 	void SetFrameCaches(CGameObject* pRootObject);
 
+	void EnableTrack(const int& index);
+
+	void ChangeAnimation(const int& index);
+
+	void SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func);
+
+	void SetLoopType(const int& index, const AnimationLoopType& type);
+
+	bool IsEnableTrack(const int& index) { return animation_tracks_[index].IsEnable(); }
+
 private:
+	const float animation_blend_speed_ = 5.f; // 애니메이션 교체시 교체 속도 단위 once/s
+
+	bool is_animation_chainging_ = false;
+
+	int prev_index_;
+	int curr_index_;
 
 	float m_fTime;
 
-	std::vector<CAnimationTrack> m_Tracks;
+	std::vector<CAnimationTrack> animation_tracks_;
+
 };
 
