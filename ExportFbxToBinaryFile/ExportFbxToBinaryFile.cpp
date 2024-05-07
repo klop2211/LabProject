@@ -8,6 +8,7 @@
 #include "DisplayHierarchy.h"
 #include "DisplayAnimation.h"
 
+
 FILE *gpBinaryFile = NULL;
 char pszBuffer[256];
 
@@ -39,8 +40,8 @@ int main(int argc, char** argv)
 //	char *pszWriteFileName = "Eagle.bin";
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
-	FbxString pfbxstrModelFilePath("../Resource/Model/Player_Model.fbx");
-	char *pszWriteFileName = "../Resource/Model/Player_Model.bin";
+	FbxString pfbxstrModelFilePath("../Resource/Model/Weapons/Sword.fbx");
+	char *pszWriteFileName = "../Resource/Model/Weapons/Sword.bin";
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");
@@ -49,7 +50,7 @@ int main(int argc, char** argv)
     FbxScene *pfbxModelScene = FbxScene::Create(pfbxSdkManager, pfbxstrModelFilePath);
 	bool bResult = LoadScene(pfbxSdkManager, pfbxModelScene, pfbxstrModelFilePath.Buffer());
 
-#define _WITH_SEPARATED_ANIMATIONS
+//#define _WITH_SEPARATED_ANIMATIONS
 
 #ifdef _WITH_SEPARATED_ANIMATIONS
 	const int nSeparatedAnimations = 4;

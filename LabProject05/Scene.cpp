@@ -252,11 +252,12 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	int shader_num = 2;			// 조명 O, X 각각 1개씩
+	int shader_num = 3;
 	shaders_.reserve(shader_num);
 
 	shaders_.emplace_back(new CStandardShader);
 	shaders_.emplace_back(new CTerrainShader);
+	shaders_.emplace_back(new CStaticMeshShader);
 
 	for(auto& shader : shaders_)
 		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
@@ -284,21 +285,40 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	
+	shaders_[1]->AddObject(terrain_);
 
-
-	player_->SetShader(4);
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
-	
+	player_->SetShader(4);
+	shaders_[0]->AddObject(player_);
+
+	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword.bin");
+	sword_socket->set_child(model.heirarchy_root);
+	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
+	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
+	XMFLOAT4X4 temp;
+	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&sword_socket->to_parent_matrix()), R));
+	sword_socket->set_to_parent_matrix(temp);
+
+	sword_socket->set_position_vector(10.f, 5.f, 50.f);
+	sword_socket->SetShader((int)ShaderNum::StaticMesh);
+	shaders_[2]->AddObject(sword_socket);
+
+
 	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
 	CGameObject* object = new CMawang(model);
 	objects_.push_back(object);
 	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
+	shaders_[0]->AddObject(objects_[0]);
+
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
+
 }
 
 void CScene::ReleaseObjects()
@@ -319,7 +339,7 @@ void CScene::ReleaseObjects()
 
 	for (auto& shader : shaders_)
 	{
-		shader->Release();
+		delete shader;
 		shader = NULL;
 	}
 
@@ -352,18 +372,18 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 	for (int i = 0; i < shaders_.size(); i++)
 	{
-		shaders_[i]->Render(pd3dCommandList);
-		for (auto& pObject: objects_)
-		{
-			if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
-			{
-				pObject->Render(pd3dCommandList, pCamera);
-			}
-		}
-		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
-			player_->Render(pd3dCommandList, pCamera);
-		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
-			terrain_->Render(pd3dCommandList, pCamera);
+		shaders_[i]->Render(pd3dCommandList, pCamera);
+		//for (auto& pObject: objects_)
+		//{
+		//	if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
+		//	{
+		//		pObject->Render(pd3dCommandList, pCamera);
+		//	}
+		//}
+		//if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
+		//	player_->Render(pd3dCommandList, pCamera);
+		//if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
+		//	terrain_->Render(pd3dCommandList, pCamera);
 	}
 
 

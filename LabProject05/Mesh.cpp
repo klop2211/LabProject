@@ -69,6 +69,7 @@ void CMesh::Render(ID3D12GraphicsCommandList *pd3dCommandList)
 	{
 		for (int i = 0; i < m_nSubMeshes; ++i)
 		{
+			if (!m_pnIndices[i]) continue;
 			pd3dCommandList->IASetIndexBuffer(&m_pd3dIndexBufferViews[i]);
 			pd3dCommandList->DrawIndexedInstanced(m_pnIndices[i], 1, 0, 0, 0);
 		}
@@ -160,7 +161,12 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 					{
 						int nIndex = FBXLoad::ReadFromFile<int>(InFile);
 						m_pnIndices[i] = FBXLoad::ReadFromFile<int>(InFile);
-
+						if (!m_pnIndices[i])
+						{
+							m_nSubMeshes--;
+							i--;
+							continue;
+						}
 						ppIndices[i] = new UINT[m_pnIndices[i]];
 						FBXLoad::ReadFromFile<UINT>(InFile, ppIndices[i], m_pnIndices[i]);
 
@@ -174,7 +180,10 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 					}
 				}
 
-				for (int i = 0; i < m_nSubMeshes; ++i) delete ppIndices[i];
+				for (int i = 0; i < m_nSubMeshes; ++i) {
+					if (!m_pnIndices[i]) continue;
+					delete ppIndices[i];
+				}
 				delete[] ppIndices;
 			}
 		}

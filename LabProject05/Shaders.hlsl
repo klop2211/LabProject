@@ -131,6 +131,37 @@ float4 PSStandard(VS_STANDARD_OUTPUT input) : SV_TARGET
     return (Color);
 }
 
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+
+struct VS_STATICMESH_INPUT
+{
+    float3 position : POSITION;
+    float2 uv : TEXCOORD;
+};
+
+struct VS_STATICMESH_OUTPUT
+{
+    float4 position : SV_POSITION;
+};
+
+VS_STATICMESH_OUTPUT VSStaticMesh(VS_STATICMESH_INPUT input)
+{
+    VS_STATICMESH_OUTPUT output;
+
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+    return (output);
+}
+
+float4 PSStaticMesh(VS_STATICMESH_OUTPUT input) : SV_TARGET
+{
+    float4 Color = float4(0.f, 0.f, 0.f, 1.f);
+        
+    return (Color);
+}
+
 
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

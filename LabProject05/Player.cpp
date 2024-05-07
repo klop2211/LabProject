@@ -214,7 +214,7 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 {
 	if (pCamera->GetMode() != CameraMode::FIRST_PERSON)
 	{
-		CGameObject::Render(pd3dCommandList);
+		CGameObject::Render(pd3dCommandList, pCamera, m_nShader);
 	}
 }
 
