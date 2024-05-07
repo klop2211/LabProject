@@ -153,8 +153,8 @@ private:
 
 	bool is_animation_chainging_ = false;
 
-	int prev_index_;
-	int curr_index_;
+	int prev_index_ = 0;
+	int curr_index_ = 0;
 
 	float m_fTime;
 

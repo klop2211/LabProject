@@ -387,7 +387,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			switch (wParam)
 			{
 				case VK_SPACE:
-					player_->InputActionRoll(0);
+					//player_->InputActionRoll(0);
 				break;
 				case VK_ESCAPE:
 					::PostQuitMessage(0);
@@ -528,6 +528,7 @@ void CGameFramework::ProcessInput()
 		if (pKeysBuffer['D'] & 0xF0) dwDirection |= DIR_RIGHT;
 		if (pKeysBuffer['E'] & 0xF0) dwDirection |= DIR_UP;
 		if (pKeysBuffer['Q'] & 0xF0) dwDirection |= DIR_DOWN;
+		if (pKeysBuffer[' '] & 0xF0) player_->InputActionRoll(dwDirection);
 
 		XMFLOAT2 delta_xy = XMFLOAT2(0.f, 0.f);
 		POINT ptCursorPos;

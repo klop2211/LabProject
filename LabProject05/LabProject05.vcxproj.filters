@@ -40,6 +40,12 @@
     <Filter Include="AudioManager">
       <UniqueIdentifier>{3d1b832e-3e1e-483c-b847-62ac202fd4f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="StateMachine">
+      <UniqueIdentifier>{d0d4478a-f837-47f9-b4ca-7e8ce1e7981c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\Player">
+      <UniqueIdentifier>{eac72e55-03f4-4dda-a33c-88f172f34571}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -87,9 +93,6 @@
     <ClInclude Include="Object.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Camera</Filter>
     </ClInclude>
@@ -119,6 +122,18 @@
     </ClInclude>
     <ClInclude Include="WICTextureLoader12.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>StateMachine</Filter>
+    </ClInclude>
+    <ClInclude Include="StateMachine.h">
+      <Filter>StateMachine</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Objects\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerState.h">
+      <Filter>Objects\Player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,9 +170,6 @@
     <ClCompile Include="Object.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Objects</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
@@ -187,6 +199,12 @@
     </ClCompile>
     <ClCompile Include="WICTextureLoader12.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Objects\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerState.cpp">
+      <Filter>Objects\Player</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

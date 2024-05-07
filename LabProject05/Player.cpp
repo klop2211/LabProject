@@ -12,6 +12,7 @@
 #include "Mesh.h"
 #include "AnimationCallbackFunc.h"
 #include "Material.h"
+#include "PlayerState.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -34,6 +35,10 @@ CPlayer::CPlayer()
 
 	m_pPlayerUpdatedContext = NULL;
 	m_pCameraUpdatedContext = NULL;
+
+	state_machine_ = new StateMachine<CPlayer>(this);
+	state_machine_->SetCurrentState(PIdle::Instance());
+	state_machine_->SetPreviousState(PIdle::Instance());
 }
 
 CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) : CPlayer()
@@ -152,26 +157,15 @@ void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_t
 
 void CPlayer::InputActionRoll(const DWORD& direction)
 {
-	animation_state_ = PlayerAnimationState::Roll;
+	state_machine_->ChangeState(PEvade::Instance());	
 }
 
 void CPlayer::Update(float elapsed_time)
 {
+	state_machine_->Update(elapsed_time);
+
 	if (movement_component_)
 		movement_component_->Update(elapsed_time);
-
-	if (orient_rotation_to_movement_ && !IsZero(movement_component_->speed()))
-	{
-		// 벡터의 삼중적을 활용한 최단 방향 회전 
-		XMFLOAT3 v = look_vector(), d = Vector3::Normalize(movement_component_->velocity_vector()), u = XMFLOAT3(0.f,1.f,0.f);
-		float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
-
-		float yaw = Vector3::Angle(v, d);
-		if (result > 0)
-			yaw *= -1;
-		if(!IsZero(yaw))
-			rotation_component_->Rotate(0.f, yaw * 6.f * elapsed_time, 0.f);
-	}
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
@@ -180,26 +174,40 @@ void CPlayer::Update(float elapsed_time)
 
 	UpdateAnimationState();
 
-
 }
 
 void CPlayer::UpdateAnimationState()
 {
-	if (animation_state_ == PlayerAnimationState::Roll)
+	if (state_machine_->isInState(*PEvade::Instance()))
 	{
-		if(!animation_controller_->IsEnableTrack((int)PlayerAnimationState::Roll))
-			animation_state_ = PlayerAnimationState::Idle;
+		if (!animation_controller_->IsEnableTrack((int)PlayerAnimationState::Roll))
+		{
+			state_machine_->ChangeState(PIdle::Instance());
+		}
 	}
 
 
-	if (animation_state_ != PlayerAnimationState::Roll)
+	if (!state_machine_->isInState(*PEvade::Instance()))
 	{
 		if (IsZero(Vector3::Length(movement_component_->direction_vector())))
-			animation_state_ = PlayerAnimationState::Idle;
+			state_machine_->ChangeState(PIdle::Instance());
 		else
-			animation_state_ = PlayerAnimationState::Run;
+			state_machine_->ChangeState(PMove::Instance());
 	}
 
+}
+
+void CPlayer::OrientRotationToMove(float elapsed_time)
+{
+	// 벡터의 삼중적을 활용한 최단 방향 회전 
+	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(movement_component_->velocity_vector()), u = XMFLOAT3(0.f, 1.f, 0.f);
+	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
+	float yaw = Vector3::Angle(v, d);
+	if (result > 0)
+		yaw *= -1;
+	if (!IsZero(yaw))
+		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
 }
 
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
