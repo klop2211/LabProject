@@ -142,7 +142,6 @@
     <ClInclude Include="Mawang.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MovementComponent.h" />
-    <ClInclude Include="NetworkProtocol.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Resource.h" />

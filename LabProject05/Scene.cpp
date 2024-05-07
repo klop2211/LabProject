@@ -9,6 +9,9 @@
 #include "AnimationCallbackFunc.h"
 #include "Mawang.h"
 
+
+//extern std::unordered_map<int, bool> g_objects;
+
 CScene::CScene()
 {
 
@@ -215,13 +218,13 @@ void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 
 	terrain_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 
-	for (auto& Object : objects_)
-		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+	for (auto& Object : g_objects)
+		objects_[Object.first]->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 }
 
 void CScene::ReleaseUploadBuffers()
 {
-	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
+	for (auto& pObject : g_objects) objects_[pObject.first]->ReleaseUploadBuffers();
 }
 
 void CScene::AnimateObjects(float elapsed_time)
@@ -234,8 +237,14 @@ void CScene::AnimateObjects(float elapsed_time)
 
 	terrain_->Animate(elapsed_time);
 
-	for (auto& pObject : objects_) 
-		pObject->Animate(elapsed_time);
+	for (auto& pObject : g_objects)
+	{
+		if (true == pObject.second)
+		{
+			objects_[pObject.first]->set_position_vector(850, terrain_->GetHeight(550, 550), 550);
+		}
+		objects_[pObject.first]->Animate(elapsed_time);
+	}
 
 	if (m_pLights)
 	{
@@ -281,9 +290,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(40.0f, 0.01f, 40.0f);
+	XMFLOAT3 xmf3Scale(40.0f, 40.0f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 
 
 	player_->SetShader(4);
@@ -294,9 +303,26 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
-	CGameObject* object = new CMawang(model);
-	objects_.push_back(object);
+
+	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
+	//for (int i = 0; i < MAXUSER; ++i)
+	//{
+	//	// 일단 로드하여 보이지 않는 곳에 숨겨놓음
+	//	CGameObject* object = new CMawang(model);
+	//	objects_.push_back(object);
+	//	g_objects[i] = false;
+	//	objects_[i]->set_position_vector(0, terrain_->GetHeight(550, 550), 0);
+	//}
+
+	CGameObject* object1 = new CMawang(model);
+	objects_.push_back(object1);
+	g_objects[0] = false;
 	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+
+
+
+
+
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 }
@@ -311,10 +337,10 @@ void CScene::ReleaseObjects()
 	delete terrain_;
 	terrain_ = NULL;
 
-	for (auto& pObject : objects_)
+	for (auto& pObject : g_objects)
 	{
-		delete pObject;
-		pObject = NULL;
+		delete objects_[pObject.first];
+		objects_[pObject.first] = NULL;
 	}
 
 	for (auto& shader : shaders_)
@@ -353,11 +379,11 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (int i = 0; i < shaders_.size(); i++)
 	{
 		shaders_[i]->Render(pd3dCommandList);
-		for (auto& pObject: objects_)
+		for (auto& pObject: g_objects)
 		{
-			if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
+			if (objects_[pObject.first]->CheckShader(shaders_[i]->GetShaderNum()))
 			{
-				pObject->Render(pd3dCommandList, pCamera);
+				objects_[pObject.first]->Render(pd3dCommandList, pCamera);
 			}
 		}
 		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
@@ -373,10 +399,10 @@ void CScene::UpdateCollisionList()
 {
 	collision_list_.clear();
 
-	for (auto& object : objects_)
+	for (auto& object : g_objects)
 	{
-		if (Vector3::Length(player_->position_vector() - object->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
-			collision_list_.push_back(object);
+		if (Vector3::Length(player_->position_vector() - objects_[object.first]->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
+			collision_list_.push_back(objects_[object.first]);
 	}
 }
 

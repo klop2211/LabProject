@@ -113,7 +113,7 @@ AudioData LoadWavFile(const std::string& filename, WAVEFORMATEXTENSIBLE& waveFor
 #include <iostream>
 #include <WS2tcpip.h>
 #include <MSWSock.h>
-#include "NetworkProtocol.h"
+#include "../../../Server/2024_MainServer/protocol.h"
 
 #pragma comment(lib, "WS2_32.lib")
 #pragma comment(lib, "MSWSock.lib")
@@ -132,9 +132,14 @@ extern SOCKADDR_IN g_server_a;
 extern std::string avatar_name;
 extern WSAOVERLAPPED g_wsaover;
 
+class CGameObject;
+extern std::unordered_map<int, bool> g_objects;
+enum ObjectType {OT_PLAYER};
+
 void print_error(const char* msg, int err_no);
 void send_packet(void* packet);
-void process_data(char* net_buf, size_t io_byte);
+void ProcessData(char* net_buf, size_t io_byte);
+void DoRecv();
 
 
 //================================================

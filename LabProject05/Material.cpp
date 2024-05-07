@@ -49,8 +49,13 @@ void CTextureProperty::ReleaseUploadBuffers()
 
 void CTextureProperty::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager)
 {
-	if(m_Textures.size())
-		m_Textures[0].CreateShaderResourceView(pd3dDevice, pDescriptorManager);
+	if (m_Textures.size())
+	{
+		for (auto& texture : m_Textures)
+		{
+			texture.CreateShaderResourceView(pd3dDevice, pDescriptorManager);
+		}
+	}
 }
 
 

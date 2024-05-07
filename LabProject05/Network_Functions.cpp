@@ -1,4 +1,9 @@
 #include "stdafx.h"
+#include "Mawang.h"
+
+std::unordered_map<int, bool> g_objects;
+void ProcessPacket(char*);
+
 
 void print_error(const char* msg, int err_no)
 {
@@ -13,7 +18,6 @@ void print_error(const char* msg, int err_no)
     LocalFree(msg_buf);
 }
 
-
 void send_packet(void* packet)
 {
     unsigned char* p = reinterpret_cast<unsigned char*>(packet);
@@ -21,7 +25,7 @@ void send_packet(void* packet)
 
     WSABUF wsabuf;
     wsabuf.buf = reinterpret_cast<CHAR*>(packet);
-    wsabuf.len = sizeof(CHAR);
+    wsabuf.len = p[0];
     ZeroMemory(&g_wsaover, sizeof(g_wsaover));
 
     int res = WSASend(g_server_socket, &wsabuf, 1, nullptr, 0, &g_wsaover, nullptr);
@@ -29,100 +33,133 @@ void send_packet(void* packet)
     {
         print_error("WSASend", WSAGetLastError());
     }
-    std::cout << "로그인 패킷 보냄" << std::endl;
 }
 
-//void process_data(char* net_buf, size_t io_byte)
-//{
-//    char* ptr = net_buf;
-//    static size_t in_packet_size = 0;
-//    static size_t saved_packet_size = 0;
-//    static char packet_buffer[BUF_SIZE];
-//
-//    while (0 != io_byte) {
-//        if (0 == in_packet_size) in_packet_size = ptr[0];
-//        if (io_byte + saved_packet_size >= in_packet_size) {
-//            memcpy(packet_buffer + saved_packet_size, ptr, in_packet_size - saved_packet_size);
-//            ProcessPacket(packet_buffer);
-//            ptr += in_packet_size - saved_packet_size;
-//            io_byte -= in_packet_size - saved_packet_size;
-//            in_packet_size = 0;
-//            saved_packet_size = 0;
-//        }
-//        else {
-//            memcpy(packet_buffer + saved_packet_size, ptr, io_byte);
-//            saved_packet_size += io_byte;
-//            io_byte = 0;
-//        }
-//    }
-//}
-//
-//void ProcessPacket(char* ptr)
-//{
-//    static bool first_time = true;
-//    switch (ptr[1])
-//    {
-//    case SC_LOGIN_INFO:
-//    {
-//        SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(ptr);
-//        g_myid = packet->id;
-//        avatar.m_x = packet->x;
-//        avatar.m_y = packet->y;
-//        avatar.show();
-//    }
-//    break;
-//
-//    case SC_ADD_PLAYER:
-//    {
-//        SC_ADD_PLAYER_PACKET* my_packet = reinterpret_cast<SC_ADD_PLAYER_PACKET*>(ptr);
-//        int id = my_packet->id;
-//
-//
-//        if (id < MAX_USER) {
-//            players[id].move(my_packet->x, my_packet->y);
-//            players[id].set_name(my_packet->name);
-//            players[id].show();
-//        }
-//        else {
-//            //npc[id - NPC_START].x = my_packet->x;
-//            //npc[id - NPC_START].y = my_packet->y;
-//            //npc[id - NPC_START].attr |= BOB_ATTR_VISIBLE;
-//        }
-//        break;
-//    }
-//    case SC_MOVE_PLAYER:
-//    {
-//        SC_MOVE_PLAYER_PACKET* my_packet = reinterpret_cast<SC_MOVE_PLAYER_PACKET*>(ptr);
-//        int other_id = my_packet->id;
-//        if (other_id == g_myid) {
-//            avatar.move(my_packet->x, my_packet->y);
-//        }
-//        else if (other_id < MAX_USER) {
-//            players[other_id].move(my_packet->x, my_packet->y);
-//        }
-//        else {
-//            //npc[other_id - NPC_START].x = my_packet->x;
-//            //npc[other_id - NPC_START].y = my_packet->y;
-//        }
-//        break;
-//    }
-//
-//    case SC_REMOVE_PLAYER:
-//    {
-//        SC_REMOVE_PLAYER_PACKET* my_packet = reinterpret_cast<SC_REMOVE_PLAYER_PACKET*>(ptr);
-//        int other_id = my_packet->id;
-//        if (other_id == g_myid) {
-//            avatar.hide();
-//        }
-//        else if (other_id < MAX_USER) {
-//            players[other_id].hide();
-//        }
-//        else {
-//            //		npc[other_id - NPC_START].attr &= ~BOB_ATTR_VISIBLE;
-//        }
-//        break;
-//    }
-//    default:
-//        printf("Unknown PACKET type [%d]\n", ptr[1]);
-//    }
-//}
+// TODO: 다른 방식으로 패킷 해석 바꿀것
+void ProcessData(char* net_buf, size_t io_byte)
+{
+    char* ptr = net_buf;
+    static size_t in_packet_size = 0;
+    static size_t saved_packet_size = 0;
+    static char packet_buffer[BUF_SIZE];
+
+    while (0 != io_byte) 
+    {
+        if (0 == in_packet_size) in_packet_size = ptr[0];
+        if (io_byte + saved_packet_size >= in_packet_size) 
+        {
+            memcpy(packet_buffer + saved_packet_size, ptr, in_packet_size - saved_packet_size);
+            ProcessPacket(packet_buffer);
+            ptr += in_packet_size - saved_packet_size;
+            io_byte -= in_packet_size - saved_packet_size;
+            in_packet_size = 0;
+            saved_packet_size = 0;
+        }
+        else {
+            memcpy(packet_buffer + saved_packet_size, ptr, io_byte);
+            saved_packet_size += io_byte;
+            io_byte = 0;
+        }
+    }
+}
+
+void ProcessPacket(char* ptr)
+{
+    static bool first_time = true;
+    switch (ptr[1])
+    {
+    case SC_LOGIN_INFO:
+    {
+        SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(ptr);
+        g_myid = packet->id;
+        
+    }
+    break;
+
+    case SC_ADD_PLAYER:
+    {
+        SC_ADD_PLAYER_PACKET* my_packet = reinterpret_cast<SC_ADD_PLAYER_PACKET*>(ptr);
+        int id = my_packet->id;
+
+        if (id == g_myid) 
+        {
+            // 자신일 경우 자신의 움직임
+            //g_objects[id].move(my_packet->x, my_packet->y);
+        }
+        else {
+            // TODO:받은 캐릭터의 bool값 true로 바꿔주고 위치 배치 해주기
+            g_objects[id] = true;
+            
+            //g_objects[id]->set_position_vector(550, 100, 550);
+        }
+        break;
+    }
+    case SC_MOVE_PLAYER:
+    {
+        SC_MOVE_PLAYER_PACKET* my_packet = reinterpret_cast<SC_MOVE_PLAYER_PACKET*>(ptr);
+        int other_id = my_packet->id;
+        if (other_id == g_myid) 
+        {
+            // TODO : 자신의 받은 움직임
+        }
+        else 
+        {
+            // TODO : 다른 캐릭터의 받은 움직임
+        }
+        break;
+    }
+
+    case SC_REMOVE_PLAYER:
+    {
+        SC_REMOVE_PLAYER_PACKET* my_packet = reinterpret_cast<SC_REMOVE_PLAYER_PACKET*>(ptr);
+        int other_id = my_packet->id;
+        if (other_id == g_myid) 
+        {
+            // 자신 삭제
+        }
+        else 
+        {
+            // 다른 플레이어 삭제
+            //g_objects.erase(other_id);
+            g_objects[other_id] = false;
+            // 보이지 않는 곳으로 다시 이동
+        }
+        break;
+    }
+    default:
+        printf("Unknown PACKET type [%d]\n", ptr[1]);
+    }
+}
+
+
+void DoRecv() 
+{
+    char buffer[BUFSIZE];
+    WSABUF wsabuf;
+    wsabuf.buf = buffer;
+    wsabuf.len = BUFSIZE;
+
+    DWORD recv_flags = 0;
+    DWORD bytes_received = 0;
+    //WSAOVERLAPPED overlapped = {};
+
+    int res = WSARecv(g_server_socket, &wsabuf, 1, &bytes_received, &recv_flags, nullptr, nullptr);
+    if (res == SOCKET_ERROR) 
+    {
+        int err = WSAGetLastError();
+        if (err == WSA_IO_PENDING || err == WSAEWOULDBLOCK) 
+        {
+            // NON-Blocking WOULDBLOCK
+        }
+        else
+        {
+            print_error("WSARecv", err);
+            exit(0);
+        }
+    }
+    else 
+    {
+        // 수신된 데이터 처리
+        ProcessData(wsabuf.buf, bytes_received);
+    }
+}

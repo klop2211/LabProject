@@ -536,7 +536,7 @@ void CGameFramework::ProcessInput()
 			SetCursor(NULL);
 			GetCursorPos(&ptCursorPos);
 			delta_xy.x = (float)(ptCursorPos.x - old_cursor_position_.x) * 0.3f;
-			delta_xy.y = (float)(ptCursorPos.y - old_cursor_position_.y) * 0.3f;
+			//delta_xy.y = (float)(ptCursorPos.y - old_cursor_position_.y) * 0.3f;
 			SetCursorPos(old_cursor_position_.x, old_cursor_position_.y);
 		}
 

@@ -3,6 +3,7 @@
 #include "Animation.h"
 
 const std::string CMawang::mawang_model_file_name_ = "../Resource/Model/Mawang_Model.bin";
+//const std::string CMawang::mawang_model_file_name_ = "../Resource/Model/Player_Model.bin";
 
 CMawang::CMawang()
 {

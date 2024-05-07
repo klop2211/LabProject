@@ -68,6 +68,7 @@ protected:
 
 public:
 	CGameObject();
+	CGameObject(ObjectType object_type);
 	~CGameObject();
 
 	void AddRef() { reference_count_++; }

@@ -88,15 +88,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         WSACleanup();
     }
 
-    // 해당 로그인 부분은 로그인 서버 완성시 그쪽으로 옮겨질 코드
+    // TODO: 해당 로그인 부분은 로그인 서버 완성시 그쪽으로 옮겨질 코드
     CS_LOGIN_PACKET p;
     p.size = sizeof(p);
     p.type = CS_LOGIN;
     strcpy_s(p.name, avatar_name.c_str());
     send_packet(&p);
     
+    unsigned long noblock = 1;
+    int nRet = ioctlsocket(g_server_socket, FIONBIO, &noblock);
 
-    while (1)
+        while (1)
     {
         if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
@@ -111,6 +113,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         {
             gGameFramework.FrameAdvance();
         }
+        //do_recv();
+        DoRecv();
     }
     gGameFramework.OnDestroy();
     return (int)msg.wParam;

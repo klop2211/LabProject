@@ -108,6 +108,7 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 	XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 	if (dwDirection)
 	{
+		// TODO: 캐릭터의 look 벡터를 다 전송하지 말고, 각도를 보내 해당 각도를 계산하는 코드를 서버에서 작성
 		if (orient_rotation_to_movement_)
 		{
 			// 카메라의 yaw 회전만 가져와서 사용

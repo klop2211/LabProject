@@ -18,6 +18,21 @@ CGameObject::CGameObject()
 	m_xmf4x4World = Matrix4x4::Identity();
 }
 
+CGameObject::CGameObject(ObjectType object_type)
+{
+	to_parent_matrix_ = Matrix4x4::Identity();
+	m_xmf4x4World = Matrix4x4::Identity();
+	// add한 오브젝트 로드를 위한
+	switch (object_type)
+	{
+	case OT_PLAYER:
+		// TODO: 여기서 캐릭터의 모델을 로드하도록
+		//CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_)
+		//this = new CGameObject(model);
+		break;
+	}
+}
+
 CGameObject::~CGameObject()
 {
 	if (m_pMesh) m_pMesh->Release();
