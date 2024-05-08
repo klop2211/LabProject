@@ -8,6 +8,7 @@ class CCamera;
 class CHeightMapTerrain;
 class CDescriptorManager;
 class CAudioManager;
+class CSkyBox;
 
 struct LIGHT
 {
@@ -77,6 +78,9 @@ protected:
 
 	// Player
 	CPlayer* player_ = NULL;
+
+	// SkyBox
+	CSkyBox* skybox_ = NULL;
 
 	// GameObject °ü¸®
 	std::vector<CGameObject*> objects_;

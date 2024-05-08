@@ -8,6 +8,7 @@
 #include "AudioManager.h"
 #include "AnimationCallbackFunc.h"
 #include "Mawang.h"
+#include "SkyBox.h"
 
 CScene::CScene()
 {
@@ -239,6 +240,8 @@ void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 
 	terrain_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 
+	skybox_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
 	for (auto& Object : objects_)
 		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 }
@@ -282,13 +285,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	shaders_.emplace_back(new CStandardShader);
 	shaders_.emplace_back(new CTerrainShader);
 	shaders_.emplace_back(new CStaticMeshShader);
+	shaders_.emplace_back(new CSkyBoxShader);
 
 	for(auto& shader : shaders_)
 		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
 
 
 	descriptor_manager_ = new CDescriptorManager;
-	descriptor_manager_->SetDescriptors(1 + 5); // 조명(cbv), 텍스처
+	descriptor_manager_->SetDescriptors(1 + 5 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
@@ -310,6 +314,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
+	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
+	shaders_[3]->AddObject(skybox_);
+
 	shaders_[1]->AddObject(terrain_);
 
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);

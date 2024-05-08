@@ -1,6 +1,6 @@
 #pragma once
 
-enum class ShaderNum{ Diffused=0, Illuminated, Terrain, AnimationWireframe, Standard, StaticMesh };
+enum class ShaderNum{ Diffused=0, Illuminated, Terrain, AnimationWireframe, Standard, StaticMesh, SkyBox };
 
 class CGameObject;
 class CCamera;
@@ -131,5 +131,21 @@ public:
 	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob** ppd3dShaderBlob);
 
 	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+};
+
+// 스카이박스를 그리는 셰이더
+class CSkyBoxShader : public CShader
+{
+public:
+	CSkyBoxShader();
+
+	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
+	virtual D3D12_DEPTH_STENCIL_DESC CreateDepthStencilState();
+
+	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob** ppd3dShaderBlob);
+	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob** ppd3dShaderBlob);
+
+	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
+
 };
 
