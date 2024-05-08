@@ -75,7 +75,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 {
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
 
-	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[4];
+	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[5];
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	pd3dDescriptorRanges[0].RegisterSpace = 0;
 	pd3dDescriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -100,7 +100,14 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[3].BaseShaderRegister = 0; //Texture(DiffuseColor)
 	pd3dDescriptorRanges[3].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[8];
+	pd3dDescriptorRanges[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	pd3dDescriptorRanges[4].RegisterSpace = 0;
+	pd3dDescriptorRanges[4].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	pd3dDescriptorRanges[4].BaseShaderRegister = 19; //Texture(SkyBox)
+	pd3dDescriptorRanges[4].NumDescriptors = 1;
+
+
+	D3D12_ROOT_PARAMETER pd3dRootParameters[9];
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 0; //Camera
 	pd3dRootParameters[0].Descriptor.RegisterSpace = 0;
@@ -142,20 +149,37 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[7].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[3];
 	pd3dRootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	pd3dRootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	pd3dRootParameters[8].DescriptorTable.NumDescriptorRanges = 1; //SkyBox Texuture
+	pd3dRootParameters[8].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[4];
+	pd3dRootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs;
-	d3dSamplerDescs.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	d3dSamplerDescs.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.MipLODBias = 0;
-	d3dSamplerDescs.MaxAnisotropy = 1;
-	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	d3dSamplerDescs.MinLOD = 0;
-	d3dSamplerDescs.MaxLOD = D3D12_FLOAT32_MAX;
-	d3dSamplerDescs.ShaderRegister = 0;
-	d3dSamplerDescs.RegisterSpace = 0;
-	d3dSamplerDescs.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs[2];
+	d3dSamplerDescs[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	d3dSamplerDescs[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].MipLODBias = 0;
+	d3dSamplerDescs[0].MaxAnisotropy = 1;
+	d3dSamplerDescs[0].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs[0].MinLOD = 0;
+	d3dSamplerDescs[0].MaxLOD = D3D12_FLOAT32_MAX;
+	d3dSamplerDescs[0].ShaderRegister = 0;
+	d3dSamplerDescs[0].RegisterSpace = 0;
+	d3dSamplerDescs[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	d3dSamplerDescs[1].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	d3dSamplerDescs[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].MipLODBias = 0;
+	d3dSamplerDescs[1].MaxAnisotropy = 1;
+	d3dSamplerDescs[1].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs[1].MinLOD = 0;
+	d3dSamplerDescs[1].MaxLOD = D3D12_FLOAT32_MAX;
+	d3dSamplerDescs[1].ShaderRegister = 1;
+	d3dSamplerDescs[1].RegisterSpace = 0;
+	d3dSamplerDescs[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 
 	D3D12_ROOT_SIGNATURE_FLAGS d3dRootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
@@ -163,8 +187,8 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
 	d3dRootSignatureDesc.NumParameters = _countof(pd3dRootParameters);
 	d3dRootSignatureDesc.pParameters = pd3dRootParameters;
-	d3dRootSignatureDesc.NumStaticSamplers = 1;
-	d3dRootSignatureDesc.pStaticSamplers = &d3dSamplerDescs;
+	d3dRootSignatureDesc.NumStaticSamplers = 2;
+	d3dRootSignatureDesc.pStaticSamplers = d3dSamplerDescs;
 	d3dRootSignatureDesc.Flags = d3dRootSignatureFlags;
 
 	ID3DBlob* pd3dSignatureBlob = NULL;
@@ -301,8 +325,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	XMFLOAT4X4 temp;
 	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&sword_socket->to_parent_matrix()), R));
 	sword_socket->set_to_parent_matrix(temp);
-
-	sword_socket->set_position_vector(10.f, 5.f, 50.f);
+	sword_socket->set_position_vector(5.f, 0.f, 50.f);
 	sword_socket->SetShader((int)ShaderNum::StaticMesh);
 	shaders_[2]->AddObject(sword_socket);
 
@@ -370,20 +393,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress);
 #endif
 
-	for (int i = 0; i < shaders_.size(); i++)
+	//05.08 수정: 이제 셰이더는 그 셰이더를 사용하는 오브젝트들을 렌더함
+	for (auto& shader : shaders_)
 	{
-		shaders_[i]->Render(pd3dCommandList, pCamera);
-		//for (auto& pObject: objects_)
-		//{
-		//	if (pObject->CheckShader(shaders_[i]->GetShaderNum()))
-		//	{
-		//		pObject->Render(pd3dCommandList, pCamera);
-		//	}
-		//}
-		//if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
-		//	player_->Render(pd3dCommandList, pCamera);
-		//if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
-		//	terrain_->Render(pd3dCommandList, pCamera);
+		shader->Render(pd3dCommandList, pCamera);
 	}
 
 

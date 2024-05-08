@@ -162,56 +162,6 @@ float4 PSStaticMesh(VS_STATICMESH_OUTPUT input) : SV_TARGET
     return (Color);
 }
 
-
-
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-//#define _WITH_VERTEX_LIGHTING
-
-
-struct VS_LIGHTING_INPUT
-{
-	float3 position : POSITION;
-	float3 normal : NORMAL;
-};
-
-struct VS_LIGHTING_OUTPUT
-{
-	float4 position : SV_POSITION;
-	float3 positionW : POSITION;
-	float3 normalW : NORMAL;
-//	nointerpolation float3 normalW : NORMAL;
-#ifdef _WITH_VERTEX_LIGHTING
-	float4 color : COLOR;
-#endif
-};
-
-VS_LIGHTING_OUTPUT VSLighting(VS_LIGHTING_INPUT input)
-{
-	VS_LIGHTING_OUTPUT output;
-
-	output.normalW = mul(input.normal, (float3x3)gmtxGameObject);
-	output.positionW = (float3)mul(float4(input.position, 1.0f), gmtxGameObject);
-	output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
-#ifdef _WITH_VERTEX_LIGHTING
-	output.normalW = normalize(output.normalW);
-	output.color = Lighting(output.positionW, output.normalW);
-#endif
-	return(output);
-}
-
-float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
-{
-#ifdef _WITH_VERTEX_LIGHTING
-	return(input.color);
-#else
-	input.normalW = normalize(input.normalW);
-	float4 color = Lighting(input.positionW, input.normalW);
-	return(color);
-#endif
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Texture2D gtxtTerrainTexture : register(t17);
@@ -257,4 +207,83 @@ float4 PSTerrain(VS_TERRAIN_OUTPUT input) : SV_TARGET
     return (cColor);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+struct VS_SKYBOX_CUBEMAP_INPUT
+{
+    float3 position : POSITION;
+};
 
+struct VS_SKYBOX_CUBEMAP_OUTPUT
+{
+    float3 positionL : POSITION;
+    float4 position : SV_POSITION;
+};
+
+VS_SKYBOX_CUBEMAP_OUTPUT VSSkyBox(VS_SKYBOX_CUBEMAP_INPUT input)
+{
+    VS_SKYBOX_CUBEMAP_OUTPUT output;
+
+    output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+    output.positionL = input.position;
+
+    return (output);
+}
+
+TextureCube gtxtSkyCubeTexture : register(t19);
+SamplerState gssClamp : register(s1);
+
+float4 PSSkyBox(VS_SKYBOX_CUBEMAP_OUTPUT input) : SV_TARGET
+{
+    float4 cColor = gtxtSkyCubeTexture.Sample(gssClamp, input.positionL);
+
+    return (cColor);
+}
+
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//#define _WITH_VERTEX_LIGHTING
+
+
+struct VS_LIGHTING_INPUT
+{
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+};
+
+struct VS_LIGHTING_OUTPUT
+{
+    float4 position : SV_POSITION;
+    float3 positionW : POSITION;
+    float3 normalW : NORMAL;
+//	nointerpolation float3 normalW : NORMAL;
+#ifdef _WITH_VERTEX_LIGHTING
+	float4 color : COLOR;
+#endif
+};
+
+VS_LIGHTING_OUTPUT VSLighting(VS_LIGHTING_INPUT input)
+{
+    VS_LIGHTING_OUTPUT output;
+
+    output.normalW = mul(input.normal, (float3x3) gmtxGameObject);
+    output.positionW = (float3) mul(float4(input.position, 1.0f), gmtxGameObject);
+    output.position = mul(mul(float4(output.positionW, 1.0f), gmtxView), gmtxProjection);
+#ifdef _WITH_VERTEX_LIGHTING
+	output.normalW = normalize(output.normalW);
+	output.color = Lighting(output.positionW, output.normalW);
+#endif
+    return (output);
+}
+
+float4 PSLighting(VS_LIGHTING_OUTPUT input) : SV_TARGET
+{
+#ifdef _WITH_VERTEX_LIGHTING
+	return(input.color);
+#else
+    input.normalW = normalize(input.normalW);
+    float4 color = Lighting(input.positionW, input.normalW);
+    return (color);
+#endif
+}

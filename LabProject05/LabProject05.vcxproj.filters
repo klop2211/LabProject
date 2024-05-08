@@ -46,6 +46,9 @@
     <Filter Include="Objects\Player">
       <UniqueIdentifier>{eac72e55-03f4-4dda-a33c-88f172f34571}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects\SkyBox">
+      <UniqueIdentifier>{4b36dd17-8eea-4f95-9a56-dbbbacdb4f03}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -135,6 +138,9 @@
     <ClInclude Include="PlayerState.h">
       <Filter>Objects\Player</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBox.h">
+      <Filter>Objects\SkyBox</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -205,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="PlayerState.cpp">
       <Filter>Objects\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyBox.cpp">
+      <Filter>Objects\SkyBox</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
