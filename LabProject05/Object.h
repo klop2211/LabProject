@@ -62,9 +62,11 @@ protected:
 	// animation 관련
 	CAnimationController* animation_controller_ = NULL;
 	
-
 	// 물리 옵션 적용관련 변수
 	bool is_fall_ = false; //중력의 적용을 받는지
+
+	// 객체의 렌더 여부
+	bool is_visible_ = true;
 
 public:
 	CGameObject();
@@ -76,6 +78,7 @@ public:
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
 	//setter
+	void set_is_visible(const bool& value) { is_visible_ = value; }
 	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
@@ -101,6 +104,7 @@ public:
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
 
 	//getter
+	bool is_visible() const { return is_visible_; }
 	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
 	XMFLOAT3 position_vector() const;
 	XMFLOAT3 look_vector() const;

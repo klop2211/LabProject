@@ -120,6 +120,7 @@ void CGameObject::ResetAnimatedSRT()
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
 {
 	if (shader_num != m_nShader) return;
+	if (!is_visible_) return;
 
 	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
@@ -255,6 +256,8 @@ CGameObject* CGameObject::AddSocket(const std::string& frame_name)
 	CGameObject* socket = new CGameObject();
 	CGameObject* socket_parent = FindFrame(frame_name);
 	socket_parent->set_child(socket);
+
+
 
 	return socket;
 }

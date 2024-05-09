@@ -5,6 +5,8 @@ class CPlayer;
 
 class PIdle : public State<CPlayer>
 {
+    const float release_weapon_time_ = 2.f;
+    float idle_time_ = 0.f;
 public:
     static PIdle* Instance();
 

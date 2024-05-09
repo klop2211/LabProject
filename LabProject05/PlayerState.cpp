@@ -11,11 +11,31 @@ PIdle* PIdle::Instance()
 
 void PIdle::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::SwordIdle);
+	idle_time_ = 0.f;
+	player->set_attack_type(PlayerAttackType::None);
+	switch (player->current_weapon())
+	{
+	case PlayerWeaponType::None:
+		player->set_animation_state(PlayerAnimationState::Idle);
+		break;
+	case PlayerWeaponType::Sword:
+		player->set_animation_state(PlayerAnimationState::SwordIdle);
+		break;
+
+	default:
+		break;
+	}
 }
 
 void PIdle::Execute(CPlayer* player, float elapsed)
 {
+	idle_time_ += elapsed;
+	if (idle_time_ > release_weapon_time_)
+	{
+		player->set_current_weapon(PlayerWeaponType::None);
+		player->weapon_socket()->set_is_visible(false);
+		player->set_animation_state(PlayerAnimationState::Idle);
+	}
 	if (!IsZero(Vector3::Length(player->movement_component()->direction_vector())))
 		player->state_machine()->ChangeState(PMove::Instance());
 
@@ -33,6 +53,8 @@ PMove* PMove::Instance()
 
 void PMove::Enter(CPlayer* player)
 {
+	player->set_current_weapon(PlayerWeaponType::None);
+	player->weapon_socket()->set_is_visible(false);
 	player->set_animation_state(PlayerAnimationState::Run);
 }
 
@@ -112,6 +134,7 @@ PSwordAttack1* PSwordAttack1::Instance()
 
 void PSwordAttack1::Enter(CPlayer* player)
 {
+	//TODO: 차지공격에 맞춰서 움직임 및 단계별 애니메이션 구현
 	player->set_animation_state(PlayerAnimationState::SwordAttack1);
 }
 
@@ -125,6 +148,7 @@ void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 
 void PSwordAttack1::Exit(CPlayer* player)
 {
+	
 }
 
 PSwordAttack2* PSwordAttack2::Instance()
@@ -135,6 +159,7 @@ PSwordAttack2* PSwordAttack2::Instance()
 
 void PSwordAttack2::Enter(CPlayer* player)
 {
+	//TODO: 기모으는 도중 안 움직이게 수정
 	player->set_animation_state(PlayerAnimationState::SwordAttack2);
 }
 

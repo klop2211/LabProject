@@ -322,7 +322,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
-	CGameObject* collision_socket = player_->AddSocket("Bip001");
+	//CGameObject* collision_socket = player_->AddSocket("Bip001");
 	//XMFLOAT3 max_point { 25.f, 175.f}
 	//BoundingBox::CreateFromPoints()
 	shaders_[0]->AddObject(player_);
@@ -337,6 +337,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	sword_socket->set_to_parent_matrix(temp);
 	sword_socket->set_position_vector(0.f, 0.f, 70.f);
 	sword_socket->SetShader((int)ShaderNum::StaticMesh);
+	player_->set_weapon_socket(sword_socket);
 	shaders_[2]->AddObject(sword_socket);
 
 
