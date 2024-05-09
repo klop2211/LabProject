@@ -332,7 +332,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	XMFLOAT4X4 temp;
 	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&sword_socket->to_parent_matrix()), R));
 	sword_socket->set_to_parent_matrix(temp);
-	sword_socket->set_position_vector(5.f, 0.f, 50.f);
+	sword_socket->set_position_vector(0.f, 0.f, 70.f);
 	sword_socket->SetShader((int)ShaderNum::StaticMesh);
 	shaders_[2]->AddObject(sword_socket);
 

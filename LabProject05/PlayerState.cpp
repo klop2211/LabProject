@@ -11,7 +11,7 @@ PIdle* PIdle::Instance()
 
 void PIdle::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::Idle);
+	player->set_animation_state(PlayerAnimationState::SwordIdle);
 }
 
 void PIdle::Execute(CPlayer* player, float elapsed)

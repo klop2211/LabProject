@@ -57,10 +57,10 @@ int main(int argc, char** argv)
 	FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];
 	FbxScene *ppfbxAnimationScenes[nSeparatedAnimations];
 	pfbxstrAnimationFilePaths[0] = "../Resource/Model/Player_Idle.fbx";
-	pfbxstrAnimationFilePaths[1] = "../Resource/Model/Player_Roll1.fbx";
+	pfbxstrAnimationFilePaths[1] = "../Resource/Model/Player_Roll.fbx";
 	pfbxstrAnimationFilePaths[2] = "../Resource/Model/Player_Run.fbx";
 	pfbxstrAnimationFilePaths[3] = "../Resource/Model/Player_Walk.fbx";
-	pfbxstrAnimationFilePaths[3] = "../Resource/Model/Player_Sword_00.fbx";
+	pfbxstrAnimationFilePaths[4] = "../Resource/Model/Player_Sword_00.fbx";
 
 	//const int nSeparatedAnimations = 3;
 	//FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];

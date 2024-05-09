@@ -6,7 +6,7 @@ class CMovementComponent;
 class CRotationComponent;
 class CAnimationCallbackFunc;
 
-enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk };
+enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle };
 
 class CPlayer : public CGameObject
 {
