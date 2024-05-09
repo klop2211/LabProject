@@ -23,12 +23,6 @@ CPlayer::CPlayer()
 
 	speed_ = 0.f;
 
-	m_xmf3Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	m_xmf3Gravity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	m_fMaxVelocityXZ = 0.0f;
-	m_fMaxVelocityY = 0.0f;
-	m_fFriction = 0.0f;
-
 	m_fPitch = 0.0f;
 	m_fRoll = 0.0f;
 	m_fYaw = 0.0f;
@@ -49,12 +43,15 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	set_child(model.heirarchy_root);
 
-	animation_controller_ = model.animation_controller;
+	animation_controller_ = new CAnimationController(*model.animation_controller);
 
 	animation_controller_->SetFrameCaches(this);
 
 	animation_controller_->EnableTrack(0);
-	animation_controller_->SetLoopType((int)PlayerAnimationState::Roll, AnimationLoopType::Once);
+	animation_controller_->SetLoopType((int)PlayerAnimationState::Idle, AnimationLoopType::Repeat);
+	animation_controller_->SetLoopType((int)PlayerAnimationState::SwordIdle, AnimationLoopType::Repeat);
+	animation_controller_->SetLoopType((int)PlayerAnimationState::Walk, AnimationLoopType::Repeat);
+	animation_controller_->SetLoopType((int)PlayerAnimationState::Run, AnimationLoopType::Repeat);
 
 	CMaterial* Material = new CMaterial(1);
 	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
@@ -126,6 +123,7 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 			if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
 			if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
 			if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
+			direction_vector_ = direction_vector;
 		}
 		else
 		{
@@ -160,8 +158,34 @@ void CPlayer::InputActionRoll(const DWORD& direction)
 	state_machine_->ChangeState(PEvade::Instance());	
 }
 
+void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
+{
+	attack_type_ = attack_type;
+	State<CPlayer>* attack_state = NULL;
+	switch (attack_type_)
+	{
+	case PlayerAttackType::None:
+		break;
+	case PlayerAttackType::LeftAttack:
+		attack_state = PSwordAttack1::Instance();
+		break;
+	case PlayerAttackType::RightAttack:
+		attack_state = PSwordAttack2::Instance();
+		break;
+	case PlayerAttackType::BothAttack:
+		break;
+	case PlayerAttackType::ControlAttack:
+		break;
+	default:
+		break;
+	}
+	state_machine_->ChangeState(attack_state);
+}
+
 void CPlayer::Update(float elapsed_time)
 {
+	animation_controller_->ChangeAnimation((int)animation_state_);
+
 	state_machine_->Update(elapsed_time);
 
 	if (movement_component_)
@@ -170,37 +194,14 @@ void CPlayer::Update(float elapsed_time)
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
 
-	animation_controller_->ChangeAnimation((int)animation_state_);
 
-	UpdateAnimationState();
-
-}
-
-void CPlayer::UpdateAnimationState()
-{
-	if (state_machine_->isInState(*PEvade::Instance()))
-	{
-		if (!animation_controller_->IsEnableTrack((int)PlayerAnimationState::Roll))
-		{
-			state_machine_->ChangeState(PIdle::Instance());
-		}
-	}
-
-
-	if (!state_machine_->isInState(*PEvade::Instance()))
-	{
-		if (IsZero(Vector3::Length(movement_component_->direction_vector())))
-			state_machine_->ChangeState(PIdle::Instance());
-		else
-			state_machine_->ChangeState(PMove::Instance());
-	}
 
 }
 
 void CPlayer::OrientRotationToMove(float elapsed_time)
 {
-	// 벡터의 삼중적을 활용한 최단 방향 회전 
-	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(movement_component_->velocity_vector()), u = XMFLOAT3(0.f, 1.f, 0.f);
+	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
+	XMFLOAT3 v = look_vector(), d = direction_vector_, u = XMFLOAT3(0.f, 1.f, 0.f);
 	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
 
 	float yaw = Vector3::Angle(v, d);

@@ -6,7 +6,9 @@ class CMovementComponent;
 class CRotationComponent;
 class CAnimationCallbackFunc;
 
-enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle };
+enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle, SwordAttack1, SwordAttack2, SwordAttack3, SwordAttack4 };
+enum class PlayerWeaponType { Sword = 0, Sphere };
+enum class PlayerAttackType { None = 0, LeftAttack, RightAttack, BothAttack, ControlAttack };
 
 class CPlayer : public CGameObject
 {
@@ -17,11 +19,7 @@ protected:
 
 	float						speed_; // ¥‹¿ß: m/s
 
-	XMFLOAT3					m_xmf3Velocity;
-	XMFLOAT3     				m_xmf3Gravity;
-	float           			m_fMaxVelocityXZ;
-	float           			m_fMaxVelocityY;
-	float           			m_fFriction;
+	XMFLOAT3 direction_vector_{ 0.f,0.f,0.f };
 
 	LPVOID						m_pPlayerUpdatedContext;
 	LPVOID						m_pCameraUpdatedContext;
@@ -36,6 +34,10 @@ protected:
 
 	PlayerAnimationState animation_state_ = PlayerAnimationState::Idle;
 
+	PlayerWeaponType current_weapon_ = PlayerWeaponType::Sword;
+	PlayerWeaponType other_weapon_ = PlayerWeaponType::Sphere;
+	PlayerAttackType attack_type_ = PlayerAttackType::None;
+
 	StateMachine<CPlayer>* state_machine_;
 
 public:
@@ -45,18 +47,14 @@ public:
 
 	//setter
 	void set_animation_state(const PlayerAnimationState& value) { animation_state_ = value; }
-	void SetFriction(float fFriction) { m_fFriction = fFriction; }
-	void SetGravity(const XMFLOAT3& xmf3Gravity) { m_xmf3Gravity = xmf3Gravity; }
-	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
-	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
-	void SetVelocity(const XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
 
 	//getter
+	StateMachine<CPlayer>* state_machine()const { return state_machine_; }
+	CAnimationController* animation_controller() const { return animation_controller_; }
 	float speed() const { return speed_; }
 	CMovementComponent* movement_component() const { return movement_component_; }
 	bool orient_rotation_to_movement() const { return orient_rotation_to_movement_; }
 	PlayerAnimationState animation_state() const { return animation_state_; }
-	const XMFLOAT3& GetVelocity() const { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
 	float GetPitch() const { return(m_fPitch); }
 	float GetRoll() const { return(m_fRoll); }
@@ -65,12 +63,12 @@ public:
 	void InputActionMove(const DWORD& dwDirection, const float& elapsed_time);
 	void InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time);
 	void InputActionRoll(const DWORD& direction);
+	void InputActionAttack(const PlayerAttackType& attack_type);
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }
 
 	virtual void Update(float fTimeElapsed);
-	void UpdateAnimationState();
 
 	void OrientRotationToMove(float fTimeElapsed);
 

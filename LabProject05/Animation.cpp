@@ -115,9 +115,7 @@ CAnimationTrack::CAnimationTrack()
 	enable_ = false;
 	weight_ = 1.0f;
 
-	m_pAnimationSet = NULL;
-
-	loop_type_ = AnimationLoopType::Repeat;
+	loop_type_ = AnimationLoopType::Once;
 
 }
 
@@ -131,13 +129,13 @@ CAnimationTrack::CAnimationTrack(std::ifstream& InFile) : CAnimationTrack()
 
 		FBXLoad::ReadStringFromFile(InFile, strToken); // animation name
 
-		float fStartTime, fEndTime;
-		fStartTime = FBXLoad::ReadFromFile<float>(InFile);
-		fEndTime = FBXLoad::ReadFromFile<float>(InFile);
+		float start_time, end_time;
+		start_time = FBXLoad::ReadFromFile<float>(InFile);
+		end_time = FBXLoad::ReadFromFile<float>(InFile);
 
-		m_pAnimationSet = new CAnimationSet(fStartTime, fEndTime, strToken);
 
-		m_pAnimationSet->LoadLayersFromFile(InFile);
+		animation_set_.reset(new CAnimationSet(start_time, end_time, strToken));
+		animation_set_->LoadLayersFromFile(InFile);
 	}
 
 	FBXLoad::ReadStringFromFile(InFile, strToken); // </AnimationSet>
@@ -145,7 +143,6 @@ CAnimationTrack::CAnimationTrack(std::ifstream& InFile) : CAnimationTrack()
 
 CAnimationTrack::~CAnimationTrack()
 {
-	if (m_pAnimationSet) delete m_pAnimationSet;
 }
 
 void CAnimationTrack::AddWeight(const float& value)
@@ -175,24 +172,24 @@ void CAnimationTrack::Animate(const float& fElapsedTime)
 			callback_key();
 	}
 
-	if (m_pAnimationSet) m_pAnimationSet->Animate(position_, weight_);
+	animation_set_->Animate(position_, weight_);
 }
 
 void CAnimationTrack::SetFrameCaches(CGameObject* pRootObject)
 {
-	m_pAnimationSet->SetFrameCaches(pRootObject);
+	animation_set_->SetFrameCaches(pRootObject);
 }
 
 void CAnimationTrack::UpdateMatrix()
 {
-	if (m_pAnimationSet) m_pAnimationSet->UpdateMatrix();
+	animation_set_->UpdateMatrix();
 }
 
 void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 {
 	position_ += (fElapsedTime * speed_);
 
-	if (m_pAnimationSet->GetEndTime() < position_)
+	if (animation_set_->end_time() < position_)
 	{
 		position_ = 0.f;
 
@@ -204,15 +201,15 @@ void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 
 CAnimationSet::CAnimationSet()
 {
-	m_fStartTime = 0.f;
-	m_fEndTime = 0.f;
+	start_time_ = 0.f;
+	end_time_ = 0.f;
 
 	m_Layers.reserve(0);
 
 }
 
 CAnimationSet::CAnimationSet(const float& fStartTime, const float& fEndTime, const std::string& strAnimationName)
-	: m_fStartTime(fStartTime), m_fEndTime(fEndTime), m_strAnimationName(strAnimationName)
+	: start_time_(fStartTime), end_time_(fEndTime), animation_name_(strAnimationName)
 {
 }
 

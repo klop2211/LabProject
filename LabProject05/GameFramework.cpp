@@ -60,6 +60,9 @@ bool CGameFramework::OnCreate(HINSTANCE hInstance, HWND hMainWnd)
 
 	BuildObjects();
 
+	::SetCapture(hwnd_);
+	::GetCursorPos(&old_cursor_position_);
+
 	return(true);
 }
 
@@ -350,13 +353,20 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	switch (nMessageID)
 	{
 		case WM_RBUTTONDOWN:
+			right_click_ = true;
+			break;
 		case WM_LBUTTONDOWN:
-			::SetCapture(hWnd);
-			::GetCursorPos(&old_cursor_position_);
+			// 05.10 수정: 기획에 맞춰서 마우스 입력 수정
+			if (GetCapture() != hwnd_)
+			{
+				::SetCapture(hwnd_);
+				::GetCursorPos(&old_cursor_position_);
+			}
+			left_click_ = true;
 			break;
 		case WM_RBUTTONUP:
 		case WM_LBUTTONUP:
-			::ReleaseCapture();
+			//::ReleaseCapture();
 			break;
 		case WM_MOUSEMOVE:
 			break;
@@ -549,6 +559,32 @@ void CGameFramework::ProcessInput()
 		if(camera_->GetMode() == CameraMode::GHOST) 
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
 
+	}
+	if (left_click_)
+	{
+		click_time_ += elapsed_time;
+		if (click_time_ > both_click_delay_time_)
+		{
+			player_->InputActionAttack(PlayerAttackType::LeftAttack);
+			left_click_ = false;
+			click_time_ = 0.f;
+		}
+	}
+	if (right_click_)
+	{
+		click_time_ += elapsed_time;
+		if (click_time_ > both_click_delay_time_)
+		{
+			player_->InputActionAttack(PlayerAttackType::RightAttack);
+			right_click_ = false;
+			click_time_ = 0.f;
+		}
+	}
+	if (left_click_ && right_click_)
+	{
+		player_->InputActionAttack(PlayerAttackType::BothAttack);
+		click_time_ = 0.f;
+		left_click_ = right_click_ = false;
 	}
 	player_->Update(elapsed_time);
 	camera_->Update(elapsed_time);

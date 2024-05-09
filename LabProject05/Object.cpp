@@ -355,7 +355,7 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 	CModelInfo rvalue;
 
 	rvalue.heirarchy_root = frame_root;
-	rvalue.animation_controller = animation_controller;
+	rvalue.animation_controller.reset(animation_controller);
 
 	return rvalue;
 }

@@ -87,6 +87,14 @@ private:
 
 	POINT						old_cursor_position_;
 
+	//마우스 양클릭을 체크하기 위한 대기시간
+	const float both_click_delay_time_ = 0.1;
+	float click_time_ = 0.f;
+
+	//마우스 각 클릭에 대한 트리거 버튼을 누르면 true가 되고 입력처리되면 false가 됨
+	bool left_click_ = false;
+	bool right_click_ = false;
+
 	_TCHAR						m_pszFrameRate[50];
 };
 

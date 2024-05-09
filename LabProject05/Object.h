@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Animation.h"
 #define DIR_FORWARD				0x01
 #define DIR_BACKWARD			0x02
 #define DIR_LEFT				0x04
@@ -11,13 +11,13 @@ class CCamera;
 class CMesh;
 class CDescriptorManager;
 class CMaterial;
-class CAnimationController;
+//class CAnimationController;
 class CGameObject;
 
 struct CModelInfo
 {
 	CGameObject* heirarchy_root;
-	CAnimationController* animation_controller;
+	std::unique_ptr<CAnimationController> animation_controller;
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

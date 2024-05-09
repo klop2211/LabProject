@@ -322,6 +322,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
+	CGameObject* collision_socket = player_->AddSocket("Bip001");
+	//XMFLOAT3 max_point { 25.f, 175.f}
+	//BoundingBox::CreateFromPoints()
 	shaders_[0]->AddObject(player_);
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
@@ -342,10 +345,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
 	CGameObject* object = new CMawang(model);
+	object->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 	objects_.push_back(object);
-	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
-
-	shaders_[0]->AddObject(objects_[0]);
+	shaders_[0]->AddObject(object);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
@@ -360,6 +362,9 @@ void CScene::ReleaseObjects()
 
 	delete terrain_;
 	terrain_ = NULL;
+
+	delete skybox_;
+	skybox_ = NULL;
 
 	for (auto& pObject : objects_)
 	{

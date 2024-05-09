@@ -49,3 +49,44 @@ public:
     virtual void Exit(CPlayer* player);
 
 };
+
+class PAttack : public State<CPlayer>
+{
+public:
+    static PAttack* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+};
+
+class PSwordAttack1 : public State<CPlayer>
+{
+public:
+    static PSwordAttack1* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PSwordAttack2 : public State<CPlayer>
+{
+public:
+    static PSwordAttack2* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
