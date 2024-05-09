@@ -5,8 +5,6 @@
 CAnimationController::CAnimationController()
 {
 	m_fTime = 0.f;
-	prev_index_ = -1;
-	curr_index_ = -1;
 	animation_tracks_.reserve(0);
 }
 
@@ -71,8 +69,12 @@ void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
 
 void CAnimationController::EnableTrack(const int& index)
 {
+	// 3개의 애니메이션이 동시에 활성화되는 것을 방지
+	animation_tracks_[prev_index_].set_enable(false);
+
 	prev_index_ = curr_index_;
 	curr_index_ = index;
+	animation_tracks_[prev_index_].set_enable(true);
 	animation_tracks_[index].set_enable(true);
 }
 

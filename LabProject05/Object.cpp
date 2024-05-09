@@ -132,8 +132,10 @@ void CGameObject::ResetAnimatedSRT()
 
 }
 
-void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
 {
+	if (shader_num != m_nShader) return;
+
 	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
 
@@ -146,8 +148,8 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 		m_pMesh->Render(pd3dCommandList);
 	}
 
-	if (child_) child_->Render(pd3dCommandList);
-	if (sibling_) sibling_->Render(pd3dCommandList);
+	if (child_) child_->Render(pd3dCommandList, pCamera, shader_num);
+	if (sibling_) sibling_->Render(pd3dCommandList, pCamera, shader_num);
 }
 
 void CGameObject::ReleaseUploadBuffers()
@@ -184,6 +186,14 @@ XMFLOAT3 CGameObject::up_vector() const
 XMFLOAT3 CGameObject::right_vector() const
 {
 	return(Vector3::Normalize(XMFLOAT3(to_parent_matrix_._11, to_parent_matrix_._12, to_parent_matrix_._13)));
+}
+
+void CGameObject::SetShader(const int& nShader)
+{ 
+	m_nShader = nShader;
+
+	if (child_) child_->SetShader(nShader);
+	if (sibling_) sibling_->SetShader(nShader);
 }
 
 void CGameObject::UpdateMatrixByBlendedSRT()
@@ -255,6 +265,15 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
+CGameObject* CGameObject::AddSocket(const std::string& frame_name)
+{
+	CGameObject* socket = new CGameObject();
+	CGameObject* socket_parent = FindFrame(frame_name);
+	socket_parent->set_child(socket);
+
+	return socket;
+}
+
 void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
 {
 	int nMaterials = FBXLoad::ReadFromFile<int>(InFile);
@@ -300,8 +319,12 @@ void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 			pShadingModel->LoadShadingModelFromFile(InFile);
 
 		}
-		FBXLoad::ReadStringFromFile(InFile, strToken); // </Materials>
+		else if (strToken == "<Unknown>")
+		{
+			int a = 0;
+		}
 	}
+	FBXLoad::ReadStringFromFile(InFile, strToken); // </Materials>
 }
 
 CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const std::string& model_file_name)
@@ -454,6 +477,8 @@ CHeightMapTerrain::CHeightMapTerrain(ID3D12Device* pd3dDevice, ID3D12GraphicsCom
 	pTerrainMaterial->SetShader((int)ShaderNum::Terrain);
 
 	SetMaterial(0, pTerrainMaterial);
+
+	SetShader((int)ShaderNum::Terrain);
 
 }
 

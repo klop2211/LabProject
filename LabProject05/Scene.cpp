@@ -8,6 +8,7 @@
 #include "AudioManager.h"
 #include "AnimationCallbackFunc.h"
 #include "Mawang.h"
+#include "SkyBox.h"
 
 
 //extern std::unordered_map<int, bool> g_objects;
@@ -78,7 +79,7 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 {
 	ID3D12RootSignature* pd3dGraphicsRootSignature = NULL;
 
-	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[4];
+	D3D12_DESCRIPTOR_RANGE pd3dDescriptorRanges[5];
 	pd3dDescriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	pd3dDescriptorRanges[0].RegisterSpace = 0;
 	pd3dDescriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -103,7 +104,14 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dDescriptorRanges[3].BaseShaderRegister = 0; //Texture(DiffuseColor)
 	pd3dDescriptorRanges[3].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER pd3dRootParameters[8];
+	pd3dDescriptorRanges[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	pd3dDescriptorRanges[4].RegisterSpace = 0;
+	pd3dDescriptorRanges[4].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	pd3dDescriptorRanges[4].BaseShaderRegister = 19; //Texture(SkyBox)
+	pd3dDescriptorRanges[4].NumDescriptors = 1;
+
+
+	D3D12_ROOT_PARAMETER pd3dRootParameters[9];
 	pd3dRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	pd3dRootParameters[0].Descriptor.ShaderRegister = 0; //Camera
 	pd3dRootParameters[0].Descriptor.RegisterSpace = 0;
@@ -145,20 +153,37 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	pd3dRootParameters[7].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[3];
 	pd3dRootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	pd3dRootParameters[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	pd3dRootParameters[8].DescriptorTable.NumDescriptorRanges = 1; //SkyBox Texuture
+	pd3dRootParameters[8].DescriptorTable.pDescriptorRanges = &pd3dDescriptorRanges[4];
+	pd3dRootParameters[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs;
-	d3dSamplerDescs.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	d3dSamplerDescs.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	d3dSamplerDescs.MipLODBias = 0;
-	d3dSamplerDescs.MaxAnisotropy = 1;
-	d3dSamplerDescs.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	d3dSamplerDescs.MinLOD = 0;
-	d3dSamplerDescs.MaxLOD = D3D12_FLOAT32_MAX;
-	d3dSamplerDescs.ShaderRegister = 0;
-	d3dSamplerDescs.RegisterSpace = 0;
-	d3dSamplerDescs.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	D3D12_STATIC_SAMPLER_DESC d3dSamplerDescs[2];
+	d3dSamplerDescs[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	d3dSamplerDescs[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	d3dSamplerDescs[0].MipLODBias = 0;
+	d3dSamplerDescs[0].MaxAnisotropy = 1;
+	d3dSamplerDescs[0].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs[0].MinLOD = 0;
+	d3dSamplerDescs[0].MaxLOD = D3D12_FLOAT32_MAX;
+	d3dSamplerDescs[0].ShaderRegister = 0;
+	d3dSamplerDescs[0].RegisterSpace = 0;
+	d3dSamplerDescs[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	d3dSamplerDescs[1].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	d3dSamplerDescs[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	d3dSamplerDescs[1].MipLODBias = 0;
+	d3dSamplerDescs[1].MaxAnisotropy = 1;
+	d3dSamplerDescs[1].ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	d3dSamplerDescs[1].MinLOD = 0;
+	d3dSamplerDescs[1].MaxLOD = D3D12_FLOAT32_MAX;
+	d3dSamplerDescs[1].ShaderRegister = 1;
+	d3dSamplerDescs[1].RegisterSpace = 0;
+	d3dSamplerDescs[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 
 	D3D12_ROOT_SIGNATURE_FLAGS d3dRootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
@@ -166,8 +191,8 @@ ID3D12RootSignature* CScene::CreateGraphicsRootSignature(ID3D12Device* pd3dDevic
 	::ZeroMemory(&d3dRootSignatureDesc, sizeof(D3D12_ROOT_SIGNATURE_DESC));
 	d3dRootSignatureDesc.NumParameters = _countof(pd3dRootParameters);
 	d3dRootSignatureDesc.pParameters = pd3dRootParameters;
-	d3dRootSignatureDesc.NumStaticSamplers = 1;
-	d3dRootSignatureDesc.pStaticSamplers = &d3dSamplerDescs;
+	d3dRootSignatureDesc.NumStaticSamplers = 2;
+	d3dRootSignatureDesc.pStaticSamplers = d3dSamplerDescs;
 	d3dRootSignatureDesc.Flags = d3dRootSignatureFlags;
 
 	ID3DBlob* pd3dSignatureBlob = NULL;
@@ -218,8 +243,12 @@ void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 
 	terrain_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 
+	skybox_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+
 	for (auto& Object : g_objects)
+	{
 		objects_[Object.first]->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+	}
 }
 
 void CScene::ReleaseUploadBuffers()
@@ -261,18 +290,20 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	int shader_num = 2;			// 조명 O, X 각각 1개씩
+	int shader_num = 3;
 	shaders_.reserve(shader_num);
 
 	shaders_.emplace_back(new CStandardShader);
 	shaders_.emplace_back(new CTerrainShader);
+	shaders_.emplace_back(new CStaticMeshShader);
+	shaders_.emplace_back(new CSkyBoxShader);
 
 	for(auto& shader : shaders_)
 		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
 
 
 	descriptor_manager_ = new CDescriptorManager;
-	descriptor_manager_->SetDescriptors(1 + 5); // 조명(cbv), 텍스처
+	descriptor_manager_->SetDescriptors(1 + 5 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
@@ -290,18 +321,36 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(40.0f, 40.0f, 40.0f);
+	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	
+	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
+	shaders_[3]->AddObject(skybox_);
 
+	shaders_[1]->AddObject(terrain_);
 
-	player_->SetShader(4);
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
-	
+	player_->SetShader(4);
+	shaders_[0]->AddObject(player_);
+
+	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword.bin");
+	sword_socket->set_child(model.heirarchy_root);
+	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
+	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
+	XMFLOAT4X4 temp;
+	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&sword_socket->to_parent_matrix()), R));
+	sword_socket->set_to_parent_matrix(temp);
+	sword_socket->set_position_vector(5.f, 0.f, 50.f);
+	sword_socket->SetShader((int)ShaderNum::StaticMesh);
+	shaders_[2]->AddObject(sword_socket);
+
+
 	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
 
 	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
@@ -319,12 +368,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	g_objects[0] = false;
 	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
-
-
-
-
+	shaders_[0]->AddObject(objects_[0]);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
+
 }
 
 void CScene::ReleaseObjects()
@@ -345,7 +392,7 @@ void CScene::ReleaseObjects()
 
 	for (auto& shader : shaders_)
 	{
-		shader->Release();
+		delete shader;
 		shader = NULL;
 	}
 
@@ -376,20 +423,10 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	pd3dCommandList->SetGraphicsRootConstantBufferView(3, d3dcbMaterialsGpuVirtualAddress);
 #endif
 
-	for (int i = 0; i < shaders_.size(); i++)
+	//05.08 수정: 이제 셰이더는 그 셰이더를 사용하는 오브젝트들을 렌더함
+	for (auto& shader : shaders_)
 	{
-		shaders_[i]->Render(pd3dCommandList);
-		for (auto& pObject: g_objects)
-		{
-			if (objects_[pObject.first]->CheckShader(shaders_[i]->GetShaderNum()))
-			{
-				objects_[pObject.first]->Render(pd3dCommandList, pCamera);
-			}
-		}
-		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Standard)
-			player_->Render(pd3dCommandList, pCamera);
-		if (shaders_[i]->GetShaderNum() == (int)ShaderNum::Terrain)
-			terrain_->Render(pd3dCommandList, pCamera);
+		shader->Render(pd3dCommandList, pCamera);
 	}
 
 

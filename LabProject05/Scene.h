@@ -8,6 +8,7 @@ class CCamera;
 class CHeightMapTerrain;
 class CDescriptorManager;
 class CAudioManager;
+class CSkyBox;
 
 struct LIGHT
 {
@@ -78,7 +79,9 @@ protected:
 	// Player
 	CPlayer* player_ = NULL;
 
-	//-- 해당 멤버변수를 사용하는 것이 아닌 자신이 아닌 다른 객체를 관리하기 위해 글로벌 변수로 사용할 것
+	// SkyBox
+	CSkyBox* skybox_ = NULL;
+
 	// GameObject 관리
 	std::vector<CGameObject*> objects_;
 

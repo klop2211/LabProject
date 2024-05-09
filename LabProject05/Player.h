@@ -1,5 +1,5 @@
 #pragma once
-
+#include "StateMachine.h"
 #include "Object.h"
 
 class CMovementComponent;
@@ -36,17 +36,26 @@ protected:
 
 	PlayerAnimationState animation_state_ = PlayerAnimationState::Idle;
 
+	StateMachine<CPlayer>* state_machine_;
+
 public:
 	CPlayer();
 	CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera);
 	virtual ~CPlayer();
 
+	//setter
+	void set_animation_state(const PlayerAnimationState& value) { animation_state_ = value; }
 	void SetFriction(float fFriction) { m_fFriction = fFriction; }
 	void SetGravity(const XMFLOAT3& xmf3Gravity) { m_xmf3Gravity = xmf3Gravity; }
 	void SetMaxVelocityXZ(float fMaxVelocity) { m_fMaxVelocityXZ = fMaxVelocity; }
 	void SetMaxVelocityY(float fMaxVelocity) { m_fMaxVelocityY = fMaxVelocity; }
 	void SetVelocity(const XMFLOAT3& xmf3Velocity) { m_xmf3Velocity = xmf3Velocity; }
 
+	//getter
+	float speed() const { return speed_; }
+	CMovementComponent* movement_component() const { return movement_component_; }
+	bool orient_rotation_to_movement() const { return orient_rotation_to_movement_; }
+	PlayerAnimationState animation_state() const { return animation_state_; }
 	const XMFLOAT3& GetVelocity() const { return(m_xmf3Velocity); }
 	float GetYaw() const { return(m_fYaw); }
 	float GetPitch() const { return(m_fPitch); }
@@ -62,6 +71,8 @@ public:
 
 	virtual void Update(float fTimeElapsed);
 	void UpdateAnimationState();
+
+	void OrientRotationToMove(float fTimeElapsed);
 
 	virtual void HandleCollision(CGameObject* other) override {}
 

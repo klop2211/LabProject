@@ -76,6 +76,8 @@ public:
 
 	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
 
+	//setter
+	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
 	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
@@ -89,9 +91,8 @@ public:
 	void set_child(CGameObject* pChild);
 	void set_sibling(CGameObject* ptr);
 	void set_parent(CGameObject* ptr);
-
 	virtual void SetMesh(CMesh* pMesh);
-	void SetShader(const int& nShader) { m_nShader = nShader; }
+	void SetShader(const int& nShader); 
 	void SetMaterial(const int& index, CMaterial* pMaterial);
 	void SetBlendedScale(const XMFLOAT3& xmf3Value) { m_xmf3BlendedScale = xmf3Value; }
 	void SetBlendedRotation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedRotation = xmf3Value; }
@@ -100,6 +101,8 @@ public:
 	void SetRotation(const XMFLOAT3& xmf3Value) { m_xmf3Rotation = xmf3Value; }
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
 
+	//getter
+	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
 	XMFLOAT3 position_vector() const;
 	XMFLOAT3 look_vector() const;
 	XMFLOAT3 up_vector() const;
@@ -107,7 +110,6 @@ public:
 	bool is_fall() const { return is_fall_; }
 	CGameObject* child() const { return child_; }
 	CGameObject* sibling() const { return sibling_; }
-
 	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
 	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
 	XMFLOAT3 GetRotation() const { return m_xmf3Rotation; }
@@ -124,7 +126,7 @@ public:
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
 
 	virtual void Animate(float fTimeElapsed);
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL, int shader_num = -1);
 	void ResetAnimatedSRT();
 
 	virtual void ReleaseUploadBuffers();
@@ -133,6 +135,8 @@ public:
 
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
+
+	CGameObject* AddSocket(const std::string& frame_name);
 
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);

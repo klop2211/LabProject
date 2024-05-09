@@ -69,6 +69,7 @@ void CMesh::Render(ID3D12GraphicsCommandList *pd3dCommandList)
 	{
 		for (int i = 0; i < m_nSubMeshes; ++i)
 		{
+			if (!m_pnIndices[i]) continue;
 			pd3dCommandList->IASetIndexBuffer(&m_pd3dIndexBufferViews[i]);
 			pd3dCommandList->DrawIndexedInstanced(m_pnIndices[i], 1, 0, 0, 0);
 		}
@@ -160,7 +161,12 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 					{
 						int nIndex = FBXLoad::ReadFromFile<int>(InFile);
 						m_pnIndices[i] = FBXLoad::ReadFromFile<int>(InFile);
-
+						if (!m_pnIndices[i])
+						{
+							m_nSubMeshes--;
+							i--;
+							continue;
+						}
 						ppIndices[i] = new UINT[m_pnIndices[i]];
 						FBXLoad::ReadFromFile<UINT>(InFile, ppIndices[i], m_pnIndices[i]);
 
@@ -174,7 +180,10 @@ void CMesh::LoadMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList
 					}
 				}
 
-				for (int i = 0; i < m_nSubMeshes; ++i) delete ppIndices[i];
+				for (int i = 0; i < m_nSubMeshes; ++i) {
+					if (!m_pnIndices[i]) continue;
+					delete ppIndices[i];
+				}
 				delete[] ppIndices;
 			}
 		}
@@ -572,4 +581,67 @@ void CSkinMesh::CreateInputBufferView()
 
 	m_d3dInputBufferViews.emplace_back(bone_index_buffer_view_);
 	m_d3dInputBufferViews.emplace_back(m_BoneWeightBufferView);
+}
+
+
+CSkyBoxMesh::CSkyBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, float fWidth, float fHeight, float fDepth) : CMesh(pd3dDevice, pd3dCommandList)
+{
+	m_nVertices = 36;
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	XMFLOAT3* positions = new XMFLOAT3[m_nVertices];
+
+	float fx = fWidth * 0.5f, fy = fHeight * 0.5f, fz = fDepth * 0.5f;
+	// Front Quad (quads point inward)
+	positions[0] = XMFLOAT3(-fx, +fx, +fx);
+	positions[1] = XMFLOAT3(+fx, +fx, +fx);
+	positions[2] = XMFLOAT3(-fx, -fx, +fx);
+	positions[3] = XMFLOAT3(-fx, -fx, +fx);
+	positions[4] = XMFLOAT3(+fx, +fx, +fx);
+	positions[5] = XMFLOAT3(+fx, -fx, +fx);
+	// Back Quad										
+	positions[6] = XMFLOAT3(+fx, +fx, -fx);
+	positions[7] = XMFLOAT3(-fx, +fx, -fx);
+	positions[8] = XMFLOAT3(+fx, -fx, -fx);
+	positions[9] = XMFLOAT3(+fx, -fx, -fx);
+	positions[10] = XMFLOAT3(-fx, +fx, -fx);
+	positions[11] = XMFLOAT3(-fx, -fx, -fx);
+	// Left Quad										
+	positions[12] = XMFLOAT3(-fx, +fx, -fx);
+	positions[13] = XMFLOAT3(-fx, +fx, +fx);
+	positions[14] = XMFLOAT3(-fx, -fx, -fx);
+	positions[15] = XMFLOAT3(-fx, -fx, -fx);
+	positions[16] = XMFLOAT3(-fx, +fx, +fx);
+	positions[17] = XMFLOAT3(-fx, -fx, +fx);
+	// Right Quad										
+	positions[18] = XMFLOAT3(+fx, +fx, +fx);
+	positions[19] = XMFLOAT3(+fx, +fx, -fx);
+	positions[20] = XMFLOAT3(+fx, -fx, +fx);
+	positions[21] = XMFLOAT3(+fx, -fx, +fx);
+	positions[22] = XMFLOAT3(+fx, +fx, -fx);
+	positions[23] = XMFLOAT3(+fx, -fx, -fx);
+	// Top Quad											
+	positions[24] = XMFLOAT3(-fx, +fx, -fx);
+	positions[25] = XMFLOAT3(+fx, +fx, -fx);
+	positions[26] = XMFLOAT3(-fx, +fx, +fx);
+	positions[27] = XMFLOAT3(-fx, +fx, +fx);
+	positions[28] = XMFLOAT3(+fx, +fx, -fx);
+	positions[29] = XMFLOAT3(+fx, +fx, +fx);
+	// Bottom Quad										
+	positions[30] = XMFLOAT3(-fx, -fx, +fx);
+	positions[31] = XMFLOAT3(+fx, -fx, +fx);
+	positions[32] = XMFLOAT3(-fx, -fx, -fx);
+	positions[33] = XMFLOAT3(-fx, -fx, -fx);
+	positions[34] = XMFLOAT3(+fx, -fx, +fx);
+	positions[35] = XMFLOAT3(+fx, -fx, -fx);
+
+	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
+
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dVertexBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+}
+
+CSkyBoxMesh::~CSkyBoxMesh()
+{
 }
