@@ -9,6 +9,7 @@
 #include "AnimationCallbackFunc.h"
 #include "Mawang.h"
 #include "SkyBox.h"
+#include "Mesh.h"
 
 CScene::CScene()
 {
@@ -279,13 +280,15 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	int shader_num = 3;
+	int shader_num = 4;
 	shaders_.reserve(shader_num);
 
 	shaders_.emplace_back(new CStandardShader);
 	shaders_.emplace_back(new CTerrainShader);
 	shaders_.emplace_back(new CStaticMeshShader);
 	shaders_.emplace_back(new CSkyBoxShader);
+	shaders_.emplace_back(new CDiffusedShader);
+
 
 	for(auto& shader : shaders_)
 		shader->CreateShader(pd3dDevice, d3d12_root_signature_);
@@ -322,13 +325,21 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
-	//CGameObject* collision_socket = player_->AddSocket("Bip001");
+
+	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
+	CGameObject* collision_socket = player_->AddSocket("Bip001");
+	CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
+	collision_socket->SetMesh(collision_mesh);
+	collision_socket->SetShader(0);
+	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
+
+	shaders_[4]->AddObject(collision_socket);
 	//XMFLOAT3 max_point { 25.f, 175.f}
 	//BoundingBox::CreateFromPoints()
 	shaders_[0]->AddObject(player_);
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword.bin");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_edit.bin");
 	sword_socket->set_child(model.heirarchy_root);
 	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
 	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));

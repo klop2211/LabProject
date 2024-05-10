@@ -6,7 +6,8 @@ class CMovementComponent;
 class CRotationComponent;
 class CAnimationCallbackFunc;
 
-enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle, SwordAttack1, SwordAttack2, SwordAttack3, SwordAttack4 };
+//TODO: 검 공격3, 4에 대한 수정 필요, 임시로 10번을 준거임
+enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle, SwordAttack1, SwordAttack2, SwordAttack3 = 10, SwordAttack4 = 14 };
 
 //플레이어의 무기 상태 None 타입은 납도 상태
 enum class PlayerWeaponType { None = 0, Sword, Sphere };

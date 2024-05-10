@@ -393,9 +393,15 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 	if (scene_) scene_->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 	switch (nMessageID)
 	{
+		case WM_KEYDOWN:
+			if (wParam == VK_CONTROL) control_key_ = true;
+		break;
 		case WM_KEYUP:
 			switch (wParam)
 			{
+				case VK_CONTROL:
+					control_key_ = false;
+				break;
 				case VK_SPACE:
 					//player_->InputActionRoll(0);
 				break;
@@ -568,6 +574,10 @@ void CGameFramework::ProcessInput()
 			player_->InputActionAttack(PlayerAttackType::LeftAttack);
 			left_click_ = false;
 			click_time_ = 0.f;
+		}
+		if (control_key_)
+		{
+			player_->InputActionAttack(PlayerAttackType::ControlAttack);
 		}
 	}
 	if (right_click_)

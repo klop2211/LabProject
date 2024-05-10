@@ -68,7 +68,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	rotation_component_->set_use_pitch(false);
 
 	axis_transform_matrix_ = new XMFLOAT4X4
-	(1, 0, 0, 0,
+	(	1, 0, 0, 0,
 		0, 0, -1, 0,
 		0, 1, 0, 0,
 		0, 0, 0, 1);
@@ -164,7 +164,9 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	// 플레이어가 공격 중이고 새로운 입력이 교체공격이 아니라면 공격을 변경하면 안됨(교체공격은 캔슬 공격임)
 	if (attack_type_ != PlayerAttackType::None && attack_type != PlayerAttackType::ControlAttack)
 		return;
-
+	// 이미 해당 공격을 실행중
+	if (attack_type_ == attack_type)
+		return;
 	attack_type_ = attack_type;
 
 
@@ -186,8 +188,10 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 		attack_state = PSwordAttack2::Instance();
 		break;
 	case PlayerAttackType::BothAttack:
+		attack_state = PSwordAttack3::Instance();
 		break;
 	case PlayerAttackType::ControlAttack:
+		attack_state = PSwordAttack4::Instance();
 		break;
 	default:
 		break;

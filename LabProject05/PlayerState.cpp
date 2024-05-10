@@ -177,3 +177,55 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 void PSwordAttack2::Exit(CPlayer* player)
 {
 }
+
+PSwordAttack3* PSwordAttack3::Instance()
+{
+	static PSwordAttack3 instance;
+	return &instance;
+}
+
+void PSwordAttack3::Enter(CPlayer* player)
+{
+	player->set_animation_state(PlayerAnimationState::SwordAttack3);
+
+}
+
+void PSwordAttack3::Execute(CPlayer* player, float elapsed_time)
+{
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		player->state_machine()->ChangeState(PIdle::Instance());
+	}
+}
+
+void PSwordAttack3::Exit(CPlayer* player)
+{
+}
+
+PSwordAttack4* PSwordAttack4::Instance()
+{
+	static PSwordAttack4 instance;
+	return &instance;
+}
+
+void PSwordAttack4::Enter(CPlayer* player)
+{
+	player->set_animation_state(PlayerAnimationState::SwordAttack4);
+
+}
+
+void PSwordAttack4::Execute(CPlayer* player, float elapsed_time)
+{
+	//TODO: 애니메이션이 끝나는 부분에 맞추어 무기를 invisible로 변환
+	//player->weapon_socket()->set_is_visible(false);
+
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		player->state_machine()->ChangeState(PIdle::Instance());
+	}
+}
+
+void PSwordAttack4::Exit(CPlayer* player)
+{
+	//TODO: 무기 교체 구현
+}

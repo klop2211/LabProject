@@ -95,6 +95,9 @@ private:
 	bool left_click_ = false;
 	bool right_click_ = false;
 
+	//컨트롤 키 값
+	bool control_key_ = false;
+
 	_TCHAR						m_pszFrameRate[50];
 };
 

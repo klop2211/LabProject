@@ -92,3 +92,31 @@ public:
     virtual void Exit(CPlayer* player);
 
 };
+
+class PSwordAttack3 : public State<CPlayer>
+{
+public:
+    static PSwordAttack3* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PSwordAttack4 : public State<CPlayer>
+{
+public:
+    static PSwordAttack4* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
