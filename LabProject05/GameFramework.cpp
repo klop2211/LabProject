@@ -596,13 +596,14 @@ void CGameFramework::ProcessInput()
 		click_time_ = 0.f;
 		left_click_ = right_click_ = false;
 	}
+
+	//scene_->CollisionCheck();
+
 	player_->Update(elapsed_time);
-
-	// 플레이어 위치 업데이트 필요
-	//player_->set_position_vector(g_objects[g_myid]);
-	//player_->set_position_vector(XMFLOAT3(0, 0, 0));
-
 	camera_->Update(elapsed_time);
+
+	player_->set_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, 0, g_objects[g_myid][V_LOCATION].z));
+
 }
 
 void CGameFramework::AnimateObjects()

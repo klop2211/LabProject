@@ -261,18 +261,22 @@ void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();
 
-	CollisionCheck();
+	//CollisionCheck();
 
 	player_->Animate(elapsed_time);
+
+	
 
 	terrain_->Animate(elapsed_time);
 
 	for (auto& pObject : g_objects)
 	{
 		// 자신의 id는 그리지 않는다 && 기본 y를 -999로 설정해놓음
-		if (pObject.first != g_myid && pObject.second.y != -999)
+		if (pObject.first != g_myid && pObject.second[V_LOCATION].y != -999)
 		{
-			objects_[pObject.first]->set_position_vector(pObject.second.x, terrain_->GetHeight(pObject.second.x, pObject.second.z), pObject.second.z);
+			objects_[pObject.first]->set_position_vector(pObject.second[V_LOCATION].x, 
+				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
+				pObject.second[V_LOCATION].z);
 		}
 		objects_[pObject.first]->Animate(elapsed_time);
 	}
@@ -307,7 +311,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	descriptor_manager_ = new CDescriptorManager;
-	descriptor_manager_->SetDescriptors(1 + 5 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
+	descriptor_manager_->SetDescriptors(1 + 20 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
@@ -366,26 +370,23 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	int object_num = 1; // 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
-	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	
 	
 
 	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
-	//for (int i = 0; i < MAXUSER; ++i)
-	//{
-	//	// 일단 로드하여 보이지 않는 곳에 숨겨놓음
-	//	CGameObject* object = new CMawang(model);
-	//	objects_.push_back(object);
-	//	g_objects[i] = false;
-	//	objects_[i]->set_position_vector(0, terrain_->GetHeight(550, 550), 0);
-	//}
+	for (int i = 0; i < 4; i++)
+	{
 
-	CGameObject* object1 = new CMawang(model);
-	objects_.push_back(object1);
-	g_objects[0] = XMFLOAT3(0, 0, 0);
-	objects_[0]->set_position_vector(g_objects[0].x, -999, g_objects[0].z);
-	//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+		model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 
-	shaders_[0]->AddObject(objects_[0]);
+		CGameObject* object = new CMawang(model);
+		objects_.push_back(object);
+		g_objects[i][V_LOCATION] = XMFLOAT3(0, 0, 0);
+		objects_[i]->set_position_vector(g_objects[i][V_LOCATION].x+i, -999, g_objects[i][V_LOCATION].z+i);
+		//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+
+		shaders_[0]->AddObject(object);
+	}
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 

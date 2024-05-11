@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Mawang.h"
 
-std::unordered_map<int, XMFLOAT3> g_objects;
+std::unordered_map<int, XMFLOAT3[2]> g_objects;
 void ProcessPacket(char*);
 
 
@@ -73,7 +73,12 @@ void ProcessPacket(char* ptr)
         SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(ptr);
         g_myid = packet->id;
         XMFLOAT3 coord = { static_cast<float>(packet->x), static_cast<float>(packet->y), static_cast<float>(packet->z) };
-        g_objects[g_myid] = coord;
+        //g_objects[g_myid].push_back(coord);
+        g_objects[g_myid][V_LOCATION] = coord;
+
+        XMFLOAT3 look = { 0, 0, 0 };
+        //g_objects[g_myid].push_back(look);
+        g_objects[g_myid][V_LOOK] = look;
     }
     break;
 
@@ -87,9 +92,12 @@ void ProcessPacket(char* ptr)
             // 자신일 경우 자신의 움직임
             //g_objects[id].move(my_packet->x, my_packet->y);
         }
-        else {
+        else 
+        {
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
-            g_objects[id] = coord;
+            g_objects[id][V_LOCATION] = coord;
+            XMFLOAT3 look = { 0, 0, 0 };
+            g_objects[id][V_LOOK] = look;
             //g_objects[id]->set_position_vector(550, 100, 550);
         }
         break;
@@ -100,13 +108,19 @@ void ProcessPacket(char* ptr)
         int other_id = my_packet->id;
         if (other_id == g_myid) 
         {
-            // 자신의 받은 움직임
+            // 자신의 받은 움직임과 look
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
-            g_objects[g_myid] = coord;
+            g_objects[g_myid][V_LOCATION] = coord;
+            XMFLOAT3 look = { static_cast<float>(my_packet->yaw), static_cast<float>(my_packet->pitch), static_cast<float>(my_packet->roll) };
+            g_objects[g_myid][V_LOOK] = look;
         }
         else 
         {
-            // TODO : 다른 캐릭터의 받은 움직임
+            // 다른 캐릭터의 받은 움직임
+            XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
+            g_objects[other_id][V_LOCATION] = coord;
+            XMFLOAT3 look = { static_cast<float>(my_packet->yaw), static_cast<float>(my_packet->pitch), static_cast<float>(my_packet->roll) };
+            g_objects[other_id][V_LOOK] = look;
         }
         break;
     }
@@ -124,7 +138,7 @@ void ProcessPacket(char* ptr)
         {
             // 다른 플레이어 삭제
             //g_objects.erase(other_id);
-            g_objects[other_id] = XMFLOAT3(0,-999,0);
+            g_objects[other_id][V_LOCATION] = XMFLOAT3(0, -999, 0);
             // 보이지 않는 곳으로 다시 이동
         }
         break;

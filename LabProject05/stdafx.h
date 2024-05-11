@@ -133,8 +133,9 @@ extern std::string avatar_name;
 extern WSAOVERLAPPED g_wsaover;
 
 class CGameObject;
-extern std::unordered_map<int, XMFLOAT3> g_objects;
+extern std::unordered_map<int, XMFLOAT3[2]> g_objects;
 enum ObjectType {OT_PLAYER};
+enum ObjectsPart {V_LOCATION, V_LOOK};
 
 void print_error(const char* msg, int err_no);
 void DoSend(void* packet);

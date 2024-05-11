@@ -110,34 +110,12 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 	XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 	if (dwDirection)
 	{
-		// TODO: 캐릭터의 look 벡터를 다 전송하지 말고, 각도를 보내 해당 각도를 계산하는 코드를 서버에서 작성
-		//if (orient_rotation_to_movement_)
-		//{
-		//	// 카메라의 yaw 회전만 가져와서 사용
-		//	float yaw = camera_->GetYaw();
-		//	XMMATRIX R = XMMatrixRotationRollPitchYaw(0.f, XMConvertToRadians(yaw), 0.f);
-		//	XMFLOAT3 look = XMFLOAT3(0.f, 0.f, 1.f), up = XMFLOAT3(0.f, 1.f, 0.f);
-		//	XMStoreFloat3(&look, XMVector3TransformCoord(XMLoadFloat3(&look), R));
-		//	XMFLOAT3 right = Vector3::CrossProduct(up, look);
-
-		//	if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
-		//	if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
-		//	if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
-		//	if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
-		//}
-		//else
-		//{
-		//	XMFLOAT3 look = look_vector(), right = right_vector();
-		//	if (dwDirection & DIR_FORWARD) direction_vector = Vector3::Add(direction_vector, look);
-		//	if (dwDirection & DIR_BACKWARD) direction_vector = Vector3::Add(direction_vector, look, -1.f);
-		//	if (dwDirection & DIR_LEFT) direction_vector = Vector3::Add(direction_vector, right, -1.f);
-		//	if (dwDirection & DIR_RIGHT) direction_vector = Vector3::Add(direction_vector, right);
-		//}
-
 		CS_MOVE_PACKET p;
 		p.size = sizeof(p);
 		p.type = CS_MOVE;
-		p.yaw = static_cast<unsigned char>(camera_->GetYaw());
+		// TODO: 현재 yaw를 float으로 보냄. 해당 yaw를 줄일 방법 찾기
+		p.yaw = static_cast<short>(camera_->GetYaw());
+		//p.yaw = (camera_->GetYaw());
 		p.direction = static_cast<unsigned char>(dwDirection);
 		DoSend(&p);
 
@@ -213,8 +191,8 @@ void CPlayer::Update(float elapsed_time)
 
 	state_machine_->Update(elapsed_time);
 
-	if (movement_component_)
-		movement_component_->Update(elapsed_time);
+	/*if (movement_component_)
+		movement_component_->Update(elapsed_time);*/
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
