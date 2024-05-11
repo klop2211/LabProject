@@ -93,12 +93,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     p.size = sizeof(p);
     p.type = CS_LOGIN;
     strcpy_s(p.name, avatar_name.c_str());
-    send_packet(&p);
+    DoSend(&p);
     
     unsigned long noblock = 1;
     int nRet = ioctlsocket(g_server_socket, FIONBIO, &noblock);
 
-        while (1)
+    while (1)
     {
         if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
@@ -113,7 +113,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         {
             gGameFramework.FrameAdvance();
         }
-        //do_recv();
         DoRecv();
     }
     gGameFramework.OnDestroy();

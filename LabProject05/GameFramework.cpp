@@ -551,6 +551,11 @@ void CGameFramework::ProcessInput()
 
 	}
 	player_->Update(elapsed_time);
+
+	// 플레이어 위치 업데이트 필요
+	//player_->set_position_vector(g_objects[g_myid]);
+	//player_->set_position_vector(XMFLOAT3(0, 0, 0));
+
 	camera_->Update(elapsed_time);
 }
 

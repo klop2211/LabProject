@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Mawang.h"
 
-std::unordered_map<int, bool> g_objects;
+std::unordered_map<int, XMFLOAT3> g_objects;
 void ProcessPacket(char*);
 
 
@@ -18,7 +18,7 @@ void print_error(const char* msg, int err_no)
     LocalFree(msg_buf);
 }
 
-void send_packet(void* packet)
+void DoSend(void* packet)
 {
     unsigned char* p = reinterpret_cast<unsigned char*>(packet);
     size_t sent = 0;
@@ -72,7 +72,8 @@ void ProcessPacket(char* ptr)
     {
         SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(ptr);
         g_myid = packet->id;
-        
+        XMFLOAT3 coord = { static_cast<float>(packet->x), static_cast<float>(packet->y), static_cast<float>(packet->z) };
+        g_objects[g_myid] = coord;
     }
     break;
 
@@ -87,9 +88,8 @@ void ProcessPacket(char* ptr)
             //g_objects[id].move(my_packet->x, my_packet->y);
         }
         else {
-            // TODO:받은 캐릭터의 bool값 true로 바꿔주고 위치 배치 해주기
-            g_objects[id] = true;
-            
+            XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
+            g_objects[id] = coord;
             //g_objects[id]->set_position_vector(550, 100, 550);
         }
         break;
@@ -100,7 +100,9 @@ void ProcessPacket(char* ptr)
         int other_id = my_packet->id;
         if (other_id == g_myid) 
         {
-            // TODO : 자신의 받은 움직임
+            // 자신의 받은 움직임
+            XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
+            g_objects[g_myid] = coord;
         }
         else 
         {
@@ -116,12 +118,13 @@ void ProcessPacket(char* ptr)
         if (other_id == g_myid) 
         {
             // 자신 삭제
+            exit(0);
         }
         else 
         {
             // 다른 플레이어 삭제
             //g_objects.erase(other_id);
-            g_objects[other_id] = false;
+            g_objects[other_id] = XMFLOAT3(0,-999,0);
             // 보이지 않는 곳으로 다시 이동
         }
         break;

@@ -268,9 +268,10 @@ void CScene::AnimateObjects(float elapsed_time)
 
 	for (auto& pObject : g_objects)
 	{
-		if (true == pObject.second)
+		// 자신의 id는 그리지 않는다 && 기본 y를 -999로 설정해놓음
+		if (pObject.first != g_myid && pObject.second.y != -999)
 		{
-			objects_[pObject.first]->set_position_vector(850, terrain_->GetHeight(550, 550), 550);
+			objects_[pObject.first]->set_position_vector(pObject.second.x, terrain_->GetHeight(pObject.second.x, pObject.second.z), pObject.second.z);
 		}
 		objects_[pObject.first]->Animate(elapsed_time);
 	}
@@ -365,8 +366,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	CGameObject* object1 = new CMawang(model);
 	objects_.push_back(object1);
-	g_objects[0] = false;
-	objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+	g_objects[0] = XMFLOAT3(0, 0, 0);
+	objects_[0]->set_position_vector(g_objects[0].x, -999, g_objects[0].z);
+	//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
 	shaders_[0]->AddObject(objects_[0]);
 

@@ -133,11 +133,11 @@ extern std::string avatar_name;
 extern WSAOVERLAPPED g_wsaover;
 
 class CGameObject;
-extern std::unordered_map<int, bool> g_objects;
+extern std::unordered_map<int, XMFLOAT3> g_objects;
 enum ObjectType {OT_PLAYER};
 
 void print_error(const char* msg, int err_no);
-void send_packet(void* packet);
+void DoSend(void* packet);
 void ProcessData(char* net_buf, size_t io_byte);
 void DoRecv();
 
