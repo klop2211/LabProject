@@ -5,6 +5,8 @@ class CPlayer;
 
 class PIdle : public State<CPlayer>
 {
+    const float release_weapon_time_ = 2.f;
+    float idle_time_ = 0.f;
 public:
     static PIdle* Instance();
 
@@ -40,6 +42,75 @@ private:
 
 public:
     static PEvade* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PAttack : public State<CPlayer>
+{
+public:
+    static PAttack* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+};
+
+class PSwordAttack1 : public State<CPlayer>
+{
+public:
+    static PSwordAttack1* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PSwordAttack2 : public State<CPlayer>
+{
+public:
+    static PSwordAttack2* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PSwordAttack3 : public State<CPlayer>
+{
+public:
+    static PSwordAttack3* Instance();
+
+public:
+    virtual void Enter(CPlayer* player);
+
+    virtual void Execute(CPlayer* player, float elapsed_time);
+
+    virtual void Exit(CPlayer* player);
+
+};
+
+class PSwordAttack4 : public State<CPlayer>
+{
+public:
+    static PSwordAttack4* Instance();
 
 public:
     virtual void Enter(CPlayer* player);

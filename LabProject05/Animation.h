@@ -54,17 +54,22 @@ public:
 
 	void LoadLayersFromFile(std::ifstream& InFile);
 
-	float GetEndTime() const { return m_fEndTime; }
+	//setter
+	void set_start_time(const float& value) { start_time_ = value; }
+	void set_end_time(const float& value) { end_time_ = value; }
+	void set_animation_name(const std::string& value) { animation_name_ = value; }
 	void SetFrameCaches(CGameObject* pRootObject);
+
+	float end_time() const { return end_time_; }
 
 	void Animate(const float& fPosition, const float& fTrackWeight);
 	void UpdateMatrix();
 
 private:
-	float m_fStartTime;
-	float m_fEndTime;
+	float start_time_;
+	float end_time_;
 
-	std::string m_strAnimationName;
+	std::string animation_name_;
 
 	std::vector<CAnimationLayer> m_Layers;
 };
@@ -121,7 +126,8 @@ private:
 
 	AnimationLoopType loop_type_;
 
-	CAnimationSet* m_pAnimationSet;
+	//05.09 수정: 컨트롤러를 복사할때 애니메이션 set 정보는 복사될 필요없음
+	std::shared_ptr<CAnimationSet> animation_set_;
 
 	std::vector<CallbackKey> callback_keys_;
 };
@@ -156,7 +162,7 @@ private:
 	int prev_index_ = 0;
 	int curr_index_ = 0;
 
-	float m_fTime;
+	float m_fTime = 0;
 
 	std::vector<CAnimationTrack> animation_tracks_;
 

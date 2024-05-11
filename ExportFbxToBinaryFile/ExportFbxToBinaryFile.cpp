@@ -40,8 +40,12 @@ int main(int argc, char** argv)
 //	char *pszWriteFileName = "Eagle.bin";
 //	FbxString pfbxstrModelFilePath("Lion.fbx");
 //	char *pszWriteFileName = "Lion.bin";
-	FbxString pfbxstrModelFilePath("../Resource/Model/Player_Model.fbx");
-	char *pszWriteFileName = "../Resource/Model/Player_Model.bin";
+	//FbxString pfbxstrModelFilePath("../Resource/Model/Player_Model.fbx");
+	//char *pszWriteFileName = "../Resource/Model/Player_Model.bin";
+
+	FbxString pfbxstrModelFilePath("../Resource/Model/Sphere_edit.fbx");
+	char* pszWriteFileName = "../Resource/Model/Sphere_edit.bin";
+
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
 //	FbxString pfbxstrModelFilePath("Elven_Witch.fbx");
@@ -50,17 +54,27 @@ int main(int argc, char** argv)
     FbxScene *pfbxModelScene = FbxScene::Create(pfbxSdkManager, pfbxstrModelFilePath);
 	bool bResult = LoadScene(pfbxSdkManager, pfbxModelScene, pfbxstrModelFilePath.Buffer());
 
-#define _WITH_SEPARATED_ANIMATIONS
+//#define _WITH_SEPARATED_ANIMATIONS
 
 #ifdef _WITH_SEPARATED_ANIMATIONS
-	const int nSeparatedAnimations = 5;
+	const int nSeparatedAnimations = 15;
 	FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];
 	FbxScene *ppfbxAnimationScenes[nSeparatedAnimations];
 	pfbxstrAnimationFilePaths[0] = "../Resource/Model/Player_Idle.fbx";
-	pfbxstrAnimationFilePaths[1] = "../Resource/Model/Player_Roll1.fbx";
+	pfbxstrAnimationFilePaths[1] = "../Resource/Model/Player_Roll.fbx";
 	pfbxstrAnimationFilePaths[2] = "../Resource/Model/Player_Run.fbx";
 	pfbxstrAnimationFilePaths[3] = "../Resource/Model/Player_Walk.fbx";
-	pfbxstrAnimationFilePaths[3] = "../Resource/Model/Player_Sword_00.fbx";
+	pfbxstrAnimationFilePaths[4] = "../Resource/Model/Player_Sword_00.fbx";
+	pfbxstrAnimationFilePaths[5] = "../Resource/Model/Player_Sword_10_Fix.fbx";
+	pfbxstrAnimationFilePaths[6] = "../Resource/Model/Player_Sword_20.fbx";
+	pfbxstrAnimationFilePaths[7] = "../Resource/Model/Player_Sword_21.fbx";
+	pfbxstrAnimationFilePaths[8] = "../Resource/Model/Player_Sword_22.fbx";
+	pfbxstrAnimationFilePaths[9] = "../Resource/Model/Player_Sword_23.fbx";
+	pfbxstrAnimationFilePaths[10] = "../Resource/Model/Player_Sword_30.fbx";
+	pfbxstrAnimationFilePaths[11] = "../Resource/Model/Player_Sword_31.fbx";
+	pfbxstrAnimationFilePaths[12] = "../Resource/Model/Player_Sword_32.fbx";
+	pfbxstrAnimationFilePaths[13] = "../Resource/Model/Player_Sword_33.fbx";
+	pfbxstrAnimationFilePaths[14] = "../Resource/Model/Player_Sword_40.fbx";
 
 	//const int nSeparatedAnimations = 3;
 	//FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];

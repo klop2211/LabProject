@@ -645,3 +645,65 @@ CSkyBoxMesh::CSkyBoxMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd
 CSkyBoxMesh::~CSkyBoxMesh()
 {
 }
+
+CCubeMesh::CCubeMesh(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, const XMFLOAT3& min, const XMFLOAT3& max) : CMesh(pd3dDevice, pd3dCommandList)
+{
+	//TODO: 바운딩 박스 메쉬관련 작업필요
+	m_nVertices = 8;
+	m_d3dPrimitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	XMFLOAT3* positions = new XMFLOAT3[m_nVertices];
+
+	positions[0] = XMFLOAT3(min.x, max.y, min.z);
+	positions[1] = XMFLOAT3(min.x, max.y, max.z);
+	positions[2] = XMFLOAT3(max.x, max.y, max.z);
+	positions[3] = XMFLOAT3(max.x, max.y, min.z);
+	positions[4] = XMFLOAT3(min.x, min.y, min.z);
+	positions[5] = XMFLOAT3(min.x, min.y, max.z);
+	positions[6] = XMFLOAT3(max.x, min.y, max.z);
+	positions[7] = XMFLOAT3(max.x, min.y, min.z);
+
+	m_pd3dVertexBuffer = ::CreateBufferResource(pd3dDevice, pd3dCommandList, positions, sizeof(XMFLOAT3) * m_nVertices, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, &m_pd3dVertexUploadBuffer);
+
+	m_d3dVertexBufferView.BufferLocation = m_pd3dVertexBuffer->GetGPUVirtualAddress();
+	m_d3dVertexBufferView.StrideInBytes = sizeof(XMFLOAT3);
+	m_d3dVertexBufferView.SizeInBytes = sizeof(XMFLOAT3) * m_nVertices;
+
+	m_nSubMeshes = 1;
+	m_pnIndices = new int[m_nSubMeshes];
+	m_pnIndices[0] = 36;
+
+	UINT indices[] {
+		//top
+		0, 1, 2,
+		0, 2, 3,
+		//forward
+		0,3,4,
+		3,7,4,
+		//left
+		1,0,5,
+		0,4,5,
+		//right
+		3,6,7,
+		3,2,6,
+		//back
+		1,5,2,
+		2,5,6,
+		//bottom
+		5,4,6,
+		6,4,7
+	};
+
+	m_ppd3dIndexBuffers = new ID3D12Resource * [1];
+	m_ppd3dIndexUploadBuffers = new ID3D12Resource * [1];
+	m_ppd3dIndexBuffers[0] = ::CreateBufferResource(pd3dDevice, pd3dCommandList,
+		indices, sizeof(UINT) * m_pnIndices[0], D3D12_HEAP_TYPE_DEFAULT,
+		D3D12_RESOURCE_STATE_INDEX_BUFFER, &m_ppd3dIndexUploadBuffers[0]);
+
+	m_pd3dIndexBufferViews = new D3D12_INDEX_BUFFER_VIEW[1];
+	m_pd3dIndexBufferViews[0].BufferLocation = m_ppd3dIndexBuffers[0]->GetGPUVirtualAddress();
+	m_pd3dIndexBufferViews[0].Format = DXGI_FORMAT_R32_UINT;
+	m_pd3dIndexBufferViews[0].SizeInBytes = sizeof(UINT) * m_pnIndices[0];
+
+
+}
