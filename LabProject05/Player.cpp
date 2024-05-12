@@ -13,6 +13,7 @@
 #include "AnimationCallbackFunc.h"
 #include "Material.h"
 #include "PlayerState.h"
+#include "Weapon.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -33,6 +34,9 @@ CPlayer::CPlayer()
 	state_machine_ = new StateMachine<CPlayer>(this);
 	state_machine_->SetCurrentState(PIdle::Instance());
 	state_machine_->SetPreviousState(PIdle::Instance());
+
+	//TODO: 씬에서 사용하는 모든 무기의 개수만큼 잡아야함
+	weapons_.reserve(10);
 }
 
 CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) : CPlayer()
@@ -107,6 +111,10 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 	if (camera_->GetMode() == CameraMode::GHOST)
 		return;
 
+	// MoveInput 예외처리
+	if (!is_move_allow_)
+		return;
+
 	XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 	if (dwDirection)
 	{
@@ -170,9 +178,9 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	attack_type_ = attack_type;
 
 
-	if (current_weapon_ == PlayerWeaponType::None)
+	if (current_weapon_type_ == WeaponType::None)
 	{
-		current_weapon_ = equipped_weapon_;
+		current_weapon_type_ = ((CWeapon*)weapon_socket_->child())->type();
 		weapon_socket_->set_is_visible(true);
 	}
 
@@ -182,16 +190,16 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	case PlayerAttackType::None:
 		break;
 	case PlayerAttackType::LeftAttack:
-		attack_state = PSwordAttack1::Instance();
+		attack_state = PAttack1::Instance(current_weapon_type_);
 		break;
 	case PlayerAttackType::RightAttack:
-		attack_state = PSwordAttack2::Instance();
+		attack_state = PAttack2::Instance(current_weapon_type_);
 		break;
 	case PlayerAttackType::BothAttack:
-		attack_state = PSwordAttack3::Instance();
+		attack_state = PAttack3::Instance(current_weapon_type_);
 		break;
 	case PlayerAttackType::ControlAttack:
-		attack_state = PSwordAttack4::Instance();
+		attack_state = PAttack4::Instance(current_weapon_type_);
 		break;
 	default:
 		break;
@@ -225,11 +233,26 @@ void CPlayer::OrientRotationToMove(float elapsed_time)
 		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
 }
 
+void CPlayer::EquipWeapon(const std::string& name)
+{
+	CGameObject* weapon = NULL;
+	for (const auto& p : weapons_)
+		if (p->name() == name)
+		{
+			weapon = p;
+			break;
+		}
+	if (!weapon) 
+		return;
+	weapon_socket_->ResetChild(weapon);
+	weapon_socket_->SetShader(weapon->shader_num());
+}
+
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
 	if (pCamera->GetMode() != CameraMode::FIRST_PERSON)
 	{
-		CGameObject::Render(pd3dCommandList, pCamera, m_nShader);
+		CGameObject::Render(pd3dCommandList, pCamera, shader_num_);
 	}
 }
 

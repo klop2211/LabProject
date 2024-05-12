@@ -262,6 +262,7 @@ void CAnimationSet::Animate(const float& fPosition, const float& fTrackWeight)
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
+			if (!Frame) continue;
 			Frame->SetBlendedScale(Vector3::Add(Frame->GetBlendedScale(), Frame->GetScale(), fTrackWeight));
 			Frame->SetBlendedRotation(Vector3::Add(Frame->GetBlendedRotation(), Frame->GetRotation(), fTrackWeight));
 			Frame->SetBlendedTranslation(Vector3::Add(Frame->GetBlendedTranslation(), Frame->GetTranslation(), fTrackWeight));
@@ -277,6 +278,7 @@ void CAnimationSet::UpdateMatrix()
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
+			if (!Frame) continue;
 			Frame->UpdateMatrixByBlendedSRT();
 		}
 	}
@@ -329,6 +331,7 @@ void CAnimationLayer::UpdateFrameCachesSRT(const float& fPosition)
 	for (int i = 0 ; i < m_Curves.size(); ++i)
 	{
 		CGameObject* pFrameCache = m_FrameCaches[i];
+		if (!pFrameCache) continue;
 		XMFLOAT3 S, R, T;
 		m_Curves[i].GetAnimatedSRT(fPosition, weight_, &S, &R, &T);
 		pFrameCache->SetScale(S);

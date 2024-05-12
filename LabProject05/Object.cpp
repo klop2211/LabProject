@@ -119,7 +119,7 @@ void CGameObject::ResetAnimatedSRT()
 
 void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
 {
-	if (shader_num != m_nShader) return;
+	if (shader_num != shader_num_) return;
 	if (!is_visible_) return;
 
 	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
@@ -176,7 +176,7 @@ XMFLOAT3 CGameObject::right_vector() const
 
 void CGameObject::SetShader(const int& nShader)
 { 
-	m_nShader = nShader;
+	shader_num_ = nShader;
 
 	if (child_) child_->SetShader(nShader);
 	if (sibling_) sibling_->SetShader(nShader);
@@ -256,8 +256,6 @@ CGameObject* CGameObject::AddSocket(const std::string& frame_name)
 	CGameObject* socket = new CGameObject();
 	CGameObject* socket_parent = FindFrame(frame_name);
 	socket_parent->set_child(socket);
-
-
 
 	return socket;
 }
@@ -493,4 +491,3 @@ int CHeightMapTerrain::GetRawImageLength()
 { 
 	return(m_pHeightMapImage->GetHeightMapLength());
 }
-

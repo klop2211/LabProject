@@ -54,8 +54,8 @@ using namespace DirectX::PackedVector;
 
 using Microsoft::WRL::ComPtr;
 
-#define FRAME_BUFFER_WIDTH		800
-#define FRAME_BUFFER_HEIGHT		600
+#define FRAME_BUFFER_WIDTH		1920
+#define FRAME_BUFFER_HEIGHT		1080
 
 #define TEXTURES				6
 
@@ -69,6 +69,9 @@ using Microsoft::WRL::ComPtr;
 //#define _WITH_CB_GAMEOBJECT_32BIT_CONSTANTS
 //#define _WITH_CB_GAMEOBJECT_ROOT_DESCRIPTOR
 #define _WITH_CB_WORLD_MATRIX_DESCRIPTOR_TABLE
+
+// 무기 상태 None 타입은 납도 상태
+enum class WeaponType { None = -1, Sword = 0, Sphere };
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
