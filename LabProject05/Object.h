@@ -42,6 +42,9 @@ protected:
 
 	XMFLOAT4X4 to_parent_matrix_;
 
+	//5.12 update 이전 위치와 계산을 통한 velocity를 얻기 위한 prev_matrix_
+	XMFLOAT4X4 to_prev_matrix_;
+
 	XMFLOAT3 m_xmf3Scale;
 	XMFLOAT3 m_xmf3Rotation;
 	XMFLOAT3 m_xmf3Translation;
@@ -90,6 +93,12 @@ public:
 	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
+
+	// 5.12 추가 prev_vector를 이용해 velocity를 구하기 위한 setter
+	void set_prev_position_vector(const float& x, const float& y, const float& z);
+	void set_prev_position_vector(const XMFLOAT3& position) { set_prev_position_vector(position.x, position.y, position.z); }
+	XMFLOAT3 get_prev_position_vector() const { return XMFLOAT3(to_prev_matrix_._41, to_prev_matrix_._42, to_prev_matrix_._43); };
+
 	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
 	void set_child(CGameObject* pChild);
 	void set_sibling(CGameObject* ptr);

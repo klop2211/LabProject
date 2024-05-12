@@ -76,7 +76,7 @@ void ProcessPacket(char* ptr)
         //g_objects[g_myid].push_back(coord);
         g_objects[g_myid][V_LOCATION] = coord;
 
-        XMFLOAT3 look = { 0, 0, 0 };
+        XMFLOAT3 look = { 0, 0, 1 };
         //g_objects[g_myid].push_back(look);
         g_objects[g_myid][V_LOOK] = look;
     }
@@ -96,7 +96,7 @@ void ProcessPacket(char* ptr)
         {
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
             g_objects[id][V_LOCATION] = coord;
-            XMFLOAT3 look = { 0, 0, 0 };
+            XMFLOAT3 look = { 0, 0, 1 };
             g_objects[id][V_LOOK] = look;
             //g_objects[id]->set_position_vector(550, 100, 550);
         }
@@ -111,7 +111,7 @@ void ProcessPacket(char* ptr)
             // 자신의 받은 움직임과 look
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
             g_objects[g_myid][V_LOCATION] = coord;
-            XMFLOAT3 look = { static_cast<float>(my_packet->yaw), static_cast<float>(my_packet->pitch), static_cast<float>(my_packet->roll) };
+            XMFLOAT3 look = { my_packet->pitch, my_packet->yaw, my_packet->roll };
             g_objects[g_myid][V_LOOK] = look;
         }
         else 
@@ -119,7 +119,7 @@ void ProcessPacket(char* ptr)
             // 다른 캐릭터의 받은 움직임
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
             g_objects[other_id][V_LOCATION] = coord;
-            XMFLOAT3 look = { static_cast<float>(my_packet->yaw), static_cast<float>(my_packet->pitch), static_cast<float>(my_packet->roll) };
+            XMFLOAT3 look = { my_packet->pitch, my_packet->yaw, my_packet->roll };
             g_objects[other_id][V_LOOK] = look;
         }
         break;

@@ -15,12 +15,14 @@
 CGameObject::CGameObject()
 {
 	to_parent_matrix_ = Matrix4x4::Identity();
+	to_prev_matrix_ = Matrix4x4::Identity();
 	m_xmf4x4World = Matrix4x4::Identity();
 }
 
 CGameObject::CGameObject(ObjectType object_type)
 {
 	to_parent_matrix_ = Matrix4x4::Identity();
+	to_prev_matrix_ = Matrix4x4::Identity();
 	m_xmf4x4World = Matrix4x4::Identity();
 	// add한 오브젝트 로드를 위한
 	switch (object_type)
@@ -166,6 +168,13 @@ void CGameObject::set_position_vector(const float& x, const float& y, const floa
 	to_parent_matrix_._41 = x;
 	to_parent_matrix_._42 = y;
 	to_parent_matrix_._43 = z;
+}
+
+void CGameObject::set_prev_position_vector(const float& x, const float& y, const float& z)
+{
+	to_prev_matrix_._41 = x;
+	to_prev_matrix_._42 = y;
+	to_prev_matrix_._43 = z;
 }
 
 

@@ -114,16 +114,20 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 		p.size = sizeof(p);
 		p.type = CS_MOVE;
 		// TODO: 현재 yaw를 float으로 보냄. 해당 yaw를 줄일 방법 찾기
-		p.yaw = static_cast<short>(camera_->GetYaw());
+		p.camera_yaw = (camera_->GetYaw());
+		p.player_yaw = (rotation_component_->yaw());
+
+		//p.camera_yaw = static_cast<short>(camera_->GetYaw());
+		//p.player_yaw = static_cast<short>(rotation_component_->yaw());
+		
 		//p.yaw = (camera_->GetYaw());
 		p.direction = static_cast<unsigned char>(dwDirection);
 		DoSend(&p);
-
 	}
-	if (movement_component_)
-	{
-		movement_component_->set_direction_vector(direction_vector);
-	}
+	//if (movement_component_)
+	//{
+	//	movement_component_->set_direction_vector(direction_vector);
+	//}
 }
 
 void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time)
@@ -191,27 +195,30 @@ void CPlayer::Update(float elapsed_time)
 
 	state_machine_->Update(elapsed_time);
 
-	/*if (movement_component_)
-		movement_component_->Update(elapsed_time);*/
+	if (movement_component_)
+	{
+		movement_component_->Update(elapsed_time); 
+	}
+	
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
-
-
 
 }
 
 void CPlayer::OrientRotationToMove(float elapsed_time)
 {
 	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
-	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
-	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+	//XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
+	//float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
 
-	float yaw = Vector3::Angle(v, d);
-	if (result > 0)
-		yaw *= -1;
-	if (!IsZero(yaw))
-		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
+	//float yaw = Vector3::Angle(v, d);
+	//if (result > 0)
+	//	yaw *= -1;
+	if (!IsZero(g_objects[g_myid][V_LOOK].y))
+	{
+		rotation_component_->Rotate(0.f, g_objects[g_myid][V_LOOK].y, 0.f);
+	}
 }
 
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)

@@ -265,8 +265,6 @@ void CScene::AnimateObjects(float elapsed_time)
 
 	player_->Animate(elapsed_time);
 
-	
-
 	terrain_->Animate(elapsed_time);
 
 	for (auto& pObject : g_objects)
@@ -277,8 +275,10 @@ void CScene::AnimateObjects(float elapsed_time)
 			objects_[pObject.first]->set_position_vector(pObject.second[V_LOCATION].x, 
 				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
 				pObject.second[V_LOCATION].z);
+
+			objects_[pObject.first]->Animate(elapsed_time);
 		}
-		objects_[pObject.first]->Animate(elapsed_time);
+		
 	}
 
 	if (m_pLights)

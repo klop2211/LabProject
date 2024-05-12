@@ -600,9 +600,10 @@ void CGameFramework::ProcessInput()
 	//scene_->CollisionCheck();
 
 	player_->Update(elapsed_time);
+	
 	camera_->Update(elapsed_time);
 
-	player_->set_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, 0, g_objects[g_myid][V_LOCATION].z));
+	
 
 }
 

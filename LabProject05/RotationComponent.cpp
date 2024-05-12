@@ -33,10 +33,7 @@ void CRotationComponent::Update(const float& elapsed_time)
 	owner_->set_look_vector(Vector3::TransformNormal(z_axis, rotation_matrix));
 	owner_->set_right_vector(Vector3::CrossProduct(y_axis, owner_->look_vector(), true));
 	owner_->set_up_vector(Vector3::CrossProduct(owner_->look_vector(), owner_->right_vector(), true));
+	
 
-	// TODO: rotation 적용 해야함
-	/*owner_->set_look_vector(g_objects[g_myid][V_LOOK]);
-	owner_->set_right_vector(Vector3::CrossProduct(y_axis, owner_->look_vector(), true));
-	owner_->set_up_vector(Vector3::CrossProduct(owner_->look_vector(), owner_->right_vector(), true));*/
 }
 

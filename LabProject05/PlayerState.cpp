@@ -60,7 +60,7 @@ void PMove::Enter(CPlayer* player)
 
 void PMove::Execute(CPlayer* player, float elapsed_time)
 {
-	if(player->orient_rotation_to_movement())
+	if(player->orient_rotation_to_movement())	
 		player->OrientRotationToMove(elapsed_time);
 	if (IsZero(Vector3::Length(player->movement_component()->direction_vector())))
 		player->state_machine()->ChangeState(PIdle::Instance());
