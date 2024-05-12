@@ -671,19 +671,19 @@ void WriteControlPointUVs(FbxMesh *pfbxMesh, int nControlPoints)
 							break;
 						}
 						case FbxGeometryElement::eByPolygonVertex:
+						{
+							int nTextureUVIndex = pfbxMesh->GetTextureUVIndex(i, j);
+							switch (pfbxElementUV->GetReferenceMode())
 							{
-								int nTextureUVIndex = pfbxMesh->GetTextureUVIndex(i, j);
-								switch (pfbxElementUV->GetReferenceMode())
-								{
-									case FbxGeometryElement::eDirect:
-									case FbxGeometryElement::eIndexToDirect:
-										pControlPointUVs[nControlPointIndex] = pfbxElementUV->GetDirectArray().GetAt(nTextureUVIndex);
-										break;
-									default:
-										break;
-								}
-								break;
+								case FbxGeometryElement::eDirect:
+								case FbxGeometryElement::eIndexToDirect:
+									pControlPointUVs[nControlPointIndex] = pfbxElementUV->GetDirectArray().GetAt(nTextureUVIndex);
+									break;
+								default:
+									break;
 							}
+							break;
+						}
 						case FbxGeometryElement::eByPolygon:
 						case FbxGeometryElement::eAllSame:
 						case FbxGeometryElement::eNone:

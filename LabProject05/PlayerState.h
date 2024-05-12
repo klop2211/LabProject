@@ -67,6 +67,11 @@ public:
 
 class PSwordAttack1 : public State<CPlayer>
 {
+private:
+    const float max_charge_time_ = 2.f;
+    float charge_time_ = 0.f;
+    bool is_charging_ = false;
+
 public:
     static PSwordAttack1* Instance();
 

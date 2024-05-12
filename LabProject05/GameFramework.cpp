@@ -514,9 +514,9 @@ void CGameFramework::BuildObjects()
 
 	WaitForGpuComplete();
 
-	audio_manager_->AddTrack("BackGroundMusic");
-	audio_manager_->PlayTrack("BackGroundMusic");
-
+	//audio_manager_->AddTrack("BackGroundMusic");
+	//audio_manager_->PlayTrack("BackGroundMusic");
+	
 	if (scene_) scene_->ReleaseUploadBuffers();
 	//if (player_) player_->ReleaseUploadBuffers();
 
@@ -562,6 +562,7 @@ void CGameFramework::ProcessInput()
 
 		player_->InputActionRotate(delta_xy, elapsed_time);
 		player_->InputActionMove(dwDirection, elapsed_time);
+
 		if(camera_->GetMode() == CameraMode::GHOST) 
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
 
@@ -596,8 +597,12 @@ void CGameFramework::ProcessInput()
 		click_time_ = 0.f;
 		left_click_ = right_click_ = false;
 	}
+
+	scene_->CollisionCheck();
+
 	player_->Update(elapsed_time);
 	camera_->Update(elapsed_time);
+
 }
 
 void CGameFramework::AnimateObjects()
@@ -666,7 +671,7 @@ void CGameFramework::FrameAdvance()
 
 	AnimateObjects();
 
-	if (scene_) scene_->Render(d3d12_command_list_, camera_);
+	if (scene_) scene_->Render(d3d12_command_list_, camera_, game_timer_.GetTimeElapsed());
 
 #ifdef _WITH_PLAYER_TOP
 	m_pd3dCommandList->ClearDepthStencilView(d3dDsvCPUDescriptorHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, NULL);

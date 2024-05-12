@@ -68,7 +68,7 @@ void CTexture::LoadTextureFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 	m_strTextureFileName = strToken;
 	m_strTextureFileName = TEXTURE_FILE_ROOT + m_strTextureFileName.substr(0, m_strTextureFileName.size());
 	
-	//TODO: 루트마라미터 인덱스 관련 상수 정리
+	//TODO: 루트파라미터 인덱스 관련 상수 정리
 	LoadTextureFromWICFile(pd3dDevice, pd3dCommandList, m_strTextureFileName, TextureType::RESOURCE_TEXTURE2D, 7); 
 
 	m_UVScale.x = FBXLoad::ReadFromFile<float>(InFile);

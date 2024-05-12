@@ -256,13 +256,11 @@ void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();
 
-	CollisionCheck();
 
 	player_->Animate(elapsed_time);
-
 	terrain_->Animate(elapsed_time);
 
-	for (auto& pObject : objects_) 
+	for (auto& pObject : objects_)
 		pObject->Animate(elapsed_time);
 
 	if (m_pLights)
@@ -295,7 +293,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 	descriptor_manager_ = new CDescriptorManager;
-	descriptor_manager_->SetDescriptors(1 + 5 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
+	descriptor_manager_->SetDescriptors(1 + 20 + 1); // 조명(cbv), 터레인(2) 모델텍스처(3), 스카이박스(1)
 
 	D3D12_DESCRIPTOR_HEAP_DESC d3dDescriptorHeapDesc;
 	d3dDescriptorHeapDesc.NumDescriptors = descriptor_manager_->GetDescriptors();		
@@ -326,7 +324,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
 
-	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
+	XMFLOAT3 min_point(-15.f, -25, -30.5), max_point(15, 25, 30.5);
 	CGameObject* collision_socket = player_->AddSocket("Bip001");
 	CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
 	collision_socket->SetMesh(collision_mesh);
@@ -334,12 +332,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
 
 	shaders_[4]->AddObject(collision_socket);
+
 	//XMFLOAT3 max_point { 25.f, 175.f}
 	//BoundingBox::CreateFromPoints()
 	shaders_[0]->AddObject(player_);
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_edit.bin");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword_TXT.bin");
 	sword_socket->set_child(model.heirarchy_root);
 	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
 	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
@@ -360,6 +359,14 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	object->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 	objects_.push_back(object);
 	shaders_[0]->AddObject(object);
+
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+
+	object = new CMawang(model);
+	object->set_position_vector(50, terrain_->GetHeight(550, 550), 550);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
@@ -397,7 +404,7 @@ void CScene::ReleaseObjects()
 	if (m_pLights) delete m_pLights;
 }
 
-void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera)
+void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, float elapsed_time)
 {
 	pd3dCommandList->SetGraphicsRootSignature(d3d12_root_signature_);
 	pd3dCommandList->SetDescriptorHeaps(1, &descriptor_manager_->GetDescriptorHeap());
@@ -420,7 +427,7 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	//05.08 수정: 이제 셰이더는 그 셰이더를 사용하는 오브젝트들을 렌더함
 	for (auto& shader : shaders_)
 	{
-		shader->Render(pd3dCommandList, pCamera);
+		shader->Render(pd3dCommandList, pCamera, elapsed_time);
 	}
 
 

@@ -190,20 +190,20 @@ void CGameObject::UpdateMatrixByBlendedSRT()
 	XMStoreFloat4x4(&to_parent_matrix_, XMMatrixMultiply(XMMatrixMultiply(S, R), T));
 }
 
-void CGameObject::set_child(CGameObject* pChild)
+void CGameObject::set_child(CGameObject* ptr)
 {
-	if (pChild)
+	if (ptr)
 	{
-		pChild->set_parent(this);
+		ptr->set_parent(this);
 	}
 	if (child_)
 	{
-		if (pChild) pChild->sibling_ = child_->sibling_;
-		child_->sibling_ = pChild;
+		if (ptr) ptr->sibling_ = child_->sibling_;
+		child_->sibling_ = ptr;
 	}
 	else
 	{
-		child_ = pChild;
+		child_ = ptr;
 	}
 }
 

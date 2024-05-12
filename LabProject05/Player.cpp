@@ -210,9 +210,6 @@ void CPlayer::Update(float elapsed_time)
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
-
-
-
 }
 
 void CPlayer::OrientRotationToMove(float elapsed_time)

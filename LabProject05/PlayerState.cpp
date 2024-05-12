@@ -30,6 +30,8 @@ void PIdle::Enter(CPlayer* player)
 void PIdle::Execute(CPlayer* player, float elapsed)
 {
 	idle_time_ += elapsed;
+	if (!player->animation_controller()->is_animation_chainging())
+		player->animation_controller()->set_is_blend_change(true);
 	if (idle_time_ > release_weapon_time_)
 	{
 		player->set_current_weapon(PlayerWeaponType::None);
@@ -110,7 +112,6 @@ PAttack* PAttack::Instance()
 void PAttack::Enter(CPlayer* player)
 {
 
-	player->set_animation_state(PlayerAnimationState::SwordAttack2);
 }
 
 void PAttack::Execute(CPlayer* player, float elapsed_time)
@@ -135,20 +136,58 @@ PSwordAttack1* PSwordAttack1::Instance()
 void PSwordAttack1::Enter(CPlayer* player)
 {
 	//TODO: 차지공격에 맞춰서 움직임 및 단계별 애니메이션 구현
-	player->set_animation_state(PlayerAnimationState::SwordAttack1);
+	player->set_animation_state(PlayerAnimationState::SwordAttack11);
+	charge_time_ = 0.f;
+	is_charging_ = false;
 }
 
 void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 {
+	if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+		is_charging_ = true;
+	else
+		is_charging_ = false;
+
+	if (is_charging_)
+		charge_time_ += elapsed_time;
+
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
-		player->state_machine()->ChangeState(PIdle::Instance());
+		//사전동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack11)
+		{
+			player->animation_controller()->set_is_blend_change(false);
+			if (!is_charging_)
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			else
+			{
+				player->set_animation_state(PlayerAnimationState::SwordAttack12);
+			}
+			return;
+		}
+		//차지동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack12)
+		{
+			if (charge_time_ > max_charge_time_)
+			{
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			}
+			else if (is_charging_)
+				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SwordAttack12);
+			else
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			return;
+		}
+		//베기동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack13)
+		{
+			player->state_machine()->ChangeState(PIdle::Instance());
+		}
 	}
 }
 
 void PSwordAttack1::Exit(CPlayer* player)
 {
-	
 }
 
 PSwordAttack2* PSwordAttack2::Instance()
@@ -160,7 +199,7 @@ PSwordAttack2* PSwordAttack2::Instance()
 void PSwordAttack2::Enter(CPlayer* player)
 {
 	//TODO: 기모으는 도중 안 움직이게 수정
-	player->set_animation_state(PlayerAnimationState::SwordAttack2);
+	player->set_animation_state(PlayerAnimationState::SwordAttack21);
 }
 
 void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
@@ -186,7 +225,7 @@ PSwordAttack3* PSwordAttack3::Instance()
 
 void PSwordAttack3::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::SwordAttack3);
+	player->set_animation_state(PlayerAnimationState::SwordAttack30);
 
 }
 
@@ -210,7 +249,7 @@ PSwordAttack4* PSwordAttack4::Instance()
 
 void PSwordAttack4::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::SwordAttack4);
+	player->set_animation_state(PlayerAnimationState::SwordAttack40);
 
 }
 

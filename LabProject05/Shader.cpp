@@ -209,7 +209,8 @@ void CShader::OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList)
 	if (m_ppd3dPipelineStates) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[0]);
 }
 
-void CShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera)
+//TODO: 인스턴싱 관련 리펙토링 필요
+void CShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera, float elapsed_time)
 {
 	OnPrepareRender(pd3dCommandList);
 
@@ -486,7 +487,7 @@ D3D12_INPUT_LAYOUT_DESC CStandardShader::CreateInputLayout()
 	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dInputElementDescs[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0,
-	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dInputElementDescs[2] = { "BONEINDEX", 0, DXGI_FORMAT_R32G32B32A32_SINT, 2, 0,
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	pd3dInputElementDescs[3] = { "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, 0,
@@ -565,7 +566,7 @@ D3D12_RASTERIZER_DESC CStaticMeshShader::CreateRasterizerState()
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
 	::ZeroMemory(&d3dRasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
-	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	d3dRasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	d3dRasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 	d3dRasterizerDesc.FrontCounterClockwise = FALSE;
 	d3dRasterizerDesc.DepthBias = 0;

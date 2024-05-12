@@ -35,7 +35,7 @@ public:
 	virtual void CreateShader(ID3D12Device* pd3dDevice, ID3D12RootSignature* pd3dGraphicsRootSignature);
 
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
-	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera);
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera, float elapsed_time);
 
 	void AddObject(CGameObject* object) { render_list_.push_back(object); }
 

@@ -7,7 +7,7 @@
 
 CSkyBox::CSkyBox(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList) : CGameObject()
 {
-	CSkyBoxMesh* skybox_mesh = new CSkyBoxMesh(pd3dDevice, pd3dCommandList, 40.0f, 40.0f, 2.0f);
+	CSkyBoxMesh* skybox_mesh = new CSkyBoxMesh(pd3dDevice, pd3dCommandList, 100.0f, 100.0f, 2.0f);
 	SetMesh(skybox_mesh);
 
 	CMaterial* material = new CMaterial(1);
