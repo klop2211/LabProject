@@ -94,7 +94,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     p.type = CS_LOGIN;
     strcpy_s(p.name, avatar_name.c_str());
     DoSend(&p);
-    
+
     unsigned long noblock = 1;
     int nRet = ioctlsocket(g_server_socket, FIONBIO, &noblock);
 

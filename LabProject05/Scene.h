@@ -87,6 +87,8 @@ protected:
 	// 05.13 수정: 현재는 생성과 삭제를 하지 않아 다시 vector로 변경
 	std::vector<CGameObject*> objects_;
 
+	std::list<CGameObject*> weapon_object_;
+
 	// 충돌 관리
 	std::list<CGameObject*> collision_list_;
 

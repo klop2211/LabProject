@@ -252,11 +252,21 @@ void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 	{
 		objects_[Object.first]->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 	}
+
+	for (auto& Object : weapon_object_)
+	{
+		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+	}
+
 }
 
 void CScene::ReleaseUploadBuffers()
 {
 	for (auto& pObject : g_objects) objects_[pObject.first]->ReleaseUploadBuffers();
+	for (auto& Object : weapon_object_)
+	{
+		Object->ReleaseUploadBuffers();
+	}
 }
 
 void CScene::AnimateObjects(float elapsed_time)
@@ -279,7 +289,7 @@ void CScene::AnimateObjects(float elapsed_time)
 				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
 				pObject.second[V_LOCATION].z);
 
-			objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
+			//objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
 			objects_[pObject.first]->Animate(elapsed_time);
 		}
 		else
@@ -289,6 +299,12 @@ void CScene::AnimateObjects(float elapsed_time)
 		
 	}
 	g_objects[g_myid][V_LOCATION].y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
+
+	for (auto& Object : weapon_object_)
+	{
+		Object->Animate(elapsed_time);
+	}
+
 	if (m_pLights)
 	{
 		m_pLights->m_pLights[1].m_xmf3Position = player_->position_vector();
@@ -363,6 +379,24 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	//BoundingBox::CreateFromPoints()
 	shaders_[0]->AddObject(player_);
 
+
+	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
+	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
+	for (int i = 0; i < 4; i++)
+	{
+		CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+
+		CGameObject* object = new CMawang(model);
+
+		g_objects[i][V_LOCATION] = XMFLOAT3(-9999, 0, -9999);
+		objects_.push_back(object);
+		objects_[i]->set_position_vector(g_objects[i][V_LOCATION].x + i, -999, g_objects[i][V_LOCATION].z + i);
+		//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+
+		shaders_[0]->AddObject(object);
+	}
+
+
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
 
 	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword_TXT.bin");
@@ -378,7 +412,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 110.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	objects_.push_back(weapon);
+	weapon_object_.push_back(weapon);
 	player_->AddWeapon(weapon);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
@@ -392,7 +426,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	objects_.push_back(weapon);
+	weapon_object_.push_back(weapon);
 	player_->AddWeapon(weapon);
 
 	player_->set_weapon_socket(sword_socket);
@@ -400,32 +434,6 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	shaders_[2]->AddObject(sword_socket);
 
 
-	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
-
-	
-	
-
-	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
-	for (int i = 0; i < 4; i++)
-	{
-
-		model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
-
-		CGameObject* object = new CMawang(model);
-		objects_.push_back(object);
-		g_objects[i][V_LOCATION] = XMFLOAT3(-9999, 0, -9999);
-		objects_[i]->set_position_vector(g_objects[i][V_LOCATION].x+i, -999, g_objects[i][V_LOCATION].z+i);
-		//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
-
-		shaders_[0]->AddObject(object);
-	}
-
-	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
-
-	object = new CMawang(model);
-	object->set_position_vector(50, terrain_->GetHeight(550, 550), 550);
-	objects_.push_back(object);
-	shaders_[0]->AddObject(object);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
@@ -450,6 +458,12 @@ void CScene::ReleaseObjects()
 	{
 		delete objects_[pObject.first];
 		objects_[pObject.first] = NULL;
+	}
+
+	for (auto& Object : weapon_object_)
+	{
+		delete Object;
+		Object = NULL;
 	}
 
 	for (auto& shader : shaders_)

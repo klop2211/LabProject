@@ -137,7 +137,7 @@ void ProcessPacket(char* ptr)
         else 
         {
             // 다른 플레이어 삭제
-            g_objects[other_id][V_LOCATION] = XMFLOAT3(0, -999, 0);
+            g_objects[other_id][V_LOCATION] = XMFLOAT3(-9999, -999, -9999);
             // 보이지 않는 곳으로 다시 이동
         }
         break;
@@ -179,3 +179,4 @@ void DoRecv()
         ProcessData(wsabuf.buf, bytes_received);
     }
 }
+
