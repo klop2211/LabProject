@@ -49,10 +49,10 @@ void CMovementComponent::Update(const float& elapsed_time)
 	//owner_->set_position_vector(xmf3NewPosition);
 
 	XMFLOAT3 prev = owner_->get_prev_position_vector();
-	XMFLOAT3 curr = XMFLOAT3(g_objects[g_myid][V_LOCATION].x, 100, g_objects[g_myid][V_LOCATION].z);
+	XMFLOAT3 curr = XMFLOAT3(g_objects[g_myid][V_LOCATION].x, g_objects[g_myid][V_LOCATION].y, g_objects[g_myid][V_LOCATION].z);
 	set_direction_vector(Vector3::Subtract(curr, prev));
 	
 	
-	owner_->set_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, 100, g_objects[g_myid][V_LOCATION].z));
-	owner_->set_prev_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, 100, g_objects[g_myid][V_LOCATION].z));
+	owner_->set_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, g_objects[g_myid][V_LOCATION].y, g_objects[g_myid][V_LOCATION].z));
+	owner_->set_prev_position_vector(XMFLOAT3(g_objects[g_myid][V_LOCATION].x, g_objects[g_myid][V_LOCATION].y, g_objects[g_myid][V_LOCATION].z));
 }

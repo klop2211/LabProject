@@ -137,7 +137,6 @@ void ProcessPacket(char* ptr)
         else 
         {
             // 다른 플레이어 삭제
-            //g_objects.erase(other_id);
             g_objects[other_id][V_LOCATION] = XMFLOAT3(0, -999, 0);
             // 보이지 않는 곳으로 다시 이동
         }

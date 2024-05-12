@@ -115,10 +115,9 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 		p.type = CS_MOVE;
 		// TODO: 현재 yaw를 float으로 보냄. 해당 yaw를 줄일 방법 찾기
 		p.camera_yaw = (camera_->GetYaw());
+
 		p.player_yaw = (rotation_component_->yaw());
 
-		//p.camera_yaw = static_cast<short>(camera_->GetYaw());
-		//p.player_yaw = static_cast<short>(rotation_component_->yaw());
 		
 		//p.yaw = (camera_->GetYaw());
 		p.direction = static_cast<unsigned char>(dwDirection);

@@ -159,6 +159,8 @@ public:
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		std::ifstream& InFile, int& nFrames);
 
+	void UpdateLookVector(const XMFLOAT3& look);
+
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||

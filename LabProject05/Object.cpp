@@ -462,6 +462,34 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 	return rvalue;
 }
 
+// TODO: 오브젝트의 로테이트 다음에 구현
+void CGameObject::UpdateLookVector(const XMFLOAT3& look)
+{
+	to_parent_matrix_._32 += look.y;
+	XMMATRIX P = XMMatrixIdentity(), Y = XMMatrixIdentity(), R = XMMatrixIdentity();
+	XMFLOAT3 x_axis = XMFLOAT3(1.f, 0.f, 0.f);
+	XMFLOAT3 y_axis = XMFLOAT3(0.f, 1.f, 0.f);
+	XMFLOAT3 z_axis = XMFLOAT3(0.f, 0.f, 1.f);
+
+	if (false)
+	{
+		P = XMMatrixRotationAxis(XMLoadFloat3(&x_axis), XMConvertToRadians(look.x));
+	}
+	if (true)
+	{
+		Y = XMMatrixRotationAxis(XMLoadFloat3(&y_axis), XMConvertToRadians(look.y));
+	}
+	if (true)
+	{
+		R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(look.z));
+	}
+
+	XMMATRIX rotation_matrix = XMMatrixMultiply(XMMatrixMultiply(P, Y), R);
+	set_look_vector(Vector3::TransformNormal(z_axis, rotation_matrix));
+	set_right_vector(Vector3::CrossProduct(y_axis, look_vector(), true));
+	set_up_vector(Vector3::CrossProduct(look_vector(), right_vector(), true));
+}
+
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||| <CHeightMapTerrain> |||||||||||||||||||||||||||||||||||||||||||||||

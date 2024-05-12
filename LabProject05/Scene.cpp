@@ -261,8 +261,11 @@ void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();
 
-	//CollisionCheck();
+	CollisionCheck();
 
+	/*player_->set_position_vector(player_->position_vector().x,
+		terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z),
+		player_->position_vector().z);*/
 	player_->Animate(elapsed_time);
 
 	terrain_->Animate(elapsed_time);
@@ -276,11 +279,16 @@ void CScene::AnimateObjects(float elapsed_time)
 				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
 				pObject.second[V_LOCATION].z);
 
+			objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
 			objects_[pObject.first]->Animate(elapsed_time);
+		}
+		else
+		{
+			objects_[pObject.first]->set_position_vector(-9999, -999, -9999);
 		}
 		
 	}
-
+	g_objects[g_myid][V_LOCATION].y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
 	if (m_pLights)
 	{
 		m_pLights->m_pLights[1].m_xmf3Position = player_->position_vector();
@@ -381,7 +389,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 		CGameObject* object = new CMawang(model);
 		objects_.push_back(object);
-		g_objects[i][V_LOCATION] = XMFLOAT3(0, 0, 0);
+		g_objects[i][V_LOCATION] = XMFLOAT3(-9999, 0, -9999);
 		objects_[i]->set_position_vector(g_objects[i][V_LOCATION].x+i, -999, g_objects[i][V_LOCATION].z+i);
 		//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
 
