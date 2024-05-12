@@ -28,6 +28,9 @@ std::string avatar_name;
 WSAOVERLAPPED g_wsaover;
 
 
+
+
+
 //#define ENTERIP
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -83,9 +86,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     res = connect(g_server_socket, reinterpret_cast<sockaddr*>(&g_server_a), sizeof(g_server_a));
     if (SOCKET_ERROR == res)
     {
-        print_error("Connect", WSAGetLastError());
+        //print_error("Connect", WSAGetLastError());
         closesocket(g_server_socket);
         WSACleanup();
+        exit(0);
     }
 
     // TODO: 해당 로그인 부분은 로그인 서버 완성시 그쪽으로 옮겨질 코드

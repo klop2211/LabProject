@@ -289,13 +289,13 @@ void CScene::AnimateObjects(float elapsed_time)
 				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
 				pObject.second[V_LOCATION].z);
 
-			//objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
-			objects_[pObject.first]->Animate(elapsed_time);
+			objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
 		}
 		else
 		{
 			objects_[pObject.first]->set_position_vector(-9999, -999, -9999);
 		}
+		objects_[pObject.first]->Animate(elapsed_time);
 		
 	}
 	g_objects[g_myid][V_LOCATION].y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
@@ -355,7 +355,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
 	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
 	shaders_[3]->AddObject(skybox_);
