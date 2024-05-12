@@ -173,6 +173,15 @@ public:
 
 class PSphereAttack1 : public PAttack1
 {
+private:
+    const std::array<float, 2> move_start_time_ = { 1.f / 30.f * 3.f, 1.f / 30.f * 25.f };
+    const std::array<float, 2> move_end_time_ = { 1.f / 30.f * 10.f, 1.f / 30.f * 35.f };
+    const std::array<float, 2> move_speed_ = { 1000.f, 1500.f };
+
+    float attack_time_ = 0.f;
+
+    bool is_click_ = false;
+
 public:
     static PSphereAttack1* Instance();
 
@@ -186,6 +195,13 @@ public:
 
 class PSphereAttack2 : public PAttack2
 {
+private:
+    const std::array<float, 2> move_start_time_ = { 1.f / 30.f * 10.f, 1.f / 30.f * 38.f };
+    const std::array<float, 2> move_end_time_ = { 1.f / 30.f * 38.f, 1.f / 30.f * 55.f };
+    const std::array<float, 2> move_speed_ = { 1000.f, 500.f };
+
+    float attack_time_ = 0.f;
+
 public:
     static PSphereAttack2* Instance();
 
@@ -199,6 +215,18 @@ public:
 
 class PSphereAttack3 : public PAttack3
 {
+private:
+    const float move_start_time_ = 1.f / 30.f * 10.f;
+    const float move_end_time_ = 1.f / 30.f * 29.f;
+    const float move_speed_ = 800.f;
+
+    float attack_time_ = 0.f;
+
+    const float max_charge_time_ = 2.f;
+    bool is_charging_ = true;
+
+    float charge_time_ = 0.f;
+
 public:
     static PSphereAttack3* Instance();
 
@@ -212,6 +240,13 @@ public:
 
 class PSphereAttack4 : public PAttack4
 {
+private:
+    const std::array<float, 3> move_start_time_ =   { 1.f / 30.f * 0.f, 1.f / 30.f * 20.f, 1.f / 30.f * 40 };
+    const std::array<float, 3> move_end_time_ =     { 1.f / 30.f * 5.f, 1.f / 30.f * 30.f, 1.f / 30.f * 50 };
+    const std::array<float, 3> move_speed_ = { 500.f, 3000.f, 200.f };
+
+    float attack_time_ = 0.f;
+
 public:
     static PSphereAttack4* Instance();
 

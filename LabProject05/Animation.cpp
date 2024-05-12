@@ -33,11 +33,16 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_
 	if (is_animation_chainging_)
 	{
 		if (is_end_time_blending_)
-			animation_tracks_[prev_index_].set_position(animation_tracks_[prev_index_].end_time() - 0.01);
+			animation_tracks_[prev_index_].set_position(animation_tracks_[prev_index_].end_time());
 		animation_tracks_[prev_index_].AddWeight(-animation_blend_speed_ * elapsed_time);
 		animation_tracks_[curr_index_].AddWeight(animation_blend_speed_ * elapsed_time);
 		if (!animation_tracks_[prev_index_].IsEnable())
 		{
+			if (is_end_time_blending_)
+			{
+				animation_tracks_[prev_index_].set_position(0.f);
+				animation_tracks_[prev_index_].set_auto_reset(true);
+			}
 			animation_tracks_[prev_index_].Start();
 			animation_tracks_[curr_index_].Start();
 			is_animation_chainging_ = false;
@@ -101,6 +106,9 @@ void CAnimationController::ChangeAnimation(const int& index)
 	animation_tracks_[prev_index_].Stop();
 	animation_tracks_[index].Stop();
 
+	if (is_end_time_blending_)
+		animation_tracks_[prev_index_].set_auto_reset(false);
+
 	// 현재 애니메이션을 이전 애니메이션 weight의 남은 부분 만큼 설정
 	animation_tracks_[index].set_weight(1.f - animation_tracks_[prev_index_].weight());
 	// 애니메이션 전환 트리거를 true로 설정
@@ -115,6 +123,11 @@ void CAnimationController::SetLoopType(const int& index, const AnimationLoopType
 void CAnimationController::SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func)
 {
 	animation_tracks_[index].AddCallbackKey(time, callback_func);
+}
+
+void CAnimationController::SetTrackSpeed(const int& index, const float& speed)
+{
+	animation_tracks_[index].set_speed(speed);
 }
 
 const float CAnimationTrack::callback_check_time_ = 1.f / 120.f;
@@ -175,7 +188,7 @@ void CAnimationTrack::AddCallbackKey(const float& time, CAnimationCallbackFunc* 
 
 void CAnimationTrack::Animate(const float& fElapsedTime)
 {
-	UpdatePosition(fElapsedTime);
+	UpdatePosition(fElapsedTime, auto_reset_);
 
 	for (auto& callback_key : callback_keys_)
 	{
@@ -196,18 +209,20 @@ void CAnimationTrack::UpdateMatrix()
 	animation_set_->UpdateMatrix();
 }
 
-void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
+void CAnimationTrack::UpdatePosition(const float& fElapsedTime, bool reset)
 {
 	position_ += (fElapsedTime * speed_);
 
+	if (!reset) return;
+
 	if (animation_set_->end_time() < position_)
 	{
-		position_ = 0.f;
+		
 		if (loop_type_ == AnimationLoopType::Once) 
 		{
 			enable_ = false;
 		}
-
+		position_ = 0.f;
 	}
 }
 

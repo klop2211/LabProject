@@ -96,10 +96,12 @@ public:
 	bool IsEnable() { return enable_; }
 
 	//setter
+	void set_auto_reset(const bool& value) { auto_reset_ = value; }
 	void set_position(const float& value) { position_ = value; }
 	void set_enable(const bool& value) { enable_ = value; }
 	void set_weight(const float& value) { weight_ = value; }
 	void set_loop_type(const AnimationLoopType& type) { loop_type_ = type; }
+	void set_speed(const float& value) { speed_ = value; }
 
 	//getter
 	float end_time() const { return animation_set_->end_time(); }
@@ -117,7 +119,7 @@ public:
 	void Start() { speed_ = 1.f; }
 
 private:
-	void UpdatePosition(const float& fElapsedTime);
+	void UpdatePosition(const float& fElapsedTime, bool reset);
 
 	// 콜백을 체크하는 시간 callback_key.time +- callback_check_time
 	static const float callback_check_time_;
@@ -127,6 +129,7 @@ private:
 	float weight_;
 
 	bool enable_;
+	bool auto_reset_ = true;
 
 	AnimationLoopType loop_type_;
 
@@ -181,6 +184,8 @@ public:
 	bool IsEnableTrack(const int& index) { return animation_tracks_[index].IsEnable(); }
 
 	void PositionReset(const int& index) { animation_tracks_[index].set_position(0.f); }
+
+	void SetTrackSpeed(const int& index, const float& speed);
 
 };
 

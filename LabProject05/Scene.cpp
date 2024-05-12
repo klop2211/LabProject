@@ -12,6 +12,7 @@
 #include "Mesh.h"
 #include "Sword.h"
 #include "Sphere.h"
+#include "Building.h"
 
 CScene::CScene()
 {
@@ -315,7 +316,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/HeightMap.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
 	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
 	shaders_[3]->AddObject(skybox_);
@@ -392,9 +393,19 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	objects_.push_back(object);
 	shaders_[0]->AddObject(object);
 
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
+
+	object = new CBuilding(model);
+
+	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
+	objects_.push_back(object);
+	object->SetShader((int)ShaderNum::StaticMesh);
+	shaders_[2]->AddObject(object);
+
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
 	player_->EquipWeapon("default_sphere");
+	
 
 }
 

@@ -54,6 +54,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	animation_controller_->EnableTrack(0);
 	animation_controller_->SetLoopType((int)PlayerAnimationState::Idle, AnimationLoopType::Repeat);
 	animation_controller_->SetLoopType((int)PlayerAnimationState::SwordIdle, AnimationLoopType::Repeat);
+	animation_controller_->SetLoopType((int)PlayerAnimationState::SphereIdle, AnimationLoopType::Repeat);
 	animation_controller_->SetLoopType((int)PlayerAnimationState::Walk, AnimationLoopType::Repeat);
 	animation_controller_->SetLoopType((int)PlayerAnimationState::Run, AnimationLoopType::Repeat);
 
@@ -245,6 +246,7 @@ void CPlayer::EquipWeapon(const std::string& name)
 	if (!weapon) 
 		return;
 	weapon_socket_->ResetChild(weapon);
+	current_weapon_type_ = ((CWeapon*)weapon)->type();
 	weapon_socket_->SetShader(weapon->shader_num());
 }
 
