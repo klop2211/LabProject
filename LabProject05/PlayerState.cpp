@@ -15,24 +15,33 @@ void PIdle::Enter(CPlayer* player)
 	player->set_attack_type(PlayerAttackType::None);
 	switch (player->current_weapon())
 	{
-	case PlayerWeaponType::None:
+	case WeaponType::None:
 		player->set_animation_state(PlayerAnimationState::Idle);
 		break;
-	case PlayerWeaponType::Sword:
+	case WeaponType::Sword:
 		player->set_animation_state(PlayerAnimationState::SwordIdle);
+		break;
+	case WeaponType::Sphere:
+		player->set_animation_state(PlayerAnimationState::SphereIdle);
 		break;
 
 	default:
 		break;
 	}
+	
 }
 
 void PIdle::Execute(CPlayer* player, float elapsed)
 {
 	idle_time_ += elapsed;
+	if (!player->animation_controller()->is_animation_chainging())
+	{
+		player->animation_controller()->set_is_blend_change(true);
+		player->set_is_move_allow(true);
+	}
 	if (idle_time_ > release_weapon_time_)
 	{
-		player->set_current_weapon(PlayerWeaponType::None);
+		player->set_current_weapon(WeaponType::None);
 		player->weapon_socket()->set_is_visible(false);
 		player->set_animation_state(PlayerAnimationState::Idle);
 	}
@@ -53,14 +62,20 @@ PMove* PMove::Instance()
 
 void PMove::Enter(CPlayer* player)
 {
-	player->set_current_weapon(PlayerWeaponType::None);
+	player->set_current_weapon(WeaponType::None);
 	player->weapon_socket()->set_is_visible(false);
 	player->set_animation_state(PlayerAnimationState::Run);
+	player->movement_component()->set_max_speed(player->speed());
 }
 
 void PMove::Execute(CPlayer* player, float elapsed_time)
 {
-	if(player->orient_rotation_to_movement())	
+	if (!player->animation_controller()->is_animation_chainging())
+	{
+		player->animation_controller()->set_is_blend_change(true);
+		player->set_is_move_allow(true);
+	}
+	if(player->orient_rotation_to_movement())
 		player->OrientRotationToMove(elapsed_time);
 	if (IsZero(Vector3::Length(player->movement_component()->direction_vector())))
 		player->state_machine()->ChangeState(PIdle::Instance());
@@ -69,6 +84,7 @@ void PMove::Execute(CPlayer* player, float elapsed_time)
 
 void PMove::Exit(CPlayer* player)
 {
+	player->movement_component()->set_max_speed(0.f);
 }
 
 PEvade* PEvade::Instance()
@@ -98,33 +114,69 @@ void PEvade::Execute(CPlayer* player, float elapsed_time)
 
 void PEvade::Exit(CPlayer* player)
 {
-	player->movement_component()->set_max_speed(player->speed());
-}
-
-PAttack* PAttack::Instance()
-{
-	static PAttack instance;
-	return &instance;
+	//player->movement_component()->set_max_speed(player->speed());
 }
 
 void PAttack::Enter(CPlayer* player)
 {
-
-	player->set_animation_state(PlayerAnimationState::SwordAttack2);
 }
 
-void PAttack::Execute(CPlayer* player, float elapsed_time)
+PAttack1* PAttack1::Instance(const WeaponType& type)
 {
-	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	switch (type)
 	{
-		player->state_machine()->ChangeState(PIdle::Instance());
+		case WeaponType::Sword:
+			return PSwordAttack1::Instance();
+		case WeaponType::Sphere:
+			return PSphereAttack1::Instance();
+	default:
+		break;
 	}
-
 }
 
-void PAttack::Exit(CPlayer* player)
+PAttack2* PAttack2::Instance(const WeaponType& type)
 {
+	switch (type)
+	{
+	case WeaponType::Sword:
+		return PSwordAttack2::Instance();
+	case WeaponType::Sphere:
+		return PSphereAttack2::Instance();
+	default:
+		break;
+	}
 }
+
+PAttack3* PAttack3::Instance(const WeaponType& type)
+{
+	switch (type)
+	{
+	case WeaponType::Sword:
+		return PSwordAttack3::Instance();
+	case WeaponType::Sphere:
+		return PSphereAttack3::Instance();
+	default:
+		break;
+	}
+}
+
+PAttack4* PAttack4::Instance(const WeaponType& type)
+{
+	switch (type)
+	{
+	case WeaponType::Sword:
+		return PSwordAttack4::Instance();
+	case WeaponType::Sphere:
+		return PSphereAttack4::Instance();
+	default:
+		break;
+	}
+}
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+//||||||||||||||||||||||||||||||||||||||||||||||||||| < SwordAttack > ||||||||||||||||||||||||||||||||||||||||||||||||||| 
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
 
 PSwordAttack1* PSwordAttack1::Instance()
 {
@@ -134,21 +186,78 @@ PSwordAttack1* PSwordAttack1::Instance()
 
 void PSwordAttack1::Enter(CPlayer* player)
 {
-	//TODO: 차지공격에 맞춰서 움직임 및 단계별 애니메이션 구현
-	player->set_animation_state(PlayerAnimationState::SwordAttack1);
+	player->set_animation_state(PlayerAnimationState::SwordAttack11);
+	player->set_is_move_allow(false);
+	player->movement_component()->set_max_speed(0.f);
+	charge_time_ = 0.f;
+	slash_time_ = 0.f;
+	is_charging_ = false;
 }
 
 void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 {
+	if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+		is_charging_ = true;
+	else
+		is_charging_ = false;
+
+	if (is_charging_)
+		charge_time_ += elapsed_time;
+	else if(player->animation_state() == PlayerAnimationState::SwordAttack13)
+	{
+		slash_time_ += elapsed_time;
+		if (slash_time_ > slash_move_start_time_)
+		{
+			player->movement_component()->set_max_speed(slash_move_speed_);
+			player->movement_component()->set_direction_vector(player->look_vector());
+		}
+		if (slash_time_ > slash_move_end_time_)
+		{
+			player->movement_component()->set_max_speed(0.f);
+			player->movement_component()->set_direction_vector(XMFLOAT3(0,0,0));
+		}
+	}
+
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
-		player->state_machine()->ChangeState(PIdle::Instance());
+		//사전동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack11)
+		{
+			player->animation_controller()->set_is_blend_change(false);
+			if (!is_charging_)
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			else
+			{
+				player->set_animation_state(PlayerAnimationState::SwordAttack12);
+			}
+			return;
+		}
+		//차지동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack12)
+		{
+			if (charge_time_ > max_charge_time_)
+			{
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+
+			}
+			else if (is_charging_)
+				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SwordAttack12);
+			else
+			{
+				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			}
+			return;
+		}
+		//베기동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack13)
+		{
+			player->state_machine()->ChangeState(PIdle::Instance());
+		}
 	}
 }
 
 void PSwordAttack1::Exit(CPlayer* player)
 {
-	
 }
 
 PSwordAttack2* PSwordAttack2::Instance()
@@ -159,8 +268,12 @@ PSwordAttack2* PSwordAttack2::Instance()
 
 void PSwordAttack2::Enter(CPlayer* player)
 {
-	//TODO: 기모으는 도중 안 움직이게 수정
-	player->set_animation_state(PlayerAnimationState::SwordAttack2);
+	player->set_animation_state(PlayerAnimationState::SwordAttack21);
+	hold_time_ = 0.f;
+	is_holding_ = false;
+	player->set_is_move_allow(false);
+	player->movement_component()->set_max_speed(0.f);
+
 }
 
 void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
@@ -168,9 +281,53 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 	if (player->orient_rotation_to_movement())
 		player->OrientRotationToMove(elapsed_time);
 
+	if (GetAsyncKeyState(VK_RBUTTON) & 0x8000)
+		is_holding_ = true;
+	else
+		is_holding_ = false;
+
+	if (is_holding_ && player->animation_state() == PlayerAnimationState::SwordAttack22)
+	{
+		hold_time_ += elapsed_time;
+		player->movement_component()->set_max_speed(slash_move_speed_);
+	}
+	
+	if (hold_time_ > max_hold_time_)
+		is_holding_ = false;
+
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
-		player->state_machine()->ChangeState(PIdle::Instance());
+		//사전동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack21)
+		{
+			player->animation_controller()->set_is_blend_change(false);
+			if (!is_holding_)
+				player->set_animation_state(PlayerAnimationState::SwordAttack23);
+			else
+			{
+				player->set_is_move_allow(true);
+				player->set_animation_state(PlayerAnimationState::SwordAttack22);
+			}
+			return;
+		}
+		//회전동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack22)
+		{
+			if (is_holding_)
+				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SwordAttack22);
+			else
+			{
+				player->set_is_move_allow(false);
+				player->movement_component()->set_max_speed(0.f);
+				player->set_animation_state(PlayerAnimationState::SwordAttack23);
+			}
+			return;
+		}
+		//베기동작 끝
+		if (player->animation_state() == PlayerAnimationState::SwordAttack23)
+		{
+			player->state_machine()->ChangeState(PIdle::Instance());
+		}
 	}
 }
 
@@ -186,12 +343,30 @@ PSwordAttack3* PSwordAttack3::Instance()
 
 void PSwordAttack3::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::SwordAttack3);
+	player->set_animation_state(PlayerAnimationState::SwordAttack30);
+	player->set_is_move_allow(false);
+	attack_time_ = 0.f;
 
 }
 
 void PSwordAttack3::Execute(CPlayer* player, float elapsed_time)
 {
+	attack_time_ += elapsed_time;
+
+	for (int i = 0; i < move_end_time_.size(); ++i)
+	{
+		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
+		{
+			player->movement_component()->set_direction_vector(player->look_vector());
+			player->movement_component()->set_max_speed(move_speed_[i]);
+			break;
+		}
+		else
+		{
+			player->movement_component()->set_direction_vector(0, 0, 0);
+			player->movement_component()->set_max_speed(0);
+		}
+	}
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		player->state_machine()->ChangeState(PIdle::Instance());
@@ -210,17 +385,37 @@ PSwordAttack4* PSwordAttack4::Instance()
 
 void PSwordAttack4::Enter(CPlayer* player)
 {
-	player->set_animation_state(PlayerAnimationState::SwordAttack4);
-
+	player->set_animation_state(PlayerAnimationState::SwordAttack40);
+	player->set_is_move_allow(false);
+	attack_time_ = 0.f;
 }
 
 void PSwordAttack4::Execute(CPlayer* player, float elapsed_time)
 {
-	//TODO: 애니메이션이 끝나는 부분에 맞추어 무기를 invisible로 변환
-	//player->weapon_socket()->set_is_visible(false);
+	attack_time_ += elapsed_time;
+
+	if(attack_time_ > weapon_invisible_time_)
+		player->weapon_socket()->set_is_visible(false);
+
+	for (int i = 0; i < move_end_time_.size(); ++i)
+	{
+		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
+		{
+			player->movement_component()->set_direction_vector(player->look_vector());
+			player->movement_component()->set_max_speed(move_speed_[i]);
+			break;
+		}
+		else
+		{
+			player->movement_component()->set_direction_vector(0,0,0);
+			player->movement_component()->set_max_speed(0);
+		}
+	}
 
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
+		player->animation_controller()->set_is_blend_change(false);
+		player->set_current_weapon(WeaponType::None);
 		player->state_machine()->ChangeState(PIdle::Instance());
 	}
 }
@@ -228,4 +423,103 @@ void PSwordAttack4::Execute(CPlayer* player, float elapsed_time)
 void PSwordAttack4::Exit(CPlayer* player)
 {
 	//TODO: 무기 교체 구현
+	player->EquipWeapon("default_sphere");
+}
+
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+//|||||||||||||||||||||||||||||||||||||||||||||||||| < PSphereAttack > |||||||||||||||||||||||||||||||||||||||||||||||||| 
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+
+PSphereAttack1* PSphereAttack1::Instance()
+{
+	static PSphereAttack1 instance;
+	return &instance;
+}
+
+void PSphereAttack1::Enter(CPlayer* player)
+{
+	player->set_is_move_allow(false);
+	player->set_animation_state(PlayerAnimationState::SphereAttack11);
+}
+
+void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
+{
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		//1타 끝
+		if (player->animation_state() == PlayerAnimationState::SphereAttack11)
+		{
+			player->animation_controller()->set_is_blend_change(false);
+			player->set_animation_state(PlayerAnimationState::SphereAttack12);
+			return;
+		}
+		//2타 끝
+		if (player->animation_state() == PlayerAnimationState::SphereAttack12)
+		{
+			player->state_machine()->ChangeState(PIdle::Instance());
+			return;
+		}
+	}
+}
+
+void PSphereAttack1::Exit(CPlayer* player)
+{
+}
+
+PSphereAttack2* PSphereAttack2::Instance()
+{
+	static PSphereAttack2 instance;
+	return &instance;
+}
+
+void PSphereAttack2::Enter(CPlayer* player)
+{
+	player->set_is_move_allow(false);
+}
+
+void PSphereAttack2::Execute(CPlayer* player, float elapsed_time)
+{
+}
+
+void PSphereAttack2::Exit(CPlayer* player)
+{
+}
+
+PSphereAttack3* PSphereAttack3::Instance()
+{
+	static PSphereAttack3 instance;
+	return &instance;
+}
+
+void PSphereAttack3::Enter(CPlayer* player)
+{
+	player->set_is_move_allow(false);
+}
+
+void PSphereAttack3::Execute(CPlayer* player, float elapsed_time)
+{
+}
+
+void PSphereAttack3::Exit(CPlayer* player)
+{
+}
+
+PSphereAttack4* PSphereAttack4::Instance()
+{
+	static PSphereAttack4 instance;
+	return &instance;
+}
+
+void PSphereAttack4::Enter(CPlayer* player)
+{
+	player->set_is_move_allow(false);
+}
+
+void PSphereAttack4::Execute(CPlayer* player, float elapsed_time)
+{
+}
+
+void PSphereAttack4::Exit(CPlayer* player)
+{
 }

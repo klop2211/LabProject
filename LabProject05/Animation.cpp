@@ -32,6 +32,8 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_
 {
 	if (is_animation_chainging_)
 	{
+		if (is_end_time_blending_)
+			animation_tracks_[prev_index_].set_position(animation_tracks_[prev_index_].end_time() - 0.01);
 		animation_tracks_[prev_index_].AddWeight(-animation_blend_speed_ * elapsed_time);
 		animation_tracks_[curr_index_].AddWeight(animation_blend_speed_ * elapsed_time);
 		if (!animation_tracks_[prev_index_].IsEnable())
@@ -74,7 +76,11 @@ void CAnimationController::EnableTrack(const int& index)
 
 	prev_index_ = curr_index_;
 	curr_index_ = index;
-	animation_tracks_[prev_index_].set_enable(true);
+	if(is_blend_change_)
+		animation_tracks_[prev_index_].set_enable(true);
+	else
+		animation_tracks_[prev_index_].set_enable(false);
+
 	animation_tracks_[index].set_enable(true);
 }
 
@@ -83,8 +89,13 @@ void CAnimationController::ChangeAnimation(const int& index)
 	if (curr_index_ == index)
 		return;
 
+
 	// 해당 애니메이션 트랙으로 전환
 	EnableTrack(index);
+	if (!is_blend_change_)
+	{
+		return;
+	}
 
 	// 트랙 블렌딩간 일시정지
 	animation_tracks_[prev_index_].Stop();
@@ -192,8 +203,11 @@ void CAnimationTrack::UpdatePosition(const float& fElapsedTime)
 	if (animation_set_->end_time() < position_)
 	{
 		position_ = 0.f;
+		if (loop_type_ == AnimationLoopType::Once) 
+		{
+			enable_ = false;
+		}
 
-		if (loop_type_ == AnimationLoopType::Once) enable_ = false;
 	}
 }
 
@@ -248,6 +262,7 @@ void CAnimationSet::Animate(const float& fPosition, const float& fTrackWeight)
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
+			if (!Frame) continue;
 			Frame->SetBlendedScale(Vector3::Add(Frame->GetBlendedScale(), Frame->GetScale(), fTrackWeight));
 			Frame->SetBlendedRotation(Vector3::Add(Frame->GetBlendedRotation(), Frame->GetRotation(), fTrackWeight));
 			Frame->SetBlendedTranslation(Vector3::Add(Frame->GetBlendedTranslation(), Frame->GetTranslation(), fTrackWeight));
@@ -263,6 +278,7 @@ void CAnimationSet::UpdateMatrix()
 	{
 		for (auto& Frame : Layer.GetFrameCaches())
 		{
+			if (!Frame) continue;
 			Frame->UpdateMatrixByBlendedSRT();
 		}
 	}
@@ -315,6 +331,7 @@ void CAnimationLayer::UpdateFrameCachesSRT(const float& fPosition)
 	for (int i = 0 ; i < m_Curves.size(); ++i)
 	{
 		CGameObject* pFrameCache = m_FrameCaches[i];
+		if (!pFrameCache) continue;
 		XMFLOAT3 S, R, T;
 		m_Curves[i].GetAnimatedSRT(fPosition, weight_, &S, &R, &T);
 		pFrameCache->SetScale(S);

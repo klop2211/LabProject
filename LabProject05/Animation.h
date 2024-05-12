@@ -95,10 +95,14 @@ public:
 
 	bool IsEnable() { return enable_; }
 
+	//setter
+	void set_position(const float& value) { position_ = value; }
 	void set_enable(const bool& value) { enable_ = value; }
 	void set_weight(const float& value) { weight_ = value; }
 	void set_loop_type(const AnimationLoopType& type) { loop_type_ = type; }
 
+	//getter
+	float end_time() const { return animation_set_->end_time(); }
 	float weight() const { return weight_; }
 
 	void AddWeight(const float& value);
@@ -134,9 +138,31 @@ private:
 
 class CAnimationController
 {
+private:
+	const float animation_blend_speed_ = 5.f; // 애니메이션 교체시 교체 속도 단위 once/s
+
+	bool is_animation_chainging_ = false;
+	bool is_blend_change_ = true; // 애니메이션 교체시 블렌딩 여부
+	bool is_end_time_blending_ = false; // end 프레임과 블렝딩
+
+	int prev_index_ = 0;
+	int curr_index_ = 0;
+
+	float m_fTime = 0;
+
+	std::vector<CAnimationTrack> animation_tracks_;
+
 public:
 	CAnimationController();
 	~CAnimationController() {}
+
+	//setter
+	void set_is_blend_change(const bool& value) { is_blend_change_ = value; }
+	void set_is_end_time_blending(const bool& value) { is_end_time_blending_ = value; }
+	
+	//getter
+	bool is_blend_change() const { return is_blend_change_; }
+	bool is_animation_chainging() const { return is_animation_chainging_; }
 
 	void LoadAnimationFromFile(std::ifstream& InFile);
 
@@ -154,17 +180,7 @@ public:
 
 	bool IsEnableTrack(const int& index) { return animation_tracks_[index].IsEnable(); }
 
-private:
-	const float animation_blend_speed_ = 5.f; // 애니메이션 교체시 교체 속도 단위 once/s
-
-	bool is_animation_chainging_ = false;
-
-	int prev_index_ = 0;
-	int curr_index_ = 0;
-
-	float m_fTime = 0;
-
-	std::vector<CAnimationTrack> animation_tracks_;
+	void PositionReset(const int& index) { animation_tracks_[index].set_position(0.f); }
 
 };
 

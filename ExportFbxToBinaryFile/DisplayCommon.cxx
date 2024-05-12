@@ -256,8 +256,8 @@ void WriteFloat(float value1, float value2, float value3, float value4)
 
 void WriteUV2DVector(FbxVector2 value)
 {
-	float value1 = (float)value[0];
-	float value2 = (float)(1.0 - value[1]);
+	float value1 = static_cast<float>(value.mData[0]);
+	float value2 = 1.0 - static_cast<float>(value.mData[1]);
 	::fwrite(&value1, sizeof(float), 1, gpBinaryFile);
 	::fwrite(&value2, sizeof(float), 1, gpBinaryFile);
 }

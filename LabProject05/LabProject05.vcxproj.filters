@@ -49,6 +49,9 @@
     <Filter Include="Objects\SkyBox">
       <UniqueIdentifier>{4b36dd17-8eea-4f95-9a56-dbbbacdb4f03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects\Weapon">
+      <UniqueIdentifier>{50bd4449-a4ef-4668-b8cf-eb5d86c2cb92}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -141,6 +144,15 @@
     <ClInclude Include="SkyBox.h">
       <Filter>Objects\SkyBox</Filter>
     </ClInclude>
+    <ClInclude Include="Weapon.h">
+      <Filter>Objects\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Sword.h">
+      <Filter>Objects\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Objects\Weapon</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -214,6 +226,15 @@
     </ClCompile>
     <ClCompile Include="SkyBox.cpp">
       <Filter>Objects\SkyBox</Filter>
+    </ClCompile>
+    <ClCompile Include="Weapon.cpp">
+      <Filter>Objects\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Sword.cpp">
+      <Filter>Objects\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>Objects\Weapon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

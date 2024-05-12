@@ -105,7 +105,7 @@ struct VS_STANDARD_INPUT
 
 struct VS_STANDARD_OUTPUT
 {
-    float4 position : SV_POSITION;
+    float4 position : SV_POSITION; 
     float2 uv : TEXCOORD;
 };
 
@@ -121,6 +121,7 @@ VS_STANDARD_OUTPUT VSStandard(VS_STANDARD_INPUT input)
     
     output.position = mul(mul(float4(positionW, 1.0f), gmtxView), gmtxProjection);
     output.uv = input.uv;
+    
     return (output);
 }
 
@@ -145,6 +146,7 @@ struct VS_STATICMESH_INPUT
 struct VS_STATICMESH_OUTPUT
 {
     float4 position : SV_POSITION;
+    float2 uv : TEXCOORD;
 };
 
 VS_STATICMESH_OUTPUT VSStaticMesh(VS_STATICMESH_INPUT input)
@@ -152,12 +154,13 @@ VS_STATICMESH_OUTPUT VSStaticMesh(VS_STATICMESH_INPUT input)
     VS_STATICMESH_OUTPUT output;
 
     output.position = mul(mul(mul(float4(input.position, 1.0f), gmtxGameObject), gmtxView), gmtxProjection);
+    output.uv = input.uv;
     return (output);
 }
 
 float4 PSStaticMesh(VS_STATICMESH_OUTPUT input) : SV_TARGET
 {
-    float4 Color = float4(0.f, 0.f, 0.f, 1.f);
+    float4 Color = gtxtDiffuseColor.Sample(gssWrap, input.uv);
         
     return (Color);
 }

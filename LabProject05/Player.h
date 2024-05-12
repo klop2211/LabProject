@@ -5,12 +5,12 @@
 class CMovementComponent;
 class CRotationComponent;
 class CAnimationCallbackFunc;
+class CWeapon;
 
-//TODO: 검 공격3, 4에 대한 수정 필요, 임시로 10번을 준거임
-enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, SwordIdle, SwordAttack1, SwordAttack2, SwordAttack3 = 10, SwordAttack4 = 14 };
-
-//플레이어의 무기 상태 None 타입은 납도 상태
-enum class PlayerWeaponType { None = 0, Sword, Sphere };
+enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, 
+	SwordIdle, SwordAttack11, SwordAttack12, SwordAttack13, SwordAttack21, SwordAttack22, SwordAttack23, SwordAttack30, SwordAttack40,
+	SphereIdle, SphereAttack11, SphereAttack12, SphereAttack20, SphereAttack31, SphereAttack32, SphereAttack33, SphereAttack40
+};
 
 //플레이어 공격 4가지 None 타입은 공격 상태가 아님을 나타냄
 enum class PlayerAttackType { None = 0, LeftAttack, RightAttack, BothAttack, ControlAttack };
@@ -23,6 +23,8 @@ protected:
 	float           			m_fRoll;
 
 	float						speed_; // 단위: m/s
+
+	bool is_move_allow_ = true;
 
 	XMFLOAT3 direction_vector_{ 0.f,0.f,0.f };
 
@@ -39,10 +41,12 @@ protected:
 
 	PlayerAnimationState animation_state_ = PlayerAnimationState::Idle;
 
-	PlayerWeaponType current_weapon_ = PlayerWeaponType::None;
-	PlayerWeaponType equipped_weapon_ = PlayerWeaponType::Sword;
+	// 현재 플레이어의 무기상태를 나타냄 None은 납도
+	WeaponType current_weapon_type_ = WeaponType::None;
 
 	CGameObject* weapon_socket_ = NULL;
+
+	std::vector<CWeapon*> weapons_;
 
 	PlayerAttackType attack_type_ = PlayerAttackType::None;
 	StateMachine<CPlayer>* state_machine_;
@@ -53,13 +57,14 @@ public:
 	virtual ~CPlayer();
 
 	//setter
+	void set_is_move_allow(const bool& value) { is_move_allow_ = value; }
 	void set_attack_type(const PlayerAttackType& value) { attack_type_ = value; }
-	void set_current_weapon(const PlayerWeaponType& value) { current_weapon_ = value; }
+	void set_current_weapon(const WeaponType& value) { current_weapon_type_ = value; }
 	void set_animation_state(const PlayerAnimationState& value) { animation_state_ = value; }
 	void set_weapon_socket(CGameObject* value) { weapon_socket_ = value; }
 
 	//getter
-	PlayerWeaponType current_weapon() const { return current_weapon_; }
+	WeaponType current_weapon() const { return current_weapon_type_; }
 	CGameObject* weapon_socket() const { return weapon_socket_; }
 	StateMachine<CPlayer>* state_machine()const { return state_machine_; }
 	CAnimationController* animation_controller() const { return animation_controller_; }
@@ -76,6 +81,9 @@ public:
 	void InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_time);
 	void InputActionRoll(const DWORD& direction);
 	void InputActionAttack(const PlayerAttackType& attack_type);
+
+	void AddWeapon(CWeapon* ptr) { weapons_.push_back(ptr); }
+	void EquipWeapon(const std::string& name);
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }

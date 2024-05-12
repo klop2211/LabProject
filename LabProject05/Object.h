@@ -60,7 +60,7 @@ protected:
 	CMesh* m_pMesh = NULL;
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
-	int m_nShader = -1;
+	int shader_num_ = -1;
 
 	// animation 관련
 	CAnimationController* animation_controller_ = NULL;
@@ -79,7 +79,7 @@ public:
 	void AddRef() { reference_count_++; }
 	void Release() { reference_count_--; if (reference_count_ <= 0) delete this; }
 
-	bool CheckShader(const int& nShader) { return nShader == m_nShader; }
+	bool CheckShader(const int& nShader) { return nShader == shader_num_; }
 
 	//setter
 	void set_is_visible(const bool& value) { is_visible_ = value; }
@@ -114,6 +114,7 @@ public:
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
 
 	//getter
+	int shader_num() const { return shader_num_; }
 	bool is_visible() const { return is_visible_; }
 	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
 	XMFLOAT3 position_vector() const;
@@ -130,6 +131,8 @@ public:
 	XMFLOAT3 GetBlendedScale() const { return m_xmf3BlendedScale; }
 	XMFLOAT3 GetBlendedRotation() const { return m_xmf3BlendedRotation; }
 	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
+
+	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
 
 	void UpdateMatrixByBlendedSRT();
 
