@@ -438,10 +438,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
 
-	object = new CBuilding(model);
+	CGameObject* object = new CBuilding(model);
 
 	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
-	objects_.push_back(object);
+	weapon_object_.push_back(object);
 	object->SetShader((int)ShaderNum::StaticMesh);
 	shaders_[2]->AddObject(object);
 
