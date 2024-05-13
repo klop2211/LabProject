@@ -12,6 +12,7 @@
 #include "Mesh.h"
 #include "Sword.h"
 #include "Sphere.h"
+#include "Building.h"
 
 
 //extern std::unordered_map<int, bool> g_objects;
@@ -435,9 +436,19 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 
 
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
+
+	object = new CBuilding(model);
+
+	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
+	objects_.push_back(object);
+	object->SetShader((int)ShaderNum::StaticMesh);
+	shaders_[2]->AddObject(object);
+
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
 	player_->EquipWeapon("default_sphere");
+	
 
 }
 

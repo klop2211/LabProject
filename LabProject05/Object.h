@@ -82,6 +82,7 @@ public:
 	bool CheckShader(const int& nShader) { return nShader == shader_num_; }
 
 	//setter
+	void set_frame_name(const std::string& value) { m_strFrameName = value; }
 	void set_is_visible(const bool& value) { is_visible_ = value; }
 	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }

@@ -258,7 +258,7 @@ void CThirdPersonCamera::Rotate(float fPitch, float fYaw, float fRoll)
 
 	// 각도 보정 (Pitch 값은 90도가 넘어가면 화면이 뒤집어짐)
 	if (m_fPitch + m_fOffsetPitch > 89.f) m_fPitch -= fPitch;
-	if (m_fPitch + m_fOffsetPitch < -89.f) m_fPitch -= fPitch;
+	if (m_fPitch + m_fOffsetPitch < -0.f) m_fPitch -= fPitch;
 	if (m_fYaw > 360.f) m_fYaw += -360.f;
 	if (m_fYaw < -360.f) m_fYaw += 360.f;
 }

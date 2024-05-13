@@ -153,6 +153,9 @@
     <ClInclude Include="Sphere.h">
       <Filter>Objects\Weapon</Filter>
     </ClInclude>
+    <ClInclude Include="Building.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -235,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="Sphere.cpp">
       <Filter>Objects\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Building.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

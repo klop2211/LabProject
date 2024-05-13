@@ -133,6 +133,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimationCallbackFunc.h" />
     <ClInclude Include="AudioManager.h" />
+    <ClInclude Include="Building.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="d3dx12.h" />
@@ -168,6 +169,7 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimationCallbackFunc.cpp" />
     <ClCompile Include="AudioManager.cpp" />
+    <ClCompile Include="Building.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="DDSTextureLoader12.cpp" />

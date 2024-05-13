@@ -43,8 +43,10 @@ int main(int argc, char** argv)
 	FbxString pfbxstrModelFilePath("../Resource/Model/Player_Model.fbx");
 	char *pszWriteFileName = "../Resource/Model/Player_Model.bin";
 
-	//FbxString pfbxstrModelFilePath("../Resource/Model/Weapons/Sphere_TXT.fbx");
-	//char* pszWriteFileName = "../Resource/Model/Weapons/Sphere_TXT.bin";
+	//FbxString pfbxstrModelFilePath("../Resource/Model/Weapons/Sphere_TXT_Pivot.fbx");
+	//char* pszWriteFileName = "../Resource/Model/Weapons/Sphere_TXT_Pivot.bin";
+	//FbxString pfbxstrModelFilePath("../Resource/Model/Building/Test_TXT.fbx");
+	//char* pszWriteFileName = "../Resource/Model/Building/Test_TXT.bin";
 
 //	FbxString pfbxstrModelFilePath("Angrybot.fbx");
 //	char *pszWriteFileName = "Angrybot.bin";
@@ -75,14 +77,14 @@ int main(int argc, char** argv)
 	pfbxstrAnimationFilePaths[11] = "../Resource/Model/Player_Sword_30_Fix.fbx";
 	pfbxstrAnimationFilePaths[12] = "../Resource/Model/Player_Sword_40_Fix.fbx";
 
-	pfbxstrAnimationFilePaths[13] = "../Resource/Model/Player_Sphere_00.fbx";
-	pfbxstrAnimationFilePaths[14] = "../Resource/Model/Player_Sphere_11.fbx";
-	pfbxstrAnimationFilePaths[15] = "../Resource/Model/Player_Sphere_12.fbx";
-	pfbxstrAnimationFilePaths[16] = "../Resource/Model/Player_Sphere_20.fbx";
-	pfbxstrAnimationFilePaths[17] = "../Resource/Model/Player_Sphere_31.fbx";
-	pfbxstrAnimationFilePaths[18] = "../Resource/Model/Player_Sphere_32.fbx";
-	pfbxstrAnimationFilePaths[19] = "../Resource/Model/Player_Sphere_33.fbx";
-	pfbxstrAnimationFilePaths[20] = "../Resource/Model/Player_Sphere_40.fbx";
+	pfbxstrAnimationFilePaths[13] = "../Resource/Model/Player_Sphere_00_Fix.fbx";
+	pfbxstrAnimationFilePaths[14] = "../Resource/Model/Player_Sphere_11_Fix.fbx";
+	pfbxstrAnimationFilePaths[15] = "../Resource/Model/Player_Sphere_12_Fix.fbx";
+	pfbxstrAnimationFilePaths[16] = "../Resource/Model/Player_Sphere_20_Fix.fbx";
+	pfbxstrAnimationFilePaths[17] = "../Resource/Model/Player_Sphere_31_Fix.fbx";
+	pfbxstrAnimationFilePaths[18] = "../Resource/Model/Player_Sphere_32_Fix.fbx";
+	pfbxstrAnimationFilePaths[19] = "../Resource/Model/Player_Sphere_33_Fix.fbx";
+	pfbxstrAnimationFilePaths[20] = "../Resource/Model/Player_Sphere_40_Fix.fbx";
 
 	//const int nSeparatedAnimations = 3;
 	//FbxString pfbxstrAnimationFilePaths[nSeparatedAnimations];

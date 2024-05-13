@@ -33,12 +33,20 @@ void PIdle::Enter(CPlayer* player)
 
 void PIdle::Execute(CPlayer* player, float elapsed)
 {
-	idle_time_ += elapsed;
 	if (!player->animation_controller()->is_animation_chainging())
 	{
 		player->animation_controller()->set_is_blend_change(true);
+		player->animation_controller()->set_is_end_time_blending(false);
 		player->set_is_move_allow(true);
 	}
+	
+	idle_time_ += elapsed;
+
+	if (player->animation_state() != PlayerAnimationState::Idle)
+	{
+		player->weapon_socket()->set_is_visible(true);
+	}
+
 	if (idle_time_ > release_weapon_time_)
 	{
 		player->set_current_weapon(WeaponType::None);
@@ -441,17 +449,47 @@ void PSphereAttack1::Enter(CPlayer* player)
 {
 	player->set_is_move_allow(false);
 	player->set_animation_state(PlayerAnimationState::SphereAttack11);
+	attack_time_ = 0.f;
+	is_click_ = false;
 }
 
 void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
 {
+	attack_time_ += elapsed_time;
+
+	for (int i = 0; i < move_end_time_.size(); ++i)
+	{
+		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
+		{
+			player->movement_component()->set_direction_vector(player->look_vector());
+			player->movement_component()->set_max_speed(move_speed_[i]);
+			break;
+		}
+		else
+		{
+			player->movement_component()->set_direction_vector(0, 0, 0);
+			player->movement_component()->set_max_speed(0);
+		}
+	}
+
+	if (attack_time_ > 0.1 && GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+		is_click_ = true;
+
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		//1鸥 场
 		if (player->animation_state() == PlayerAnimationState::SphereAttack11)
 		{
-			player->animation_controller()->set_is_blend_change(false);
-			player->set_animation_state(PlayerAnimationState::SphereAttack12);
+			if (is_click_) 
+			{
+				player->animation_controller()->set_is_blend_change(false);
+				player->set_animation_state(PlayerAnimationState::SphereAttack12);
+			}
+			else
+			{
+				player->animation_controller()->set_is_end_time_blending(true);
+				player->state_machine()->ChangeState(PIdle::Instance());
+			}
 			return;
 		}
 		//2鸥 场
@@ -476,10 +514,34 @@ PSphereAttack2* PSphereAttack2::Instance()
 void PSphereAttack2::Enter(CPlayer* player)
 {
 	player->set_is_move_allow(false);
+	player->set_animation_state(PlayerAnimationState::SphereAttack20);
+	attack_time_ = 0.f;
+	player->animation_controller()->SetTrackSpeed((int)PlayerAnimationState::SphereAttack20, 1.5);
 }
 
 void PSphereAttack2::Execute(CPlayer* player, float elapsed_time)
 {
+	attack_time_ += elapsed_time;
+
+	for (int i = 0; i < move_end_time_.size(); ++i)
+	{
+		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
+		{
+			player->movement_component()->set_direction_vector(player->look_vector());
+			player->movement_component()->set_max_speed(move_speed_[i]);
+			break;
+		}
+		else
+		{
+			player->movement_component()->set_direction_vector(0, 0, 0);
+			player->movement_component()->set_max_speed(0);
+		}
+	}
+
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		player->state_machine()->ChangeState(PIdle::Instance());
+	}
 }
 
 void PSphereAttack2::Exit(CPlayer* player)
@@ -495,10 +557,73 @@ PSphereAttack3* PSphereAttack3::Instance()
 void PSphereAttack3::Enter(CPlayer* player)
 {
 	player->set_is_move_allow(false);
+	player->set_animation_state(PlayerAnimationState::SphereAttack31);
+	is_charging_ = false;
 }
 
 void PSphereAttack3::Execute(CPlayer* player, float elapsed_time)
 {
+	if (GetAsyncKeyState(VK_LBUTTON) & 0x8000)
+		is_charging_ = true;
+	else
+		is_charging_ = false;
+
+	if (is_charging_)
+		charge_time_ += elapsed_time;
+	
+	if (player->animation_state() == PlayerAnimationState::SphereAttack33)
+	{
+		attack_time_ += elapsed_time;
+	}
+
+	if (move_start_time_ < attack_time_ && attack_time_ < move_end_time_)
+	{
+		player->movement_component()->set_direction_vector(player->look_vector());
+		player->movement_component()->set_max_speed(move_speed_);
+	}
+	else
+	{
+		player->movement_component()->set_direction_vector(0, 0, 0);
+		player->movement_component()->set_max_speed(0);
+	}
+
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		//1鸥 场
+		if (player->animation_state() == PlayerAnimationState::SphereAttack31)
+		{
+			player->animation_controller()->set_is_blend_change(false);
+			if (is_charging_)
+				player->set_animation_state(PlayerAnimationState::SphereAttack32);
+			else
+				player->set_animation_state(PlayerAnimationState::SphereAttack33);
+
+			return;
+		}
+		//2鸥 场
+		if (player->animation_state() == PlayerAnimationState::SphereAttack32)
+		{
+			if (charge_time_ > max_charge_time_)
+			{
+				player->set_animation_state(PlayerAnimationState::SphereAttack33);
+
+			}
+			else if (is_charging_)
+				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SphereAttack32);
+			else
+			{
+				player->set_animation_state(PlayerAnimationState::SphereAttack33);
+			}
+			return;
+		}
+		//3鸥 场
+		if (player->animation_state() == PlayerAnimationState::SphereAttack33)
+		{
+			player->state_machine()->ChangeState(PIdle::Instance());
+			return;
+		}
+	}
+
 }
 
 void PSphereAttack3::Exit(CPlayer* player)
@@ -514,12 +639,37 @@ PSphereAttack4* PSphereAttack4::Instance()
 void PSphereAttack4::Enter(CPlayer* player)
 {
 	player->set_is_move_allow(false);
+	player->set_animation_state(PlayerAnimationState::SphereAttack40);
+	player->animation_controller()->SetTrackSpeed((int)PlayerAnimationState::SphereAttack40, 0.1);
+	attack_time_ = 0.f;
 }
 
 void PSphereAttack4::Execute(CPlayer* player, float elapsed_time)
 {
+	attack_time_ += elapsed_time;
+
+	for (int i = 0; i < move_end_time_.size(); ++i)
+	{
+		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
+		{
+			player->movement_component()->set_direction_vector(player->look_vector());
+			player->movement_component()->set_max_speed(move_speed_[i]);
+			break;
+		}
+		else
+		{
+			player->movement_component()->set_direction_vector(0, 0, 0);
+			player->movement_component()->set_max_speed(0);
+		}
+	}
+
+	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
+	{
+		player->state_machine()->ChangeState(PIdle::Instance());
+	}
 }
 
 void PSphereAttack4::Exit(CPlayer* player)
 {
+	player->EquipWeapon("default_sword");
 }

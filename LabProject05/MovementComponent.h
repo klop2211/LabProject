@@ -9,7 +9,7 @@ class CMovementComponent : public CComponent
 	const XMFLOAT3 m_cxmf3GravityDirection = XMFLOAT3(0.f, -1.0f, 0.f);
 
 	XMFLOAT3 direction_vector_ = XMFLOAT3(0.f, 0.f, 0.f);
-	float acceleration_ = 4000.f;
+	float acceleration_ = 8000.f;
 	float friction_ = 3000.f;
 	bool is_friction_ = true;
 
