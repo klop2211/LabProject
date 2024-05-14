@@ -325,6 +325,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
+	player_->SetAnimationCallbackKey((int)PlayerAnimationState::SwordAttack13, 0.3, new CSoundCallbackFunc(audio_manager_, "swing1"));
+
 	player_->SetShader(4);
 
 	//XMFLOAT3 min_point(-15.f, -25, -30.5), max_point(15, 25, 30.5);

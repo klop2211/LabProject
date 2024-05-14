@@ -14,8 +14,6 @@
 
 CGameObject::CGameObject()
 {
-	to_parent_matrix_ = Matrix4x4::Identity();
-	m_xmf4x4World = Matrix4x4::Identity();
 }
 
 CGameObject::~CGameObject()
@@ -23,24 +21,6 @@ CGameObject::~CGameObject()
 	if (m_pMesh) m_pMesh->Release();
 	for (auto& p : m_Materials) p->Release();
 	if (axis_transform_matrix_) delete axis_transform_matrix_;
-
-	if (child_) child_->Release();
-	if (sibling_) sibling_->Release();
-}
-
-void CGameObject::set_look_vector(const float& x, const float& y, const float& z)
-{
-	to_parent_matrix_._31 = x, to_parent_matrix_._32 = y, to_parent_matrix_._33 = z;
-}
-
-void CGameObject::set_right_vector(const float& x, const float& y, const float& z)
-{
-	to_parent_matrix_._11 = x, to_parent_matrix_._12 = y, to_parent_matrix_._13 = z;
-}
-
-void CGameObject::set_up_vector(const float& x, const float& y, const float& z)
-{
-	to_parent_matrix_._21 = x, to_parent_matrix_._22 = y, to_parent_matrix_._23 = z;
 }
 
 void CGameObject::SetMesh(CMesh* pMesh)
@@ -69,19 +49,19 @@ void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
 	if (axis_transform_matrix_)
 	{
 		XMFLOAT4X4 mat = Matrix4x4::Multiply(*axis_transform_matrix_, to_parent_matrix_);
-		m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(mat, *pxmf4x4Parent) : mat;
+		world_matrix_ = (pxmf4x4Parent) ? Matrix4x4::Multiply(mat, *pxmf4x4Parent) : mat;
 	}
 	else
-		m_xmf4x4World = (pxmf4x4Parent) ? Matrix4x4::Multiply(to_parent_matrix_, *pxmf4x4Parent) : to_parent_matrix_;
+		world_matrix_ = (pxmf4x4Parent) ? Matrix4x4::Multiply(to_parent_matrix_, *pxmf4x4Parent) : to_parent_matrix_;
 
 	if (sibling_) sibling_->UpdateTransform(pxmf4x4Parent);
-	if (child_) child_->UpdateTransform(&m_xmf4x4World);
+	if (child_) child_->UpdateTransform(&world_matrix_);
 }
 
 void CGameObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	XMFLOAT4X4 xmf4x4World;
-	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&m_xmf4x4World)));
+	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&world_matrix_)));
 	pd3dCommandList->SetGraphicsRoot32BitConstants(1, 16, &xmf4x4World, 0);
 }
 
@@ -490,4 +470,49 @@ int CHeightMapTerrain::GetRawImageWidth()
 int CHeightMapTerrain::GetRawImageLength()
 { 
 	return(m_pHeightMapImage->GetHeightMapLength());
+}
+
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//|||||||||||||||||||||||||||||||||||||||||||||||||| <CFrame> ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+CFrame::CFrame()
+{
+	to_parent_matrix_ = Matrix4x4::Identity();
+	world_matrix_ = Matrix4x4::Identity();
+}
+
+CFrame::~CFrame()
+{
+}
+
+void CFrame::set_child(CFrame* pChild)
+{
+}
+
+void CFrame::set_sibling(CFrame* ptr)
+{
+}
+
+void CFrame::set_parent(CFrame* ptr)
+{
+}
+
+void CFrame::set_look_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._31 = x, to_parent_matrix_._32 = y, to_parent_matrix_._33 = z;
+}
+
+void CFrame::set_right_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._11 = x, to_parent_matrix_._12 = y, to_parent_matrix_._13 = z;
+}
+
+void CFrame::set_up_vector(const float& x, const float& y, const float& z)
+{
+	to_parent_matrix_._21 = x, to_parent_matrix_._22 = y, to_parent_matrix_._23 = z;
+}
+
+void CFrame::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
+{
 }

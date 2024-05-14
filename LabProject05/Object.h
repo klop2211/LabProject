@@ -20,11 +20,81 @@ struct CModelInfo
 	std::unique_ptr<CAnimationController> animation_controller;
 };
 
+// 모델의 계층구조를 표현하는 class
+class CFrame
+{
+protected:
+	// 최종적으로 셰이더에 입력되는 행렬(ToParent 행렬과 부모의 World 행렬의 곱의 결과이다)
+	XMFLOAT4X4 world_matrix_;
+
+	XMFLOAT4X4 to_parent_matrix_;
+
+	//Heirarchy 구조 관련 변수
+	std::string frame_name_;
+
+	XMFLOAT3 scale_;
+	XMFLOAT3 rotation_;
+	XMFLOAT3 translation_;
+
+	//애니메이션 블렌딩을 위한 SRT
+	XMFLOAT3 blended_scale_;
+	XMFLOAT3 blended_rotation_;
+	XMFLOAT3 blended_translation_;
+
+	std::unique_ptr<CFrame> parent_ = NULL;
+	std::unique_ptr<CFrame> child_ = NULL;
+	std::unique_ptr<CFrame> sibling_ = NULL;
+
+public:
+	CFrame();
+	~CFrame();
+
+	//setter
+	void set_frame_name(const std::string& value) { frame_name_ = value; }
+	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
+	void set_blended_scale(const XMFLOAT3& xmf3Value) { blended_scale_ = xmf3Value; }
+	void set_blended_rotation(const XMFLOAT3& xmf3Value) { blended_rotation_ = xmf3Value; }
+	void set_blended_translation(const XMFLOAT3& xmf3Value) { blended_translation_ = xmf3Value; }
+	void set_scale(const XMFLOAT3& xmf3Value) { scale_ = xmf3Value; }
+	void set_rotation(const XMFLOAT3& xmf3Value) { rotation_ = xmf3Value; }
+	void set_translation(const XMFLOAT3& xmf3Value) { translation_ = xmf3Value; }
+	void set_child(CFrame* pChild);
+	void set_sibling(CFrame* ptr);
+	void set_parent(CFrame* ptr);
+	void set_look_vector(const float& x, const float& y, const float& z);
+	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
+	void set_right_vector(const float& x, const float& y, const float& z);
+	void set_right_vector(const XMFLOAT3& right) { set_right_vector(right.x, right.y, right.z); }
+	void set_up_vector(const float& x, const float& y, const float& z);
+	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
+	
+	//getter
+	CFrame* child() const { return child_.get(); }
+	CFrame* sibling() const { return sibling_.get(); }
+	XMFLOAT4X4& world_matrix() { return world_matrix_; }
+	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
+	XMFLOAT3 scale() const { return scale_; }
+	XMFLOAT3 rotation() const { return rotation_; }
+	XMFLOAT3 translation() const { return translation_; }
+	XMFLOAT3 blended_scale() const { return blended_scale_; }
+	XMFLOAT3 blended_rotation() const { return blended_rotation_; }
+	XMFLOAT3 blended_translation() const { return blended_translation_; }
+	XMFLOAT3 position_vector() const;
+	XMFLOAT3 look_vector() const;
+	XMFLOAT3 up_vector() const;
+	XMFLOAT3 right_vector() const;
+
+
+	virtual void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
+
+
+};
+
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> ||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-class CGameObject
+class CGameObject : public CFrame
 {	
 private:
 	int reference_count_ = 0;
@@ -32,29 +102,10 @@ private:
 protected:
 	std::vector<CMaterial*> m_Materials;
 	
+	CMesh* m_pMesh = NULL;
+
 	// 모델의 좌표축이 다이렉트 환경과 다를 경우 사용되는 행렬로 루트 오브젝트의 to_parent 행렬 앞에 이 행렬을 곱해준다(UpdateTransform 함수 참조)
 	XMFLOAT4X4* axis_transform_matrix_;
-
-	XMFLOAT4X4 m_xmf4x4World; // 최종적으로 셰이더에 입력되는 행렬(ToParent 행렬과 부모의 World 행렬의 곱의 결과이다)
-
-	//Heirarchy 구조 관련 변수
-	std::string m_strFrameName;
-
-	XMFLOAT4X4 to_parent_matrix_;
-
-	XMFLOAT3 m_xmf3Scale;
-	XMFLOAT3 m_xmf3Rotation;
-	XMFLOAT3 m_xmf3Translation;
-
-	XMFLOAT3 m_xmf3BlendedScale;
-	XMFLOAT3 m_xmf3BlendedRotation;
-	XMFLOAT3 m_xmf3BlendedTranslation;
-
-	CGameObject* parent_ = NULL;
-	CGameObject* child_ = NULL;
-	CGameObject* sibling_ = NULL;
-
-	CMesh* m_pMesh = NULL;
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int shader_num_ = -1;
@@ -78,56 +129,23 @@ public:
 	bool CheckShader(const int& nShader) { return nShader == shader_num_; }
 
 	//setter
-	void set_frame_name(const std::string& value) { m_strFrameName = value; }
 	void set_is_visible(const bool& value) { is_visible_ = value; }
-	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }
-	void set_look_vector(const float& x, const float& y, const float& z);
-	void set_look_vector(const XMFLOAT3& look) { set_look_vector(look.x, look.y, look.z); }
-	void set_right_vector(const float& x, const float& y, const float& z);
-	void set_right_vector(const XMFLOAT3& right) { set_right_vector(right.x, right.y, right.z); }
-	void set_up_vector(const float& x, const float& y, const float& z);
-	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
 	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
-	void set_child(CGameObject* pChild);
-	void set_sibling(CGameObject* ptr);
-	void set_parent(CGameObject* ptr);
 	virtual void SetMesh(CMesh* pMesh);
 	void SetShader(const int& nShader); 
 	void SetMaterial(const int& index, CMaterial* pMaterial);
-	void SetBlendedScale(const XMFLOAT3& xmf3Value) { m_xmf3BlendedScale = xmf3Value; }
-	void SetBlendedRotation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedRotation = xmf3Value; }
-	void SetBlendedTranslation(const XMFLOAT3& xmf3Value) { m_xmf3BlendedTranslation = xmf3Value; }
-	void SetScale(const XMFLOAT3& xmf3Value) { m_xmf3Scale = xmf3Value; }
-	void SetRotation(const XMFLOAT3& xmf3Value) { m_xmf3Rotation = xmf3Value; }
-	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
 
 	//getter
 	int shader_num() const { return shader_num_; }
 	bool is_visible() const { return is_visible_; }
-	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
-	XMFLOAT3 position_vector() const;
-	XMFLOAT3 look_vector() const;
-	XMFLOAT3 up_vector() const;
-	XMFLOAT3 right_vector() const;
 	bool is_fall() const { return is_fall_; }
-	CGameObject* child() const { return child_; }
-	CGameObject* sibling() const { return sibling_; }
-	XMFLOAT4X4& GetWorldMatrix() { return m_xmf4x4World; }
-	XMFLOAT3 GetScale() const { return m_xmf3Scale; }
-	XMFLOAT3 GetRotation() const { return m_xmf3Rotation; }
-	XMFLOAT3 GetTranslation() const { return m_xmf3Translation; }
-	XMFLOAT3 GetBlendedScale() const { return m_xmf3BlendedScale; }
-	XMFLOAT3 GetBlendedRotation() const { return m_xmf3BlendedRotation; }
-	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
-
-	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
 
 	void UpdateMatrixByBlendedSRT();
 
-	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
+	virtual void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
 	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
