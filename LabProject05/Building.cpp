@@ -8,7 +8,7 @@ CBuilding::CBuilding(const CModelInfo& model)
 	axis_transform_matrix_ = new XMFLOAT4X4
 	(
 		1, 0, 0, 0,
-		0, 0, -1, 0,
+		0, 0, 1, 0,
 		0, 1, 0, 0,
 		0, 0, 0, 1
 	);

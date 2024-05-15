@@ -514,8 +514,8 @@ void CGameFramework::BuildObjects()
 
 	WaitForGpuComplete();
 
-	audio_manager_->AddTrack("BackGroundMusic");
-	audio_manager_->PlayTrack("BackGroundMusic");
+	//audio_manager_->AddTrack("BackGroundMusic");
+	//audio_manager_->PlayTrack("BackGroundMusic");
 	
 	if (scene_) scene_->ReleaseUploadBuffers();
 	//if (player_) player_->ReleaseUploadBuffers();
