@@ -119,19 +119,21 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 	XMFLOAT3 direction_vector = XMFLOAT3(0.f, 0.f, 0.f);
 	if (dwDirection)
 	{
-		CS_MOVE_PACKET p;
-		p.size = sizeof(p);
-		p.type = CS_MOVE;
-		// TODO: 현재 yaw를 float으로 보냄. 해당 yaw를 줄일 방법 찾기
-		p.camera_yaw = (camera_->GetYaw());
 
-		p.player_yaw = (rotation_component_->yaw());
 
-		// TODO: 현재 direction를 float으로 보냄. 해당 direction를 줄일 방법 찾기
-		//p.yaw = (camera_->GetYaw());
-		//p.direction = static_cast<unsigned char>(dwDirection);
-		p.direction = (dwDirection);
-		DoSend(&p);
+		//CS_MOVE_PACKET p;
+		//p.size = sizeof(p);
+		//p.type = CS_MOVE;
+		//// TODO: 현재 yaw를 float으로 보냄. 해당 yaw를 줄일 방법 찾기
+		//p.camera_yaw = (camera_->GetYaw());
+
+		//p.player_yaw = (rotation_component_->yaw());
+
+		//// TODO: 현재 direction를 float으로 보냄. 해당 direction를 줄일 방법 찾기
+		////p.yaw = (camera_->GetYaw());
+		////p.direction = static_cast<unsigned char>(dwDirection);
+		//p.direction = (dwDirection);
+		//DoSend(&p);
 	}
 	//if (movement_component_)
 	//{
@@ -256,5 +258,16 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 void CPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func)
 {
 	animation_controller_->SetCallbackKey(index, time, func);
+}
+
+void CPlayer::SendInput(uint8_t& input)
+{
+	CS_MOVE_PACKET p;
+	p.size = sizeof(p);
+	p.type = CS_MOVE;
+	p.camera_yaw = (camera_->GetYaw());
+	p.player_yaw = (rotation_component_->yaw());
+	p.keyinput = input;
+	DoSend(&p);
 }
 

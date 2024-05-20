@@ -356,7 +356,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain1010.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
 	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
 	shaders_[3]->AddObject(skybox_);

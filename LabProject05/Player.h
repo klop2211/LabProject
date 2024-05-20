@@ -70,6 +70,7 @@ public:
 	CAnimationController* animation_controller() const { return animation_controller_; }
 	float speed() const { return speed_; }
 	CMovementComponent* movement_component() const { return movement_component_; }
+	//float rotation_component_yaw() const { return rotation_component_->yaw(); }
 	bool orient_rotation_to_movement() const { return orient_rotation_to_movement_; }
 	PlayerAnimationState animation_state() const { return animation_state_; }
 	float GetYaw() const { return(m_fYaw); }
@@ -111,5 +112,7 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
 	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
+
+	void SendInput(uint8_t& input);
 };
 

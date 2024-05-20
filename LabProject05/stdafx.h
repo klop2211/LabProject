@@ -57,8 +57,8 @@ using namespace DirectX::PackedVector;
 
 using Microsoft::WRL::ComPtr;
 
-#define FRAME_BUFFER_WIDTH		1920
-#define FRAME_BUFFER_HEIGHT		1080
+#define FRAME_BUFFER_WIDTH		800
+#define FRAME_BUFFER_HEIGHT		600
 
 #define TEXTURES				6
 

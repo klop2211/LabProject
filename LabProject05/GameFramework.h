@@ -98,6 +98,10 @@ private:
 	//컨트롤 키 값
 	bool control_key_ = false;
 
+	// [SC] 현재 키보드가 입력되고 있는지
+	bool press_keyboard_ = false;
+	uint8_t input_key_;
+
 	_TCHAR						m_pszFrameRate[50];
 };
 

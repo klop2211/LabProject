@@ -395,8 +395,19 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 	{
 		case WM_KEYDOWN:
 			if (wParam == VK_CONTROL) control_key_ = true;
+
+			press_keyboard_ = true;
+			// [CS] key input이 있을시 패킷 전송
+			input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
+			
+			
 		break;
 		case WM_KEYUP:
+			press_keyboard_ = false;
+			// [CS] key input이 있을시 패킷 전송
+			input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
+			player_->SendInput(input_key_);
+
 			switch (wParam)
 			{
 				case VK_CONTROL:
@@ -455,6 +466,7 @@ LRESULT CALLBACK CGameFramework::OnProcessingWindowMessage(HWND hWnd, UINT nMess
 			OnResizeBackBuffers();
 			break;
 		}
+		
 		case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_LBUTTONUP:
@@ -560,8 +572,16 @@ void CGameFramework::ProcessInput()
 			SetCursorPos(old_cursor_position_.x, old_cursor_position_.y);
 		}
 
+
+
 		player_->InputActionRotate(delta_xy, elapsed_time);
 		player_->InputActionMove(dwDirection, elapsed_time);
+
+		// [CS] Move Packet Send
+		if( press_keyboard_ )
+		{	
+			player_->SendInput(input_key_);
+		}
 
 		if(camera_->GetMode() == CameraMode::GHOST) 
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
