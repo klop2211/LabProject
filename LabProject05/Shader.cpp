@@ -216,6 +216,9 @@ void CShader::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera
 
 	for (auto& object : render_list_)
 	{
+		// 05.17 수정: 한 개의 계층구조 모델로 여러 객체를 그리기 위해 
+		// 각 객체를 일괄 애니메이션 하는 것이 아닌 애니메이션 후 바로 렌더한다.
+		object->Animate(elapsed_time);
 		object->Render(pd3dCommandList, camera, m_nShader);
 	}
 }

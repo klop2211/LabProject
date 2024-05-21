@@ -61,7 +61,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	CMaterial* Material = new CMaterial(1);
 	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
 
-	SetMaterial(0, Material);
+	model.heirarchy_root->SetMaterial(0, Material);
 
 	speed_ = 550.f;
 

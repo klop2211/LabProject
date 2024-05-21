@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Mesh.h"
 #include "Object.h"
+#include "Material.h"
 
 CMesh::CMesh(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
@@ -59,6 +60,9 @@ void CMesh::ReleaseUploadBuffers()
 
 void CMesh::Render(ID3D12GraphicsCommandList *pd3dCommandList)
 {
+	if(material_) 
+		material_->UpdateShaderVariables(pd3dCommandList);
+
 	UpdateShaderVariables(pd3dCommandList);
 
 	pd3dCommandList->IASetPrimitiveTopology(m_d3dPrimitiveTopology);

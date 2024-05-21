@@ -54,7 +54,7 @@ protected:
 	CGameObject* child_ = NULL;
 	CGameObject* sibling_ = NULL;
 
-	CMesh* m_pMesh = NULL;
+	std::vector<CMesh*> meshes_;
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int shader_num_ = -1;
@@ -123,6 +123,8 @@ public:
 	XMFLOAT3 GetBlendedRotation() const { return m_xmf3BlendedRotation; }
 	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
 
+	void AddMaterial(CMaterial* pMaterial);
+
 	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
 
 	void UpdateMatrixByBlendedSRT();
@@ -146,12 +148,12 @@ public:
 	CGameObject* AddSocket(const std::string& frame_name);
 
 	//모델 파일 로드 관련 함수
-	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
+	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, CGameObject* root_object);
 	static CModelInfo LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		const std::string& heirarchy_file_name);
 	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
-		std::ifstream& InFile, int& nFrames);
+		std::ifstream& InFile, int& nFrames, CGameObject* root_object);
 
 };
 

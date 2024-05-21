@@ -259,12 +259,12 @@ void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();
 
+	// 05.17 수정: 이제 객체의 애니메이션은 렌더 직전에 이루어짐(shader 렌더 항목 참조)
+	//player_->Animate(elapsed_time);
+	//terrain_->Animate(elapsed_time);
 
-	player_->Animate(elapsed_time);
-	terrain_->Animate(elapsed_time);
-
-	for (auto& pObject : objects_)
-		pObject->Animate(elapsed_time);
+	//for (auto& pObject : objects_)
+	//	pObject->Animate(elapsed_time);
 
 	if (m_pLights)
 	{
@@ -386,8 +386,6 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	objects_.push_back(object);
 	shaders_[0]->AddObject(object);
 
-	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
-
 	object = new CMawang(model);
 	object->set_position_vector(50, terrain_->GetHeight(550, 550), 550);
 	objects_.push_back(object);
@@ -396,7 +394,6 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
 
 	object = new CBuilding(model);
-
 	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
 	objects_.push_back(object);
 	object->SetShader((int)ShaderNum::StaticMesh);

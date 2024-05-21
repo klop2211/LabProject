@@ -45,6 +45,7 @@ void CTexture::SetSampler(D3D12_GPU_DESCRIPTOR_HANDLE d3dSamplerGpuDescriptorHan
 
 void CTexture::UpdateShaderVariable(ID3D12GraphicsCommandList* pd3dCommandList)
 {
+	//TODO: 텍스처가 중복으로 set되지 않게 수정 혹은 텍스처 set에 관한 순서 최적화 필요
 	pd3dCommandList->SetGraphicsRootDescriptorTable(m_RootParameterIndex, m_SrvGpuDescriptorHandle);
 }
 
@@ -121,6 +122,7 @@ void CTexture::LoadTextureFromWICFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 {
 	m_ResourceType = nResourceType;
 	m_RootParameterIndex = nRootParameterIndex;
+	m_strTextureFileName = strFileName;
 
 	std::wstring wstrFileName;
 	wstrFileName.assign(strFileName.begin(), strFileName.end());
@@ -132,7 +134,8 @@ void CTexture::LoadTextureFromDDSFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCo
 {
 	m_ResourceType = nResourceType;
 	m_RootParameterIndex = nRootParameterIndex;
-	
+	m_strTextureFileName = strFileName;
+
 	std::wstring wstrFileName;
 	wstrFileName.assign(strFileName.begin(), strFileName.end());
 	m_pd3dTexture = ::CreateTextureResourceFromDDSFile(pd3dDevice, pd3dCommandList, wstrFileName.c_str(), &m_pd3dTextureUploadBuffer, D3D12_RESOURCE_STATE_GENERIC_READ/*D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE*/);

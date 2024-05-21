@@ -20,7 +20,7 @@ CGameObject::CGameObject()
 
 CGameObject::~CGameObject()
 {
-	if (m_pMesh) m_pMesh->Release();
+	for (auto& p : meshes_) p->Release();
 	for (auto& p : m_Materials) p->Release();
 	if (axis_transform_matrix_) delete axis_transform_matrix_;
 
@@ -43,15 +43,19 @@ void CGameObject::set_up_vector(const float& x, const float& y, const float& z)
 	to_parent_matrix_._21 = x, to_parent_matrix_._22 = y, to_parent_matrix_._23 = z;
 }
 
-void CGameObject::SetMesh(CMesh* pMesh)
+void CGameObject::SetMesh(CMesh* mesh)
 {
-	if (m_pMesh)
-	{
-		m_pMesh->Release();
-	}
-	m_pMesh = pMesh;
-	if (pMesh) pMesh->AddRef();
+	meshes_.push_back(mesh);
 }
+
+void CGameObject::AddMaterial(CMaterial* pMaterial)
+{
+	m_Materials.emplace_back(pMaterial);
+	m_Materials.back()->AddRef();
+
+	meshes_[m_Materials.size() - 1]->set_material(pMaterial);
+}
+
 
 void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 {
@@ -62,6 +66,8 @@ void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 	else 
 		m_Materials[index] = pMaterial;
 	m_Materials[index]->AddRef();
+
+	meshes_[index]->set_material(pMaterial);
 }
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
@@ -125,13 +131,14 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
 		UpdateTransform(NULL);
 
-	for(auto& p : m_Materials)
-		p->UpdateShaderVariables(pd3dCommandList);
+	// 05.17: 이제 텍스처는 적용되는 메쉬에서 렌더전에 set함
+	//for(auto& p : m_Materials)
+	//	p->UpdateShaderVariables(pd3dCommandList);
 
-	if (m_pMesh) 
+	for (auto& p : meshes_)
 	{
 		UpdateShaderVariables(pd3dCommandList);
-		m_pMesh->Render(pd3dCommandList);
+		p->Render(pd3dCommandList);
 	}
 
 	if (child_) child_->Render(pd3dCommandList, pCamera, shader_num);
@@ -140,7 +147,8 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 
 void CGameObject::ReleaseUploadBuffers()
 {
-	if (m_pMesh) m_pMesh->ReleaseUploadBuffers();
+	for (auto& p : meshes_)
+		p->ReleaseUploadBuffers();
 
 	for (auto& p : m_Materials)
 		p->ReleaseUploadBuffers();
@@ -243,9 +251,12 @@ CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
 
 void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject)
 {
-	CSkinMesh* pSkinMesh = dynamic_cast<CSkinMesh*>(m_pMesh);
-	if(pSkinMesh)
-		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
+	for (auto& p : meshes_)
+	{
+		CSkinMesh* pSkinMesh = dynamic_cast<CSkinMesh*>(p);
+		if (pSkinMesh)
+			pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
+	}
 
 	if (child_) child_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
@@ -260,7 +271,7 @@ CGameObject* CGameObject::AddSocket(const std::string& frame_name)
 	return socket;
 }
 
-void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
+void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, CGameObject* root_object)
 {
 	int nMaterials = FBXLoad::ReadFromFile<int>(InFile);
 	m_Materials.reserve(nMaterials);
@@ -284,7 +295,7 @@ void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 
 		pMaterial->LoadTexturePropertiesFromFile(pd3dDevice, pd3dCommandList, InFile);
 
-		m_Materials.emplace_back(pMaterial);
+		root_object->AddMaterial(pMaterial);
 
 		FBXLoad::ReadStringFromFile(InFile, strToken); // </TextureProperties>
 
@@ -317,7 +328,7 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 {
 	std::string token;
 
-	CGameObject* frame_root = NULL;
+	CGameObject* frame_root = new CGameObject();
 
 	//Heirarchy
 	std::ifstream file(model_file_name, std::ios::binary);
@@ -331,11 +342,13 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 		if (token == "<Frame>:")
 		{
 			CGameObject* frame;
-			frame = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, file, frames);
-			if(!frame_root) 
-				frame_root = frame;
-			else
-				frame_root->set_sibling(frame);
+			frame = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, file, frames, frame_root);
+
+			frame_root->set_child(frame);
+			//if(!frame_root) 
+			//	frame_root = frame;
+			//else
+			//	frame_root->set_sibling(frame);
 		}
 	}
 
@@ -373,7 +386,7 @@ CAnimationController* CGameObject::LoadAnimationFromFile(std::ifstream& file, CG
 }
 
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
-	std::ifstream& InFile, int& nFrames)
+	std::ifstream& InFile, int& nFrames, CGameObject* root_object)
 {
 	CGameObject* rvalue = new CGameObject;
 
@@ -406,17 +419,17 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 
 			if (strToken == "<Mesh>:") pSkinMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
 
-			rvalue->SetMesh(pSkinMesh);
+			root_object->SetMesh(pSkinMesh);
 		}
 		else if (strToken == "<Mesh>:")
 		{
 			CMesh* pMesh = new CMesh(pd3dDevice, pd3dCommandList);
 			pMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
-			rvalue->SetMesh(pMesh);
+			root_object->SetMesh(pMesh);
 		}
 		else if (strToken == "<Materials>:")
 		{
-			rvalue->LoadMaterialFromFile(pd3dDevice, pd3dCommandList, InFile);
+			rvalue->LoadMaterialFromFile(pd3dDevice, pd3dCommandList, InFile, root_object);
 		}
 		else if (strToken == "<Children>:")
 		{
@@ -426,7 +439,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 				FBXLoad::ReadStringFromFile(InFile, strToken);
 				if (strToken == "<Frame>:")
 				{
-					CGameObject* pChild = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames);
+					CGameObject* pChild = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames, root_object);
 					if (pChild) rvalue->set_child(pChild);
 				}
 			}
