@@ -228,6 +228,15 @@ void CPlayer::Update(float elapsed_time)
 		rotation_component_->Update(elapsed_time);
 }
 
+void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb)
+{
+	//슬라이딩 벡터 S = P - n(P*n), P: 입사벡터(여기서는 this가 이동한 벡터), n: 평면벡터(여기서는 other에서 this를 바라보는 벡터(normalize된))
+	XMFLOAT3 P = position_vector() - movement_component_->prev_position_vector();
+	XMFLOAT3 n = Vector3::Normalize(position_vector() - other->position_vector());
+	XMFLOAT3 S = P - (n * (Vector3::DotProduct(P, n)));
+	set_position_vector(movement_component_->prev_position_vector() + S);
+}
+
 void CPlayer::OrientRotationToMove(float elapsed_time)
 {
 	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())

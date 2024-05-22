@@ -151,10 +151,6 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
-	virtual void HandleCollision(CGameObject* other) {}
-
-
-
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
 
@@ -200,7 +196,7 @@ public:
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
 
-	virtual void HandleCollision(CGameObject* other) override {}
+	//virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObb) {}
 
 };
 
@@ -229,5 +225,8 @@ public:
 
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
+	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) {}
+
 	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+
 };

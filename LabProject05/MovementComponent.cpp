@@ -45,6 +45,6 @@ void CMovementComponent::Update(const float& elapsed_time)
 	}
 	else
 		gravity_velocity_ = 0.f;
-
+	prev_position_vector_ = owner_->position_vector();
 	owner_->set_position_vector(xmf3NewPosition);
 }

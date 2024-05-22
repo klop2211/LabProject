@@ -508,7 +508,8 @@ void CScene::CollisionCheck()
 			CObbComponent a, b;
 			if (other != p && CRootObject::CollisionCheck(*p, *other, a, b))
 			{
-				::PostQuitMessage(0);
+				(*p)->HandleCollision(*other, a, b);
+				(*other)->HandleCollision(*p, b, a);
 			}			
 		}
 	}

@@ -93,7 +93,7 @@ public:
 
 	void OrientRotationToMove(float fTimeElapsed);
 
-	virtual void HandleCollision(CGameObject* other) override {}
+	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) override;
 
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
 	void SetPlayerUpdatedContext(LPVOID pContext) { m_pPlayerUpdatedContext = pContext; }
