@@ -136,7 +136,7 @@ public:
 
 	void AddMaterial(CMaterial* pMaterial);
 
-	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
+	void ResetChild(CGameObject* ptr) { child_ = ptr; if(child_) child_->set_parent(this); }
 
 	void UpdateMatrixByBlendedSRT();
 

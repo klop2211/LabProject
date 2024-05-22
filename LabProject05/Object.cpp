@@ -387,7 +387,13 @@ CAnimationController* CGameObject::LoadAnimationFromFile(std::ifstream& file, CG
 {
 	CAnimationController* rvalue = new CAnimationController;
 
-	rvalue->LoadAnimationFromFile(file);
+	int animation_count = rvalue->LoadAnimationFromFile(file);
+
+	if (animation_count == 0)
+	{
+		delete rvalue;
+		return NULL;
+	}
 
 	//rvalue->SetFrameCaches(root_object);
 

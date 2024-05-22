@@ -90,6 +90,10 @@ CPlayer::CPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, 
 CPlayer::~CPlayer()
 {
 	ReleaseShaderVariables();
+	weapon_socket_->ResetChild(NULL);
+
+	for (auto& p : weapons_)
+		delete p;
 
 	//if (camera_) delete camera_;
 }

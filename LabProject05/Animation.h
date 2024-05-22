@@ -167,7 +167,8 @@ public:
 	bool is_blend_change() const { return is_blend_change_; }
 	bool is_animation_chainging() const { return is_animation_chainging_; }
 
-	void LoadAnimationFromFile(std::ifstream& InFile);
+	//로드한 애니메이션의 수를 반환
+	int LoadAnimationFromFile(std::ifstream& InFile);
 
 	void Animate(const float& fElapsedTime, CGameObject* pRootObject);
 

@@ -356,7 +356,6 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 110.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	objects_.push_back(weapon);
 	player_->AddWeapon(weapon);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
@@ -370,7 +369,6 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	objects_.push_back(weapon);
 	player_->AddWeapon(weapon);
 
 	player_->set_weapon_socket(sword_socket);
@@ -437,6 +435,7 @@ void CScene::ReleaseObjects()
 		delete pObject;
 		pObject = NULL;
 	}
+
 
 	for (auto& shader : shaders_)
 	{
