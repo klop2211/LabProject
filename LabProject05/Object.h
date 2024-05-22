@@ -13,6 +13,7 @@ class CDescriptorManager;
 class CMaterial;
 //class CAnimationController;
 class CGameObject;
+class CObbComponent;
 
 struct CModelInfo
 {
@@ -55,6 +56,11 @@ protected:
 	CGameObject* sibling_ = NULL;
 
 	std::vector<CMesh*> meshes_;
+
+	//스킨메쉬가 가진 본프레임 캐쉬(bonetransform 행렬을 업데이트하기 위해 사용)
+	CGameObject** bone_frame_caches_ = NULL;
+	int bone_count_ = 0;
+
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int shader_num_ = -1;
@@ -103,8 +109,13 @@ public:
 	void SetScale(const XMFLOAT3& xmf3Value) { m_xmf3Scale = xmf3Value; }
 	void SetRotation(const XMFLOAT3& xmf3Value) { m_xmf3Rotation = xmf3Value; }
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
+	void SetBoneFrameCaches(CGameObject** bone_frame_caches, int bone_count);
 
 	//getter
+	CMesh** meshes() { return meshes_.data(); }
+	int meshes_count() const { return meshes_.size(); }
+	CGameObject** bone_frame_caches() const { return bone_frame_caches_; }
+	int bone_count() const { return bone_count_; }
 	int shader_num() const { return shader_num_; }
 	bool is_visible() const { return is_visible_; }
 	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
@@ -130,7 +141,7 @@ public:
 	void UpdateMatrixByBlendedSRT();
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
-	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
 
@@ -141,6 +152,8 @@ public:
 	virtual void ReleaseUploadBuffers();
 
 	virtual void HandleCollision(CGameObject* other) {}
+
+
 
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
@@ -191,3 +204,30 @@ public:
 
 };
 
+//모델의 heirachy root를 child로 갖는 객체. 
+//즉, 실제 씬에서 관리하는 최상위 객체
+// 앞으로 모든 오브젝트는 이 클래스를 상속받아 사용하는 것을 원칙으로 함
+class CRootObject : public CGameObject
+{
+private:
+	std::vector<ID3D12Resource*> skinning_bone_transforms_;
+	std::vector<XMFLOAT4X4*> mapped_skinning_bone_transforms_;
+	std::list<CObbComponent*> obb_list_;
+
+public:
+	CRootObject();
+	CRootObject(const CModelInfo& model);
+	~CRootObject();
+
+	void AddObb(const BoundingBox& aabb, CGameObject* parent_socket);
+
+	virtual void Animate(float fTimeElapsed);
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num);
+
+	void CreateBoneTransformMatrix(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
+
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+
+	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+};

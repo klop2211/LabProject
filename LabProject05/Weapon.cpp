@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Weapon.h"
 
-CWeapon::CWeapon(const CModelInfo& model)
+CWeapon::CWeapon(const CModelInfo& model) : CRootObject(model)
 {
-	set_child(model.heirarchy_root);
 }

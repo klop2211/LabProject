@@ -8,15 +8,9 @@ CMawang::CMawang()
 {
 }
 
-CMawang::CMawang(const CModelInfo& model)
+CMawang::CMawang(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, const CModelInfo& model) : CRootObject(model)
 {
-	set_child(model.heirarchy_root);
-
-	animation_controller_ = new CAnimationController(*model.animation_controller);
-
-	animation_controller_->SetFrameCaches(this);
-
-	animation_controller_->EnableTrack(0);
+	CreateBoneTransformMatrix(device, command_list);
 
 	axis_transform_matrix_ = new XMFLOAT4X4
 	(1, 0, 0, 0,

@@ -190,6 +190,10 @@ public:
 	CSkinMesh();
 	~CSkinMesh() ;
 
+	//getter
+	int bone_count() const { return m_nBones; }
+	CGameObject** bone_frame_caches() { return m_BoneFrameCaches.data(); }
+
 	void LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 
 	void SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);

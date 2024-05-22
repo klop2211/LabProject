@@ -39,13 +39,15 @@ CPlayer::CPlayer()
 	weapons_.reserve(10);
 }
 
-CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) : CPlayer()
+CPlayer::CPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, CCamera* pCamera) : CPlayer()
 {
 	CGameObject* pGameObject = NULL;
 
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(device, command_list, "../Resource/Model/Player_Model.bin");
 
 	set_child(model.heirarchy_root);
+
+	CreateBoneTransformMatrix(device, command_list);
 
 	animation_controller_ = new CAnimationController(*model.animation_controller);
 
@@ -59,7 +61,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	animation_controller_->SetLoopType((int)PlayerAnimationState::Run, AnimationLoopType::Repeat);
 
 	CMaterial* Material = new CMaterial(1);
-	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
+	Material->AddTexturePropertyFromDDSFile(device, command_list, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
 
 	model.heirarchy_root->SetMaterial(0, Material);
 
@@ -80,7 +82,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	SetCamera(pCamera);
 
-	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	CreateShaderVariables(device, command_list);
 
 	SetShader((int)ShaderNum::Standard);
 }
@@ -99,6 +101,7 @@ void CPlayer::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsComm
 
 void CPlayer::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
+	CRootObject::UpdateShaderVariables(pd3dCommandList);
 	if (camera_) camera_->UpdateShaderVariables(pd3dCommandList);
 }
 

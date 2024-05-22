@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "DescriptorManager.h"
 #include "Material.h"
+#include "ObbComponent.h"
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> |||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -135,6 +136,7 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	//for(auto& p : m_Materials)
 	//	p->UpdateShaderVariables(pd3dCommandList);
 
+
 	for (auto& p : meshes_)
 	{
 		UpdateShaderVariables(pd3dCommandList);
@@ -152,6 +154,12 @@ void CGameObject::ReleaseUploadBuffers()
 
 	for (auto& p : m_Materials)
 		p->ReleaseUploadBuffers();
+}
+
+void CGameObject::SetBoneFrameCaches(CGameObject** bone_frame_caches, int bone_count)
+{
+	bone_count_ = bone_count;
+	bone_frame_caches_ = bone_frame_caches;
 }
 
 void CGameObject::set_position_vector(const float& x, const float& y, const float& z)
@@ -369,7 +377,8 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 	CModelInfo rvalue;
 
 	rvalue.heirarchy_root = frame_root;
-	rvalue.animation_controller.reset(animation_controller);
+	if(animation_controller)
+		rvalue.animation_controller.reset(animation_controller);
 
 	return rvalue;
 }
@@ -503,4 +512,111 @@ int CHeightMapTerrain::GetRawImageWidth()
 int CHeightMapTerrain::GetRawImageLength()
 { 
 	return(m_pHeightMapImage->GetHeightMapLength());
+}
+
+CRootObject::CRootObject() : CGameObject()
+{
+	skinning_bone_transforms_.reserve(0);
+	mapped_skinning_bone_transforms_.reserve(0);
+	obb_list_.clear();
+}
+
+CRootObject::CRootObject(const CModelInfo& model) : CRootObject()
+{
+	model.heirarchy_root->AddRef();
+	set_child(model.heirarchy_root);
+
+	if (model.animation_controller)
+	{
+		animation_controller_ = new CAnimationController(*model.animation_controller);
+
+		animation_controller_->SetFrameCaches(this);
+
+		animation_controller_->EnableTrack(0);
+	}
+}
+
+CRootObject::~CRootObject()
+{
+	for (auto& p : skinning_bone_transforms_) 
+	{
+		p->Unmap(0, NULL);
+		p->Release();
+	}
+	for (auto& p : obb_list_)
+		delete p;
+}
+
+void CRootObject::CreateBoneTransformMatrix(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	int mesh_count = child_->meshes_count();
+	skinning_bone_transforms_.resize(mesh_count);
+	mapped_skinning_bone_transforms_.resize(mesh_count);
+
+	for (int i = 0; i < mesh_count; ++i)
+	{
+		UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256의 배수
+		skinning_bone_transforms_[i] = ::CreateBufferResource(device, command_list, NULL, ncbElementBytes);
+		skinning_bone_transforms_[i]->Map(0, NULL, (void**)&mapped_skinning_bone_transforms_[i]);
+	}
+}
+
+void CRootObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CGameObject::UpdateShaderVariables(pd3dCommandList);
+}
+
+void CRootObject::Animate(float fTimeElapsed)
+{
+	CGameObject::Animate(fTimeElapsed);
+
+	for (auto& p : obb_list_)
+		p->Update();
+}
+
+void CRootObject::AddObb(const BoundingBox& aabb, CGameObject* parent_socket)
+{
+	obb_list_.emplace_back(new CObbComponent(this, aabb, parent_socket));
+}
+
+bool CRootObject::CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb)
+{
+	for (auto& p : a->obb_list_)
+	{
+		for (auto& other : b->obb_list_)
+		{
+			if (p->Intersects(other->animated_obb()))
+			{
+				a_obb = *p;
+				b_obb = *other;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
+{
+	UpdateShaderVariables(pd3dCommandList);
+
+	//child의 메쉬들을 렌더한다. 계층구조의 root가 이 객체의 child이기 때문이다.
+	CMesh** meshes = child_->meshes();
+
+	for (int i = 0; i < skinning_bone_transforms_.size(); ++i)
+	{
+		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = skinning_bone_transforms_[i]->GetGPUVirtualAddress();
+		pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
+
+		int bone_count = ((CSkinMesh*)meshes[i])->bone_count();
+		CGameObject** bone_frame_caches = ((CSkinMesh*)meshes[i])->bone_frame_caches();
+		for (int j = 0; j < bone_count; j++)
+		{
+			XMStoreFloat4x4(&mapped_skinning_bone_transforms_[i][j], XMMatrixTranspose(XMLoadFloat4x4(&bone_frame_caches[j]->GetWorldMatrix())));
+		}
+
+		meshes[i]->Render(pd3dCommandList);
+	}
+
+	//child_->Render(pd3dCommandList, pCamera, shader_num);
 }

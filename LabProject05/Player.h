@@ -4,6 +4,7 @@
 
 class CMovementComponent;
 class CRotationComponent;
+class CObbComponent;
 class CAnimationCallbackFunc;
 class CWeapon;
 
@@ -15,7 +16,7 @@ enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk,
 //플레이어 공격 4가지 None 타입은 공격 상태가 아님을 나타냄
 enum class PlayerAttackType { None = 0, LeftAttack, RightAttack, BothAttack, ControlAttack };
 
-class CPlayer : public CGameObject
+class CPlayer : public CRootObject
 {
 protected:
 	float           			m_fPitch;

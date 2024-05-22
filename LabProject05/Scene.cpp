@@ -13,6 +13,7 @@
 #include "Sword.h"
 #include "Sphere.h"
 #include "Building.h"
+#include "ObbComponent.h"
 
 CScene::CScene()
 {
@@ -281,7 +282,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	int shader_num = 4;
+	int shader_num = 5;
 	shaders_.reserve(shader_num);
 
 	shaders_.emplace_back(new CStandardShader);
@@ -327,18 +328,18 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
 
-	//XMFLOAT3 min_point(-15.f, -25, -30.5), max_point(15, 25, 30.5);
-	//CGameObject* collision_socket = player_->AddSocket("Bip001");
-	//CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
-	//collision_socket->SetMesh(collision_mesh);
-	//collision_socket->SetShader(0);
-	//BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
+	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
+	CGameObject* collision_socket = player_->AddSocket("Bip001");
+	CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
+	collision_socket->SetMesh(collision_mesh);
+	collision_socket->SetShader(0);
+	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
 
-	//shaders_[4]->AddObject(collision_socket);
-
-	//XMFLOAT3 max_point { 25.f, 175.f}
-	//BoundingBox::CreateFromPoints()
+	player_->AddObb(aabb, collision_socket);
+	shaders_[4]->AddObject(collision_socket);
 	shaders_[0]->AddObject(player_);
+
+	dynamic_object_list_.push_back(player_);
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
 
@@ -381,15 +382,23 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
-	CGameObject* object = new CMawang(model);
-	object->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+	CRootObject* object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(750, terrain_->GetHeight(750, 550), 550);
+
+	collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
 	objects_.push_back(object);
 	shaders_[0]->AddObject(object);
 
-	object = new CMawang(model);
-	object->set_position_vector(50, terrain_->GetHeight(550, 550), 550);
+	dynamic_object_list_.push_back(object);
+
+	object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(50, terrain_->GetHeight(50, 550), 550);
+	object->AddObb(aabb, collision_socket);
 	objects_.push_back(object);
 	shaders_[0]->AddObject(object);
+
+	dynamic_object_list_.push_back(object);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
 
@@ -403,7 +412,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	player_->EquipWeapon("default_sphere");
 	
-
+	// obb 업데이트를 위한 사전 animate
+	for (auto& p : dynamic_object_list_)
+	{
+		p->Animate(0);
+	}
 }
 
 void CScene::ReleaseObjects()
@@ -469,13 +482,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 void CScene::UpdateCollisionList()
 {
-	collision_list_.clear();
-
-	for (auto& object : objects_)
-	{
-		if (Vector3::Length(player_->position_vector() - object->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
-			collision_list_.push_back(object);
-	}
 }
 
 void CScene::CollisionCheck()
@@ -495,5 +501,19 @@ void CScene::CollisionCheck()
 		
 
 	//TODO: 객체의 OBB를 이용해서 서로 겹치면 밀어내는 기본 충돌처리 구현
+	for (auto p = dynamic_object_list_.begin(); p != dynamic_object_list_.end(); ++p)
+	{
+		for (auto other = p; other != dynamic_object_list_.end(); ++other)
+		{
+			// 충돌한 소켓을 찾기위한 객체
+			CObbComponent a, b;
+			if (other != p && CRootObject::CollisionCheck(*p, *other, a, b))
+			{
+				::PostQuitMessage(0);
+			}			
+		}
+	}
+
+	
 }
 

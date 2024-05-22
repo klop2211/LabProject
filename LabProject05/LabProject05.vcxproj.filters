@@ -156,6 +156,9 @@
     <ClInclude Include="Building.h">
       <Filter>Objects</Filter>
     </ClInclude>
+    <ClInclude Include="ObbComponent.h">
+      <Filter>Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -241,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="Building.cpp">
       <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="ObbComponent.cpp">
+      <Filter>Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

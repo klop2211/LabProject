@@ -146,6 +146,7 @@
     <ClInclude Include="Mawang.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MovementComponent.h" />
+    <ClInclude Include="ObbComponent.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerState.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="Mawang.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MovementComponent.cpp" />
+    <ClCompile Include="ObbComponent.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerState.cpp" />

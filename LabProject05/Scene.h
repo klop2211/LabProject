@@ -9,6 +9,7 @@ class CHeightMapTerrain;
 class CDescriptorManager;
 class CAudioManager;
 class CSkyBox;
+class CRootObject;
 
 struct LIGHT
 {
@@ -84,10 +85,11 @@ protected:
 
 	// GameObject 관리 
 	// 05.09 수정: 생성과 삭제가 빈번이 일어날 확률이 높은 씬의 오브젝트들은 벡터보다 리스트를 쓰는 것이 좋다고 판단 + 정렬도 필요없음
-	std::vector<CGameObject*> objects_;
+	std::vector<CRootObject*> objects_;
 
 	// 충돌 관리
-	std::list<CGameObject*> collision_list_;
+	std::list<CRootObject*> static_object_list_;
+	std::list<CRootObject*> dynamic_object_list_;
 
 	//TODO: 조명관련 처리 필요
 	LIGHTS* m_pLights = NULL;

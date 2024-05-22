@@ -532,9 +532,8 @@ void CSkinMesh::SetBoneFrameCaches(ID3D12Device* pd3dDevice, ID3D12GraphicsComma
 		m_BoneFrameCaches.emplace_back(pRootObject->FindFrame(m_BoneNames[i]));
 	}
 
-	UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256ÀÇ ¹è¼ö
-	skinning_bone_transforms_ = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL, ncbElementBytes);
-	skinning_bone_transforms_->Map(0, NULL, (void**)&mapped_skinning_bone_transforms_);
+	pRootObject->SetBoneFrameCaches(m_BoneFrameCaches.data(), m_nBones);
+
 
 }
 
@@ -549,17 +548,6 @@ void CSkinMesh::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList
 	{
 		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneOffsetsGpuVirtualAddress = bone_offset_buffer_->GetGPUVirtualAddress();
 		pd3dCommandList->SetGraphicsRootConstantBufferView(4, d3dcbBoneOffsetsGpuVirtualAddress); //Skinned Bone Offsets
-	}
-
-	if (skinning_bone_transforms_)
-	{
-		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = skinning_bone_transforms_->GetGPUVirtualAddress();
-		pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
-
-		for (int j = 0; j < m_BoneFrameCaches.size(); j++)
-		{
-			XMStoreFloat4x4(&mapped_skinning_bone_transforms_[j], XMMatrixTranspose(XMLoadFloat4x4(&m_BoneFrameCaches[j]->GetWorldMatrix())));
-		}
 	}
 
 }

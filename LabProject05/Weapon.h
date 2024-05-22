@@ -3,7 +3,7 @@
 #include "Object.h"
 
 
-class CWeapon : public CGameObject
+class CWeapon : public CRootObject
 {
 protected:
 	WeaponType type_ = WeaponType::None;

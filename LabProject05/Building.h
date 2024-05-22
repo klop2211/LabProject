@@ -1,7 +1,7 @@
 #pragma once
 #include "Object.h"
 class CBuilding :
-    public CGameObject
+    public CRootObject
 {
 public:
     CBuilding(const CModelInfo& model);
