@@ -92,8 +92,9 @@ CPlayer::~CPlayer()
 	ReleaseShaderVariables();
 	weapon_socket_->ResetChild(NULL);
 
-	for (auto& p : weapons_)
-		delete p;
+	// 무기들의 삭제는 씬에서..
+	//for (auto& p : weapons_)
+	//	delete p;
 
 	//if (camera_) delete camera_;
 }
@@ -234,6 +235,8 @@ void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 	XMFLOAT3 P = position_vector() - movement_component_->prev_position_vector();
 	XMFLOAT3 n = Vector3::Normalize(position_vector() - other->position_vector());
 	XMFLOAT3 S = P - (n * (Vector3::DotProduct(P, n)));
+
+	//충돌전 위치에서 이동한 위치의 슬라이딩 벡터만큼 이동
 	set_position_vector(movement_component_->prev_position_vector() + S);
 }
 
@@ -261,7 +264,9 @@ void CPlayer::EquipWeapon(const std::string& name)
 		}
 	if (!weapon) 
 		return;
+	weapon_socket_->set_is_visible(false);
 	weapon_socket_->ResetChild(weapon);
+	weapon_socket_->set_is_visible(true);
 	current_weapon_type_ = ((CWeapon*)weapon)->type();
 	weapon_socket_->SetShader(weapon->shader_num());
 }

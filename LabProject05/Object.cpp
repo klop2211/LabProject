@@ -576,6 +576,8 @@ void CRootObject::Animate(float fTimeElapsed)
 {
 	CGameObject::Animate(fTimeElapsed);
 
+	UpdateTransform(NULL);
+
 	for (auto& p : obb_list_)
 		p->Update();
 }
@@ -604,21 +606,27 @@ bool CRootObject::CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& 
 
 void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
 {
+	if (!is_visible_) return;
+
 	UpdateShaderVariables(pd3dCommandList);
 
 	//child의 메쉬들을 렌더한다. 계층구조의 root가 이 객체의 child이기 때문이다.
 	CMesh** meshes = child_->meshes();
+	int meshes_count = child_->meshes_count();
 
-	for (int i = 0; i < skinning_bone_transforms_.size(); ++i)
+	for (int i = 0; i < meshes_count; ++i)
 	{
-		D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = skinning_bone_transforms_[i]->GetGPUVirtualAddress();
-		pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
-
-		int bone_count = ((CSkinMesh*)meshes[i])->bone_count();
-		CGameObject** bone_frame_caches = ((CSkinMesh*)meshes[i])->bone_frame_caches();
-		for (int j = 0; j < bone_count; j++)
+		if (i < skinning_bone_transforms_.size())
 		{
-			XMStoreFloat4x4(&mapped_skinning_bone_transforms_[i][j], XMMatrixTranspose(XMLoadFloat4x4(&bone_frame_caches[j]->GetWorldMatrix())));
+			D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = skinning_bone_transforms_[i]->GetGPUVirtualAddress();
+			pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
+
+			int bone_count = ((CSkinMesh*)meshes[i])->bone_count();
+			CGameObject** bone_frame_caches = ((CSkinMesh*)meshes[i])->bone_frame_caches();
+			for (int j = 0; j < bone_count; j++)
+			{
+				XMStoreFloat4x4(&mapped_skinning_bone_transforms_[i][j], XMMatrixTranspose(XMLoadFloat4x4(&bone_frame_caches[j]->GetWorldMatrix())));
+			}
 		}
 
 		meshes[i]->Render(pd3dCommandList);

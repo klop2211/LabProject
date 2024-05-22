@@ -8,6 +8,7 @@ private:
     BoundingOrientedBox obb_;
     BoundingOrientedBox animated_obb_;
     CGameObject* parent_socket_ = NULL;
+    //CCubeMesh* debug_cube_ = NULL;
 
 public:
     CObbComponent() {}

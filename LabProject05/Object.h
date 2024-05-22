@@ -85,7 +85,7 @@ public:
 
 	//setter
 	void set_frame_name(const std::string& value) { m_strFrameName = value; }
-	void set_is_visible(const bool& value) { is_visible_ = value; }
+	void set_is_visible(const bool& value) { is_visible_ = value; if (child_) child_->set_is_visible(value); if (sibling_) sibling_->set_is_visible(value); }
 	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
@@ -208,6 +208,8 @@ class CRootObject : public CGameObject
 private:
 	std::vector<ID3D12Resource*> skinning_bone_transforms_;
 	std::vector<XMFLOAT4X4*> mapped_skinning_bone_transforms_;
+
+protected:
 	std::list<CObbComponent*> obb_list_;
 
 public:

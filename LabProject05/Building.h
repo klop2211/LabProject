@@ -1,5 +1,6 @@
 #pragma once
 #include "Object.h"
+
 class CBuilding :
     public CRootObject
 {

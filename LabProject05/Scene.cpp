@@ -357,6 +357,8 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_position_vector(0.f, 0.f, 110.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
 	player_->AddWeapon(weapon);
+	objects_.push_back(weapon);
+	shaders_[2]->AddObject(weapon);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
 	weapon = new CSphere(model);
@@ -370,10 +372,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
 	player_->AddWeapon(weapon);
+	objects_.push_back(weapon);
 
 	player_->set_weapon_socket(sword_socket);
 
-	shaders_[2]->AddObject(sword_socket);
+	shaders_[2]->AddObject(weapon);
 
 
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)

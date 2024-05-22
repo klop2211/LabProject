@@ -3,4 +3,5 @@
 
 CWeapon::CWeapon(const CModelInfo& model) : CRootObject(model)
 {
+	is_visible_ = false;
 }
