@@ -275,9 +275,6 @@ void CScene::AnimateObjects(float elapsed_time)
 	//player_->OnPrepareRender();
 
 
-	/*player_->set_position_vector(player_->position_vector().x,
-		terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z),
-		player_->position_vector().z);*/
 	player_->Animate(elapsed_time);
 	terrain_->Animate(elapsed_time);
 
@@ -287,10 +284,7 @@ void CScene::AnimateObjects(float elapsed_time)
 		if (pObject.first != g_myid && pObject.second.Location.y != -999)
 		{
 			// 위치 업데이트
-			// TODO : 현재 터레인의 높이로 재설정하는데, 서버에 터레인 코드 생성시 그냥 위치를 받게 할것
-			objects_[pObject.first]->set_position_vector(pObject.second.Location.x,
-				terrain_->GetHeight(pObject.second.Location.x, pObject.second.Location.z),
-				pObject.second.Location.z);
+			objects_[pObject.first]->set_position_vector(pObject.second.Location);
 
 			XMFLOAT3 update_look = objects_[pObject.first]->look_vector();
 			update_look.y = pObject.second.yaw;
@@ -303,8 +297,7 @@ void CScene::AnimateObjects(float elapsed_time)
 		objects_[pObject.first]->Animate(elapsed_time);
 		
 	}
-	g_objects[g_myid].Location.y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
-
+	
 	for (auto& Object : weapon_object_)
 	{
 		Object->Animate(elapsed_time);
@@ -358,9 +351,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
+	XMFLOAT3 xmf3Scale(10.0f, 1.f, 10.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
-	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain1010.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
+	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/main_8.raw"), 1025, 1025, 1025, 1025, xmf3Scale, xmf4Color);
 	
 	skybox_ = new CSkyBox(pd3dDevice, pd3dCommandList);
 	shaders_[3]->AddObject(skybox_);

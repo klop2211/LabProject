@@ -621,7 +621,7 @@ void CGameFramework::ProcessInput()
 		left_click_ = right_click_ = false;
 	}
 
-	scene_->CollisionCheck();
+	//scene_->CollisionCheck();
 
 	player_->Update(elapsed_time);
 	
