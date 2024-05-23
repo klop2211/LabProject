@@ -40,6 +40,12 @@ public:
 	CScene();
 	~CScene();
 
+	//setter
+	void set_debug_collision(bool value) { debug_collision_ = value; }
+
+	//getter
+	bool debug_collision() const { return debug_collision_; }
+
 	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return true; }
 	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam) { return true; }
 
@@ -67,6 +73,9 @@ public:
 	// 충돌 처리
 	void UpdateCollisionList();
 	void CollisionCheck();
+	
+	// 현재 충돌처리 리스트의 디버그 큐브메쉬를 생성
+	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
 
 protected:
 	ID3D12RootSignature* d3d12_root_signature_ = NULL;
@@ -90,6 +99,9 @@ protected:
 	// 충돌 관리
 	std::list<CRootObject*> static_object_list_;
 	std::list<CRootObject*> dynamic_object_list_;
+
+	// 충돌범위 디버그 트리거
+	bool debug_collision_ = false;
 
 	//TODO: 조명관련 처리 필요
 	LIGHTS* m_pLights = NULL;

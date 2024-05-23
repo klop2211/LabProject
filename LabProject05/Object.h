@@ -153,7 +153,7 @@ public:
 
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
-
+	CGameObject* AddSocket(CGameObject* parent_frame);
 	CGameObject* AddSocket(const std::string& frame_name);
 
 	//모델 파일 로드 관련 함수
@@ -217,6 +217,8 @@ public:
 	CRootObject(const CModelInfo& model);
 	~CRootObject();
 
+	void Rotate(float pitch, float yaw, float roll);
+
 	void AddObb(const BoundingBox& aabb, CGameObject* parent_socket);
 
 	virtual void Animate(float fTimeElapsed);
@@ -229,6 +231,9 @@ public:
 
 	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) {}
 
-	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
+	void RenderObbList(ID3D12GraphicsCommandList* command_list);
 
+public:
+	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
 };

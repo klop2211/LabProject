@@ -315,7 +315,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	BuildLightsAndMaterials();
 	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 
-	XMFLOAT3 xmf3Scale(40.0f, 6.f, 40.0f);
+	XMFLOAT3 xmf3Scale(40.0f, 10.f, 40.0f);
 	XMFLOAT4 xmf4Color(0.0f, 0.0f, 0.0f, 0.0f);
 	terrain_ = new CHeightMapTerrain(pd3dDevice, pd3dCommandList, d3d12_root_signature_, _T("../Resource/Terrain/terrain.raw"), 257, 257, 257, 257, xmf3Scale, xmf4Color);
 	
@@ -330,11 +330,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
 	CGameObject* collision_socket = player_->AddSocket("Bip001");
-	CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
-	collision_socket->SetMesh(collision_mesh);
-	collision_socket->SetShader(0);
 	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
-
 	player_->AddObb(aabb, collision_socket);
 	shaders_[4]->AddObject(collision_socket);
 	shaders_[0]->AddObject(player_);
@@ -404,10 +400,17 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
 
 	object = new CBuilding(model);
+	collision_socket = object->AddSocket(object);
+	aabb.Extents = XMFLOAT3(500, 500, 200);
+	collision_socket->set_position_vector(0, 0, 200);
+	object->AddObb(aabb, collision_socket);
 	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
+	object->Rotate(0, 45, 0);
 	objects_.push_back(object);
 	object->SetShader((int)ShaderNum::StaticMesh);
 	shaders_[2]->AddObject(object);
+
+	static_object_list_.push_back(object);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
@@ -418,6 +421,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	{
 		p->Animate(0);
 	}
+	for (auto& p : static_object_list_)
+	{
+		p->Animate(0);
+	}
+
+	CreateCollisionCubeMesh(pd3dDevice, pd3dCommandList);
+
 }
 
 void CScene::ReleaseObjects()
@@ -477,6 +487,18 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (auto& shader : shaders_)
 	{
 		shader->Render(pd3dCommandList, pCamera, elapsed_time);
+
+		if (debug_collision_ && shader->GetShaderNum() == (int)ShaderNum::Diffused)
+		{
+			for (auto& object : dynamic_object_list_)
+			{
+				object->RenderObbList(pd3dCommandList);
+			}
+			for (auto& object : static_object_list_)
+			{
+				object->RenderObbList(pd3dCommandList);
+			}
+		}
 	}
 
 
@@ -517,6 +539,33 @@ void CScene::CollisionCheck()
 		}
 	}
 
-	
+	for (auto& p : dynamic_object_list_)
+	{
+		for (auto& other : static_object_list_)
+		{
+			// 충돌한 소켓을 찾기위한 객체
+			CObbComponent a, b;
+			if (CRootObject::CollisionCheck(p, other, a, b))
+			{
+				p->HandleCollision(other, a, b);
+				other->HandleCollision(p, b, a);
+			}
+		}
+	}
+
+}
+
+void CScene::CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& object : static_object_list_)
+	{
+		object->CreateCollisionCubeMesh(device, command_list);
+	}
+
+	for (auto& object : dynamic_object_list_)
+	{
+		object->CreateCollisionCubeMesh(device, command_list);
+	}
+
 }
 

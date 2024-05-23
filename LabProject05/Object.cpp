@@ -270,6 +270,15 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
+CGameObject* CGameObject::AddSocket(CGameObject* parent_frame)
+{
+	CGameObject* socket = new CGameObject();
+	CGameObject* socket_parent = parent_frame;
+	socket_parent->set_child(socket);
+
+	return socket;
+}
+
 CGameObject* CGameObject::AddSocket(const std::string& frame_name)
 {
 	CGameObject* socket = new CGameObject();
@@ -572,11 +581,17 @@ void CRootObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandLi
 	CGameObject::UpdateShaderVariables(pd3dCommandList);
 }
 
+void CRootObject::Rotate(float pitch, float yaw, float roll)
+{
+	XMMATRIX R = XMMatrixRotationRollPitchYaw(XMConvertToRadians(pitch), XMConvertToRadians(yaw), XMConvertToRadians(roll));
+	to_parent_matrix_ = Matrix4x4::Multiply(R, to_parent_matrix_);
+}
+
 void CRootObject::Animate(float fTimeElapsed)
 {
 	CGameObject::Animate(fTimeElapsed);
-
-	UpdateTransform(NULL);
+	if(!parent_)
+		UpdateTransform(NULL);
 
 	for (auto& p : obb_list_)
 		p->Update();
@@ -602,6 +617,20 @@ bool CRootObject::CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& 
 		}
 	}
 	return false;
+}
+
+void CRootObject::CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& obb : obb_list_)
+	{
+		obb->CreateDebugCubeMesh(device, command_list);
+	}
+}
+
+void CRootObject::RenderObbList(ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& obb : obb_list_)
+		obb->Render(command_list);
 }
 
 void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)

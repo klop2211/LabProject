@@ -424,8 +424,11 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 					ChangeSwapChainState();
 					break;
 				}
-				case VK_F10:
-					break;
+				case VK_F8:
+				{
+					scene_->set_debug_collision(!scene_->debug_collision());
+				}
+				break;
 				default:
 					break;
 			}
