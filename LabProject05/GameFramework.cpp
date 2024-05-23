@@ -400,45 +400,45 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			// [CS] key input이 있을시 패킷 전송
 			input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
 			
-			
 		break;
 		case WM_KEYUP:
-			press_keyboard_ = false;
+			
 			// [CS] key input이 있을시 패킷 전송
 			input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
 			player_->SendInput(input_key_);
 
 			switch (wParam)
 			{
-				case VK_CONTROL:
-					control_key_ = false;
+			case VK_CONTROL:
+				control_key_ = false;
+			break;
+			case VK_SPACE:
+				//player_->InputActionRoll(0);
+			break;
+			case VK_ESCAPE:
+				// TODO : 게임 종료 패킷 서버에게 보내야한다.
+				::PostQuitMessage(0);
 				break;
-				case VK_SPACE:
-					//player_->InputActionRoll(0);
+			case VK_OEM_MINUS:
+			{
+				CCamera* pCamera = new CGhostCamera(camera_);
+				delete camera_;
+				camera_ = pCamera;
+				camera_->CreateShaderVariables(d3d12_device_, d3d12_command_list_);
+				player_->SetCamera(camera_);
+			}
 				break;
-				case VK_ESCAPE:
-					::PostQuitMessage(0);
-					break;
-				case VK_OEM_MINUS:
-				{
-					CCamera* pCamera = new CGhostCamera(camera_);
-					delete camera_;
-					camera_ = pCamera;
-					camera_->CreateShaderVariables(d3d12_device_, d3d12_command_list_);
-					player_->SetCamera(camera_);
-				}
-					break;
-				case VK_RETURN:
-					break;
-				case VK_F9:
-				{
-					ChangeSwapChainState();
-					break;
-				}
-				case VK_F10:
-					break;
-				default:
-					break;
+			case VK_RETURN:
+				break;
+			case VK_F9:
+			{
+				ChangeSwapChainState();
+				break;
+			}
+			case VK_F10:
+				break;
+			default:
+				break;
 			}
 			break;
 		default:
@@ -572,8 +572,6 @@ void CGameFramework::ProcessInput()
 			SetCursorPos(old_cursor_position_.x, old_cursor_position_.y);
 		}
 
-
-
 		player_->InputActionRotate(delta_xy, elapsed_time);
 		player_->InputActionMove(dwDirection, elapsed_time);
 
@@ -587,6 +585,11 @@ void CGameFramework::ProcessInput()
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
 
 	}
+	else
+	{
+		press_keyboard_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
+	}
+
 	if (left_click_)
 	{
 		click_time_ += elapsed_time;
