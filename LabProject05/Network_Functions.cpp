@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Mawang.h"
 
-std::unordered_map<int, XMFLOAT3[2]> g_objects;
+std::unordered_map<int, Clients> g_objects;
 void ProcessPacket(char*);
 
 
@@ -73,12 +73,9 @@ void ProcessPacket(char* ptr)
         SC_LOGIN_INFO_PACKET* packet = reinterpret_cast<SC_LOGIN_INFO_PACKET*>(ptr);
         g_myid = packet->id;
         XMFLOAT3 coord = { static_cast<float>(packet->x), static_cast<float>(packet->y), static_cast<float>(packet->z) };
-        //g_objects[g_myid].push_back(coord);
-        g_objects[g_myid][V_LOCATION] = coord;
-
-        XMFLOAT3 look = { 0, 0, 1 };
-        //g_objects[g_myid].push_back(look);
-        g_objects[g_myid][V_LOOK] = look;
+        g_objects[g_myid].Location = coord;
+        float yaw = 0;
+        g_objects[g_myid].yaw = yaw;
     }
     break;
 
@@ -95,10 +92,9 @@ void ProcessPacket(char* ptr)
         else 
         {
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
-            g_objects[id][V_LOCATION] = coord;
-            XMFLOAT3 look = { 0, 0, 1 };
-            g_objects[id][V_LOOK] = look;
-            //g_objects[id]->set_position_vector(550, 100, 550);
+            g_objects[id].Location = coord;
+            float yaw = 0;
+            g_objects[id].yaw = yaw;
         }
         break;
     }
@@ -110,17 +106,17 @@ void ProcessPacket(char* ptr)
         {
             // 자신의 받은 움직임과 look
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
-            g_objects[g_myid][V_LOCATION] = coord;
-            XMFLOAT3 look = { my_packet->pitch, my_packet->yaw, my_packet->roll };
-            g_objects[g_myid][V_LOOK] = look;
+            g_objects[g_myid].Location = coord;
+            float yaw = my_packet->yaw;
+            g_objects[g_myid].yaw = yaw;
         }
         else 
         {
             // 다른 캐릭터의 받은 움직임
             XMFLOAT3 coord = { static_cast<float>(my_packet->x), static_cast<float>(my_packet->y), static_cast<float>(my_packet->z) };
-            g_objects[other_id][V_LOCATION] = coord;
-            XMFLOAT3 look = { my_packet->pitch, my_packet->yaw, my_packet->roll };
-            g_objects[other_id][V_LOOK] = look;
+            g_objects[other_id].Location = coord;
+            float yaw = my_packet->yaw;
+            g_objects[other_id].yaw = yaw;
         }
         break;
     }
@@ -137,7 +133,7 @@ void ProcessPacket(char* ptr)
         else 
         {
             // 다른 플레이어 삭제
-            g_objects[other_id][V_LOCATION] = XMFLOAT3(-9999, -999, -9999);
+            g_objects[other_id].Location = XMFLOAT3(-9999, -999, -9999);
             // 보이지 않는 곳으로 다시 이동
         }
         break;

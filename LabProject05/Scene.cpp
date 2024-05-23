@@ -284,13 +284,17 @@ void CScene::AnimateObjects(float elapsed_time)
 	for (auto& pObject : g_objects)
 	{
 		// 자신의 id는 그리지 않는다 && 기본 y를 -999로 설정해놓음
-		if (pObject.first != g_myid && pObject.second[V_LOCATION].y != -999)
+		if (pObject.first != g_myid && pObject.second.Location.y != -999)
 		{
-			objects_[pObject.first]->set_position_vector(pObject.second[V_LOCATION].x, 
-				terrain_->GetHeight(pObject.second[V_LOCATION].x, pObject.second[V_LOCATION].z), 
-				pObject.second[V_LOCATION].z);
+			// 위치 업데이트
+			// TODO : 현재 터레인의 높이로 재설정하는데, 서버에 터레인 코드 생성시 그냥 위치를 받게 할것
+			objects_[pObject.first]->set_position_vector(pObject.second.Location.x,
+				terrain_->GetHeight(pObject.second.Location.x, pObject.second.Location.z),
+				pObject.second.Location.z);
 
-			objects_[pObject.first]->UpdateLookVector(pObject.second[V_LOOK]);
+			XMFLOAT3 update_look = objects_[pObject.first]->look_vector();
+			update_look.y = pObject.second.yaw;
+			objects_[pObject.first]->UpdateLookVector(update_look);
 		}
 		else
 		{
@@ -299,7 +303,7 @@ void CScene::AnimateObjects(float elapsed_time)
 		objects_[pObject.first]->Animate(elapsed_time);
 		
 	}
-	g_objects[g_myid][V_LOCATION].y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
+	g_objects[g_myid].Location.y = terrain_->GetHeight(player_->position_vector().x, player_->position_vector().z);
 
 	for (auto& Object : weapon_object_)
 	{
@@ -366,7 +370,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
-
+	
 	//XMFLOAT3 min_point(-15.f, -25, -30.5), max_point(15, 25, 30.5);
 	//CGameObject* collision_socket = player_->AddSocket("Bip001");
 	//CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
@@ -383,16 +387,21 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
+	// TODO : 마왕 오브젝트가 아닌 플레이어 객체여야 한다.
 	for (int i = 0; i < 4; i++)
 	{
+		
 		CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
-
 		CGameObject* object = new CMawang(model);
 
-		g_objects[i][V_LOCATION] = XMFLOAT3(-9999, 0, -9999);
+		g_objects[i].Location = XMFLOAT3(-9999, -999, -9999);
 		objects_.push_back(object);
-		objects_[i]->set_position_vector(g_objects[i][V_LOCATION].x + i, -999, g_objects[i][V_LOCATION].z + i);
-		//objects_[0]->set_position_vector(550, terrain_->GetHeight(550, 550), 550);
+
+		// TODO: ** 플레이어 순서가 꼬였을 때, 다른 객체가 움직일 수 있음
+		objects_[i]->set_my_id(i);
+
+		XMFLOAT3 init_position = g_objects[i].Location;
+		objects_[i]->set_position_vector(init_position);
 
 		shaders_[0]->AddObject(object);
 	}

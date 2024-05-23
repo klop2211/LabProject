@@ -121,6 +121,8 @@ AudioData LoadWavFile(const std::string& filename, WAVEFORMATEXTENSIBLE& waveFor
 #pragma comment(lib, "WS2_32.lib")
 #pragma comment(lib, "MSWSock.lib")
 
+
+
 constexpr short PORT = 4000;
 constexpr int BUFSIZE = 256;
 constexpr int MAX_USER = 4;
@@ -136,9 +138,17 @@ extern std::string avatar_name;
 extern WSAOVERLAPPED g_wsaover;
 
 class CGameObject;
-extern std::unordered_map<int, XMFLOAT3[2]> g_objects;
+
 enum ObjectType {OT_PLAYER};
-enum ObjectsPart {V_LOCATION, V_LOOK};
+
+struct Clients
+{
+	ObjectType Type;
+	XMFLOAT3 Location;
+	float yaw;
+};
+
+extern std::unordered_map<int, Clients> g_objects;
 
 void print_error(const char* msg, int err_no);
 void DoSend(void* packet);

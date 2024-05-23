@@ -71,6 +71,10 @@ protected:
 	// 객체의 렌더 여부
 	bool is_visible_ = true;
 
+	//[CS] 자신의 번호
+	// ** 일단 0번으로 초기화함. 초기화 순서를 찾아주면 해당 번호로 set하는 코드를 찾아서 넣을것
+	int my_id_ = 0;
+
 public:
 	CGameObject();
 	CGameObject(ObjectType object_type);
@@ -94,6 +98,7 @@ public:
 	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
+	void set_my_id(const int& id) { my_id_ = id; }
 
 	// 5.12 추가 prev_vector를 이용해 velocity를 구하기 위한 setter
 	void set_prev_position_vector(const float& x, const float& y, const float& z);
@@ -132,6 +137,7 @@ public:
 	XMFLOAT3 GetBlendedScale() const { return m_xmf3BlendedScale; }
 	XMFLOAT3 GetBlendedRotation() const { return m_xmf3BlendedRotation; }
 	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
+	int GetMyId() { return my_id_; }
 
 	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
 

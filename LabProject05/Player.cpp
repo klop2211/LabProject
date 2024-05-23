@@ -225,9 +225,9 @@ void CPlayer::OrientRotationToMove(float elapsed_time)
 	//float yaw = Vector3::Angle(v, d);
 	//if (result > 0)
 	//	yaw *= -1;
-	if (!IsZero(g_objects[g_myid][V_LOOK].y))
+	if (!IsZero(g_objects[g_myid].yaw))
 	{
-		rotation_component_->Rotate(0.f, g_objects[g_myid][V_LOOK].y, 0.f);
+		rotation_component_->Rotate(0.f, g_objects[g_myid].yaw, 0.f);
 	}
 }
 
@@ -265,8 +265,8 @@ void CPlayer::SendInput(uint8_t& input)
 	CS_MOVE_PACKET p;
 	p.size = sizeof(p);
 	p.type = CS_MOVE;
-	p.camera_yaw = (camera_->GetYaw());
-	p.player_yaw = (rotation_component_->yaw());
+	p.camera_yaw = static_cast<short>(camera_->GetYaw());
+	p.player_yaw = static_cast<short>(rotation_component_->yaw());
 	p.keyinput = input;
 	DoSend(&p);
 }
