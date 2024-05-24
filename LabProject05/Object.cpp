@@ -270,18 +270,18 @@ void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsComman
 	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
-CGameObject* CGameObject::AddSocket(CGameObject* parent_frame)
+CSocket* CGameObject::AddSocket(CGameObject* parent_frame)
 {
-	CGameObject* socket = new CGameObject();
+	CSocket* socket = new CSocket();
 	CGameObject* socket_parent = parent_frame;
 	socket_parent->set_child(socket);
 
 	return socket;
 }
 
-CGameObject* CGameObject::AddSocket(const std::string& frame_name)
+CSocket* CGameObject::AddSocket(const std::string& frame_name)
 {
-	CGameObject* socket = new CGameObject();
+	CSocket* socket = new CSocket();
 	CGameObject* socket_parent = FindFrame(frame_name);
 	socket_parent->set_child(socket);
 
@@ -662,4 +662,10 @@ void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	}
 
 	//child_->Render(pd3dCommandList, pCamera, shader_num);
+}
+
+void CSocket::Animate(float elapsed_time)
+{
+	UpdateTransform(&parent_->GetWorldMatrix());
+
 }

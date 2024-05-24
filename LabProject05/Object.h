@@ -14,6 +14,7 @@ class CMaterial;
 //class CAnimationController;
 class CGameObject;
 class CObbComponent;
+class CSocket;
 
 struct CModelInfo
 {
@@ -85,7 +86,7 @@ public:
 
 	//setter
 	void set_frame_name(const std::string& value) { m_strFrameName = value; }
-	void set_is_visible(const bool& value) { is_visible_ = value; if (child_) child_->set_is_visible(value); if (sibling_) sibling_->set_is_visible(value); }
+	void set_is_visible(const bool& value) { is_visible_ = value; }
 	void set_to_parent_matrix(const XMFLOAT4X4& value) { to_parent_matrix_ = value; }
 	void set_is_fall(const bool& value) { is_fall_ = value; }
 	void set_look_vector(const float& x, const float& y, const float& z);
@@ -153,8 +154,8 @@ public:
 
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
-	CGameObject* AddSocket(CGameObject* parent_frame);
-	CGameObject* AddSocket(const std::string& frame_name);
+	CSocket* AddSocket(CGameObject* parent_frame);
+	CSocket* AddSocket(const std::string& frame_name);
 
 	//모델 파일 로드 관련 함수
 	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, CGameObject* root_object);
@@ -236,4 +237,11 @@ public:
 
 public:
 	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+};
+
+class CSocket : public CGameObject
+{
+
+public:
+	virtual void Animate(float elapsed_time);
 };

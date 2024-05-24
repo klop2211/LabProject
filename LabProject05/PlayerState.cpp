@@ -28,7 +28,8 @@ void PIdle::Enter(CPlayer* player)
 	default:
 		break;
 	}
-	
+	if (player->is_ether())
+		player->SpawnEtherWeapon();
 }
 
 void PIdle::Execute(CPlayer* player, float elapsed)
@@ -60,6 +61,8 @@ void PIdle::Execute(CPlayer* player, float elapsed)
 
 void PIdle::Exit(CPlayer* player)
 {
+	player->DespawnEtherWeapon();
+
 }
 
 PMove* PMove::Instance()
@@ -74,6 +77,8 @@ void PMove::Enter(CPlayer* player)
 	player->weapon_socket()->set_is_visible(false);
 	player->set_animation_state(PlayerAnimationState::Run);
 	player->movement_component()->set_max_speed(player->speed());
+	if (player->is_ether())
+		player->SpawnEtherWeapon();
 }
 
 void PMove::Execute(CPlayer* player, float elapsed_time)
@@ -93,6 +98,7 @@ void PMove::Execute(CPlayer* player, float elapsed_time)
 void PMove::Exit(CPlayer* player)
 {
 	player->movement_component()->set_max_speed(0.f);
+	player->DespawnEtherWeapon();
 }
 
 PEvade* PEvade::Instance()

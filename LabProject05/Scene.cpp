@@ -330,6 +330,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
 	CGameObject* collision_socket = player_->AddSocket("Bip001");
+	
 	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
 	player_->AddObb(aabb, collision_socket);
 	shaders_[4]->AddObject(collision_socket);
@@ -354,7 +355,9 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->SetShader((int)ShaderNum::StaticMesh);
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);
-	shaders_[2]->AddObject(weapon);
+	shaders_[2]->AddObject(sword_socket);
+
+	player_->SetEtherWeaponSocketByShader(shaders_[2]);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
 	weapon = new CSphere(model);
@@ -367,12 +370,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
+	weapon->AddObb(aabb, sword_socket);
+
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);
+	dynamic_object_list_.push_back(weapon);
 
 	player_->set_weapon_socket(sword_socket);
-
-	shaders_[2]->AddObject(weapon);
 
 
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)

@@ -47,6 +47,14 @@ CPlayer::CPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, 
 	CModelInfo model = CGameObject::LoadModelInfoFromFile(device, command_list, "../Resource/Model/Player_Model.bin");
 
 	set_child(model.heirarchy_root);
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p = AddSocket("Bip001");
+	} 
+	ether_weapon_sockets_[0]->set_position_vector(0, -150.f, 0);
+	ether_weapon_sockets_[1]->set_position_vector(0, -100.f, 100);
+	ether_weapon_sockets_[2]->set_position_vector(0, 150.f, 0);
+	ether_weapon_sockets_[3]->set_position_vector(0, 100.f, 100.f);
 
 	CreateBoneTransformMatrix(device, command_list);
 
@@ -228,6 +236,8 @@ void CPlayer::Update(float elapsed_time)
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
+
+	UpdateEtherWeapon(elapsed_time);
 }
 
 void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb)
@@ -289,11 +299,17 @@ void CPlayer::EquipWeapon(const std::string& name)
 			weapon = p;
 			break;
 		}
-	if (!weapon) 
-		return;
+	if (!weapon) return;
 	weapon_socket_->set_is_visible(false);
+	weapon->set_is_visible(true);
 	weapon_socket_->ResetChild(weapon);
 	weapon_socket_->set_is_visible(true);
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->ResetChild(weapon);
+		p->SetShader(weapon->shader_num());
+		p->set_is_visible(false);
+	}
 	current_weapon_type_ = ((CWeapon*)weapon)->type();
 	weapon_socket_->SetShader(weapon->shader_num());
 }
@@ -309,5 +325,34 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 void CPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func)
 {
 	animation_controller_->SetCallbackKey(index, time, func);
+}
+
+void CPlayer::UpdateEtherWeapon(float elapsed_time)
+{
+	if (is_ether_)
+	{
+	}
+}
+
+void CPlayer::SpawnEtherWeapon()
+{
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->set_is_visible(true);
+	}
+}
+
+void CPlayer::DespawnEtherWeapon()
+{
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->set_is_visible(false);
+	}
+}
+
+void CPlayer::SetEtherWeaponSocketByShader(CShader* shader)
+{
+	for (auto& p : ether_weapon_sockets_)
+		shader->AddObject(p);
 }
 

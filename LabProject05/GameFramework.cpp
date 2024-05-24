@@ -394,7 +394,18 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 	switch (nMessageID)
 	{
 		case WM_KEYDOWN:
-			if (wParam == VK_CONTROL) control_key_ = true;
+			switch (wParam)
+			{
+			case 'r':
+			case 'R':
+				player_->set_is_ether(!player_->is_ether());
+				break;
+			case VK_CONTROL:
+				control_key_ = true;
+				break;
+			default:
+				break;
+			}
 		break;
 		case WM_KEYUP:
 			switch (wParam)

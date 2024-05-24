@@ -7,6 +7,7 @@ class CRotationComponent;
 class CObbComponent;
 class CAnimationCallbackFunc;
 class CWeapon;
+class CShader;
 
 enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, 
 	SwordIdle, SwordAttack11, SwordAttack12, SwordAttack13, SwordAttack21, SwordAttack22, SwordAttack23, SwordAttack30, SwordAttack40,
@@ -47,6 +48,11 @@ protected:
 
 	CGameObject* weapon_socket_ = NULL;
 
+	//에테르 해방 공격 관련
+	bool is_ether_ = false;
+	std::array<CGameObject*, 4> ether_weapon_sockets_;
+
+
 	std::vector<CWeapon*> weapons_;
 
 	PlayerAttackType attack_type_ = PlayerAttackType::None;
@@ -58,6 +64,7 @@ public:
 	virtual ~CPlayer();
 
 	//setter
+	void set_is_ether(const bool& value) { is_ether_ = value; }
 	void set_is_move_allow(const bool& value) { is_move_allow_ = value; }
 	void set_attack_type(const PlayerAttackType& value) { attack_type_ = value; }
 	void set_current_weapon(const WeaponType& value) { current_weapon_type_ = value; }
@@ -65,6 +72,7 @@ public:
 	void set_weapon_socket(CGameObject* value) { weapon_socket_ = value; }
 
 	//getter
+	bool is_ether() const { return is_ether_; }
 	WeaponType current_weapon() const { return current_weapon_type_; }
 	CGameObject* weapon_socket() const { return weapon_socket_; }
 	StateMachine<CPlayer>* state_machine()const { return state_machine_; }
@@ -112,5 +120,11 @@ public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera = NULL);
 
 	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
+
+	// 에테르 무기 관련 함수
+	void SetEtherWeaponSocketByShader(CShader* shader);
+	void SpawnEtherWeapon();
+	void DespawnEtherWeapon();
+	void UpdateEtherWeapon(float elapsed_time);
 };
 
