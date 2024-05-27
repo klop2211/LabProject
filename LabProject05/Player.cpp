@@ -306,7 +306,7 @@ void CPlayer::EquipWeapon(const std::string& name)
 	weapon_socket_->set_is_visible(true);
 	for (auto& p : ether_weapon_sockets_)
 	{
-		p->ResetChild(weapon);
+		p->ResetChild(new CWeapon(*(CWeapon*)weapon));
 		p->SetShader(weapon->shader_num());
 		p->set_is_visible(false);
 	}

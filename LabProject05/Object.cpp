@@ -103,11 +103,6 @@ void CGameObject::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescripto
 
 void CGameObject::Animate(float fTimeElapsed)
 {
-	if (animation_controller_)
-	{
-		ResetAnimatedSRT();
-		animation_controller_->Animate(fTimeElapsed, this);
-	}
 
 	if (sibling_) sibling_->Animate(fTimeElapsed);
 	if (child_) child_->Animate(fTimeElapsed);
@@ -128,9 +123,6 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 {
 	if (shader_num != shader_num_) return;
 	if (!is_visible_) return;
-
-	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
-		UpdateTransform(NULL);
 
 	// 05.17: 이제 텍스처는 적용되는 메쉬에서 렌더전에 set함
 	//for(auto& p : m_Materials)
@@ -551,6 +543,22 @@ CRootObject::CRootObject(const CModelInfo& model) : CRootObject()
 	}
 }
 
+CRootObject::CRootObject(const CRootObject& other)
+{
+	other.child_->AddRef();
+	set_child(other.child_);
+
+	if (other.animation_controller_)
+	{
+		animation_controller_ = new CAnimationController(*other.animation_controller_);
+
+		animation_controller_->SetFrameCaches(this);
+
+		animation_controller_->EnableTrack(0);
+	}
+
+}
+
 CRootObject::~CRootObject()
 {
 	for (auto& p : skinning_bone_transforms_) 
@@ -589,8 +597,17 @@ void CRootObject::Rotate(float pitch, float yaw, float roll)
 
 void CRootObject::Animate(float fTimeElapsed)
 {
+	if (animation_controller_)
+	{
+		ResetAnimatedSRT();
+		animation_controller_->Animate(fTimeElapsed, this);
+	}
+
 	CGameObject::Animate(fTimeElapsed);
-	if(!parent_)
+
+	if (parent_)
+		UpdateTransform(&parent_->GetWorldMatrix());
+	else
 		UpdateTransform(NULL);
 
 	for (auto& p : obb_list_)
@@ -667,5 +684,7 @@ void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 void CSocket::Animate(float elapsed_time)
 {
 	UpdateTransform(&parent_->GetWorldMatrix());
+	if (sibling_) sibling_->Animate(elapsed_time);
+	if (child_) child_->Animate(elapsed_time);
 
 }

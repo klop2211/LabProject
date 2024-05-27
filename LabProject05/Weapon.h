@@ -12,6 +12,7 @@ protected:
 
 public:
 	CWeapon(const CModelInfo& model);
+	CWeapon(const CWeapon& other);
 
 	//setter
 	void set_name(const std::string& value) { name_ = value; }

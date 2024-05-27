@@ -66,8 +66,6 @@ protected:
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int shader_num_ = -1;
 
-	// animation 관련
-	CAnimationController* animation_controller_ = NULL;
 	
 	// 물리 옵션 적용관련 변수
 	bool is_fall_ = false; //중력의 적용을 받는지
@@ -97,7 +95,6 @@ public:
 	void set_up_vector(const XMFLOAT3& up) { set_up_vector(up.x, up.y, up.z); }
 	void set_position_vector(const float& x, const float& y, const float& z);
 	void set_position_vector(const XMFLOAT3& position){ set_position_vector(position.x, position.y, position.z); }
-	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
 	void set_child(CGameObject* pChild);
 	void set_sibling(CGameObject* ptr);
 	void set_parent(CGameObject* ptr);
@@ -213,10 +210,17 @@ private:
 protected:
 	std::list<CObbComponent*> obb_list_;
 
+	// animation 관련
+	CAnimationController* animation_controller_ = NULL;
+
 public:
 	CRootObject();
 	CRootObject(const CModelInfo& model);
+	CRootObject(const CRootObject& other);
 	~CRootObject();
+
+	//setter
+	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
 
 	void Rotate(float pitch, float yaw, float roll);
 

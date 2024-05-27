@@ -67,7 +67,6 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_
 		}
 	}
 
-	root_object->UpdateTransform(NULL);
 }
 
 void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
