@@ -388,6 +388,10 @@ void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM
 	}
 }
 
+#define VK_W             0x57
+#define VK_A             0x41
+#define VK_S             0x53
+#define VK_D             0x44
 void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
 {
 	if (scene_) scene_->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
@@ -396,19 +400,37 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 		case WM_KEYDOWN:
 			if (wParam == VK_CONTROL) control_key_ = true;
 
-			press_keyboard_ = true;
-			// [CS] key input이 있을시 패킷 전송
-			input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
-			
+			switch (wParam)
+			{
+			case VK_W:
+			case VK_A:
+			case VK_S:
+			case VK_D:
+			//case VK_SPACE:
+				// [CS] key input이 있을시 패킷 전송
+				press_keyboard_movement_ = true;
+				input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
+				break;
+			}
 		break;
 		case WM_KEYUP:
 			
-			// [CS] key input이 있을시 패킷 전송
-			input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
-			player_->SendInput(input_key_);
+			//// [CS] key input이 있을시 패킷 전송
+			//input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
+			//player_->SendInput(input_key_);
 
 			switch (wParam)
 			{
+			case VK_W:
+			case VK_A:
+			case VK_S:
+			case VK_D:
+				// [CS] key input이 있을시 패킷 전송
+				input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
+				player_->SendInput(input_key_);
+				break;
+			
+
 			case VK_CONTROL:
 				control_key_ = false;
 			break;
@@ -576,10 +598,11 @@ void CGameFramework::ProcessInput()
 		player_->InputActionMove(dwDirection, elapsed_time);
 
 		// [CS] Move Packet Send
-		if( press_keyboard_ )
+		if(press_keyboard_movement_)
 		{	
 			player_->SendInput(input_key_);
 		}
+		//if (press_keyboard_movement_ && player_->animation_state() == CPlayer::PlayerAnimation::Roll)
 
 		if(camera_->GetMode() == CameraMode::GHOST) 
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
@@ -587,7 +610,7 @@ void CGameFramework::ProcessInput()
 	}
 	else
 	{
-		press_keyboard_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
+		press_keyboard_movement_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
 	}
 
 	if (left_click_)

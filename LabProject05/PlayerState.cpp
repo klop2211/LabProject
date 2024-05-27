@@ -112,10 +112,16 @@ void PEvade::Execute(CPlayer* player, float elapsed_time)
 {
 	evade_time_ += elapsed_time;
 	if (move_start_time_ < evade_time_)
+	{
 		player->movement_component()->set_direction_vector(player->look_vector());
+		uint8_t input_key_ = (static_cast<uint8_t>(0x20) << 1) | true;
+		player->SendInput(input_key_);
+	}
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		player->state_machine()->ChangeState(PIdle::Instance());
+		uint8_t input_key_ = (static_cast<uint8_t>(0x20) << 1) | false;
+		player->SendInput(input_key_);
 	}
 
 }

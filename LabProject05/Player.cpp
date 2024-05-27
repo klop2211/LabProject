@@ -218,13 +218,7 @@ void CPlayer::Update(float elapsed_time)
 
 void CPlayer::OrientRotationToMove(float elapsed_time)
 {
-	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
-	//XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
-	//float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
 
-	//float yaw = Vector3::Angle(v, d);
-	//if (result > 0)
-	//	yaw *= -1;
 	if (!IsZero(g_objects[g_myid].yaw))
 	{
 		rotation_component_->Rotate(0.f, g_objects[g_myid].yaw, 0.f);

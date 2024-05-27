@@ -99,7 +99,7 @@ private:
 	bool control_key_ = false;
 
 	// [CS] 현재 키보드가 입력되고 있는지
-	bool press_keyboard_ = false;
+	bool press_keyboard_movement_ = false;
 	uint8_t input_key_;
 
 	_TCHAR						m_pszFrameRate[50];

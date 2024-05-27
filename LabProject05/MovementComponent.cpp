@@ -50,7 +50,8 @@ void CMovementComponent::Update(const float& elapsed_time)
 
 	//++ 이전 위치와 새로 갱신된 위치의 차를 구해 걷는 애니메이션 구현
 	XMFLOAT3 prev = owner_->get_prev_position_vector();
-	XMFLOAT3 curr = g_objects[owner_->GetMyId()].Location;
+	// TODO : 자신의 번호를 받아서 돌리기
+	XMFLOAT3 curr = g_objects[g_myid].Location;
 	set_direction_vector(Vector3::Subtract(curr, prev));
 	
 	
