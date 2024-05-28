@@ -224,7 +224,10 @@ public:
 
 	void Rotate(float pitch, float yaw, float roll);
 
+	void AddObb(CObbComponent* value) { obb_list_.push_back(value); }
 	void AddObb(const BoundingBox& aabb, CGameObject* parent_socket);
+	void OnAllObb();
+	void OffAllObb();
 
 	virtual void Animate(float fTimeElapsed);
 

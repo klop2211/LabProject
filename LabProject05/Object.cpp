@@ -567,7 +567,7 @@ CRootObject::~CRootObject()
 {
 	for (auto& p : skinning_bone_transforms_) 
 	{
-		p->Unmap(0, NULL);
+		p->Unmap(0, NULL); 
 		p->Release();
 	}
 	for (auto& p : obb_list_)
@@ -623,12 +623,25 @@ void CRootObject::AddObb(const BoundingBox& aabb, CGameObject* parent_socket)
 	obb_list_.emplace_back(new CObbComponent(this, aabb, parent_socket));
 }
 
+void CRootObject::OffAllObb()
+{
+	for (auto& p : obb_list_)
+		p->Off();
+}
+
+void CRootObject::OnAllObb()
+{
+	for (auto& p : obb_list_)
+		p->On();
+}
+
 bool CRootObject::CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb)
 {
 	for (auto& p : a->obb_list_)
 	{
 		for (auto& other : b->obb_list_)
 		{
+			if (!p->is_active() || !other->is_active()) continue;
 			if (p->Intersects(other->animated_obb()))
 			{
 				a_obb = *p;

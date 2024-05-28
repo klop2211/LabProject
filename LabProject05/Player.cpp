@@ -181,8 +181,11 @@ void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_t
 
 void CPlayer::InputActionRoll(const DWORD& direction)
 {
-	if(state_machine_->isInState(*PIdle::Instance()) || state_machine_->isInState(*PMove::Instance()))
+	if (state_machine_->isInState(*PIdle::Instance()) || state_machine_->isInState(*PMove::Instance()))
+	{
+		OrientRotationToMove();
 		state_machine_->ChangeState(PEvade::Instance());	
+	}
 }
 
 void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
@@ -193,8 +196,12 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	// 이미 해당 공격을 실행중
 	if (attack_type_ == attack_type)
 		return;
-	attack_type_ = attack_type;
+	if (state_machine_->isInState(*PEvade::Instance()))
+		return;
 
+	OrientRotationToMove();
+
+	attack_type_ = attack_type;
 
 	if (current_weapon_type_ == WeaponType::None)
 	{
@@ -242,11 +249,11 @@ void CPlayer::Update(float elapsed_time)
 
 void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb)
 {
-	//슬라이딩 벡터 S = P - n(P*n), P: 입사벡터(여기서는 this가 이동한 벡터), n: 평면벡터(여기서는 other에서 this를 바라보는 벡터(normalize된))
+	//슬라이딩 벡터 S = P - n(P*n), P: 입사벡터(여기서는 this가 이동한 벡터), n: 평면벡터(여기서는 other에서 this를 바라보는 벡터를 사용하여 실제 부딪힌 평면을 예측)
 	XMFLOAT3 P = position_vector() - movement_component_->prev_position_vector();
 	XMFLOAT3 other_to_this = Vector3::Normalize(position_vector() - other->position_vector());
-	XMFLOAT3 other_look = other->look_vector();
-	XMFLOAT3 other_right = other->right_vector();
+	XMFLOAT3 other_look = Vector3::Normalize(other->look_vector());
+	XMFLOAT3 other_right = Vector3::Normalize(other->right_vector());
 	XMFLOAT3 rect_extants(other_obb.animated_obb().Extents.x, 0, other_obb.animated_obb().Extents.y);
 	XMFLOAT3 x_axis = XMFLOAT3(1, 0, 0);
 	float angle = abs(Vector3::Angle(Vector3::Normalize(rect_extants), x_axis));
@@ -260,19 +267,6 @@ void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 
 	//충돌전 위치에서 이동한 위치의 슬라이딩 벡터만큼 이동
 	set_position_vector(movement_component_->prev_position_vector() + S);
-}
-
-void CPlayer::OrientRotationToMove(float elapsed_time)
-{
-	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
-	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
-	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
-
-	float yaw = Vector3::Angle(v, d);
-	if (result > 0)
-		yaw *= -1;
-	if (!IsZero(yaw))
-		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
 }
 
 void CPlayer::EquipWeapon(const std::string& name)
@@ -310,6 +304,32 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 void CPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func)
 {
 	animation_controller_->SetCallbackKey(index, time, func);
+}
+
+void CPlayer::OrientRotationToMove(float elapsed_time)
+{
+	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
+	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
+	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
+	float yaw = Vector3::Angle(v, d);
+	if (result > 0)
+		yaw *= -1;
+	if (!IsZero(yaw))
+		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
+}
+
+void CPlayer::OrientRotationToMove()
+{
+	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
+	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
+	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
+	float yaw = Vector3::Angle(v, d);
+	if (result > 0)
+		yaw *= -1;
+	if (!IsZero(yaw))
+		rotation_component_->Rotate(0.f, yaw, 0.f);
 }
 
 void CPlayer::UpdateEtherWeapon(float elapsed_time)

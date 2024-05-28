@@ -369,8 +369,15 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&weapon->to_parent_matrix()), R));
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 55.f);
+
+	// 창 obb 오프셋
+	XMFLOAT4X4 obb_offset_matrix = Matrix4x4::Identity();
+	obb_offset_matrix._43 += 100.f;
+	CObbComponent* sphere_obb = new CObbComponent(weapon, aabb, sword_socket);
+	sphere_obb->set_offset_matrix(obb_offset_matrix);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	weapon->AddObb(aabb, sword_socket);
+	weapon->AddObb(sphere_obb);
+	weapon->OffAllObb();
 
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);

@@ -99,7 +99,10 @@ public:
 
 	virtual void Update(float fTimeElapsed);
 
+	// 시간에 따라 회전
 	void OrientRotationToMove(float fTimeElapsed);
+	// 남은 회전 각도만큼 즉시 회전
+	void OrientRotationToMove();
 
 	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) override;
 

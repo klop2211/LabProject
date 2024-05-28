@@ -36,7 +36,7 @@ void CObbComponent::Update()
 {
 	if (parent_socket_)
 	{
-		world_matrix_ = parent_socket_->GetWorldMatrix();
+		world_matrix_ = offset_matrix_ * parent_socket_->GetWorldMatrix();
 		obb_.Transform(animated_obb_, XMLoadFloat4x4(&world_matrix_));
 	}
 }
@@ -44,6 +44,7 @@ void CObbComponent::Update()
 void CObbComponent::Render(ID3D12GraphicsCommandList* command_list)
 {
 	if (!debug_cube_) return;
+	if (!is_active_) return;
 
 	XMFLOAT4X4 xmf4x4World;
 	XMStoreFloat4x4(&xmf4x4World, XMMatrixTranspose(XMLoadFloat4x4(&world_matrix_)));
