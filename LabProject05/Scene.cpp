@@ -370,7 +370,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	weapon->set_to_parent_matrix(temp);
 	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	//weapon->AddObb(aabb, sword_socket);
+	weapon->AddObb(aabb, sword_socket);
 
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);

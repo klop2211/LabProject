@@ -20,6 +20,7 @@ public:
     ~CObbComponent();
 
     //getter
+    BoundingOrientedBox obb() const { return obb_; }
     BoundingOrientedBox animated_obb() const { return animated_obb_; }
 
     CObbComponent& operator=(const CObbComponent& rhs)

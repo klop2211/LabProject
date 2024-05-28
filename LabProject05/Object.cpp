@@ -557,6 +557,10 @@ CRootObject::CRootObject(const CRootObject& other)
 		animation_controller_->EnableTrack(0);
 	}
 
+	for (auto& p : other.obb_list_)
+	{
+		obb_list_.push_back(new CObbComponent(*p));
+	}
 }
 
 CRootObject::~CRootObject()

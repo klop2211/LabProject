@@ -245,21 +245,6 @@ void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 	//슬라이딩 벡터 S = P - n(P*n), P: 입사벡터(여기서는 this가 이동한 벡터), n: 평면벡터(여기서는 other에서 this를 바라보는 벡터(normalize된))
 	XMFLOAT3 P = position_vector() - movement_component_->prev_position_vector();
 	XMFLOAT3 other_to_this = Vector3::Normalize(position_vector() - other->position_vector());
-	//XMFLOAT3 this_rect_extants = my_obb.animated_obb().Extents;
-	//XMFLOAT3 other_to_LT = position_vector() + XMFLOAT3(-this_rect_extants.x, 0, this_rect_extants.y) - other->position_vector();
-	//XMFLOAT3 other_to_RT = position_vector() + XMFLOAT3(this_rect_extants.x, 0, this_rect_extants.y)  - other->position_vector();
-	//std::array<XMFLOAT3, 2> other_to_points{ other_to_LT, other_to_RT };
-	//float min_length = INFINITE;
-	//XMFLOAT3 min_vector;
-	//for (auto& length : other_to_points)
-	//{
-	//	if (min_length > Vector3::Length(length))
-	//	{
-	//		min_length = Vector3::Length(length);
-	//		min_vector = length;
-	//	}
-	//}
-	//min_vector = Vector3::Normalize(min_vector);
 	XMFLOAT3 other_look = other->look_vector();
 	XMFLOAT3 other_right = other->right_vector();
 	XMFLOAT3 rect_extants(other_obb.animated_obb().Extents.x, 0, other_obb.animated_obb().Extents.y);
