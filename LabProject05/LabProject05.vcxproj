@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimationCallbackFunc.h" />
+    <ClInclude Include="AnotherPlayer.h" />
     <ClInclude Include="AudioManager.h" />
     <ClInclude Include="Building.h" />
     <ClInclude Include="Camera.h" />
@@ -169,6 +170,7 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimationCallbackFunc.cpp" />
+    <ClCompile Include="AnotherPlayer.cpp" />
     <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="Building.cpp" />
     <ClCompile Include="Camera.cpp" />

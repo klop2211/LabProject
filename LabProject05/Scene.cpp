@@ -14,6 +14,7 @@
 #include "Sphere.h"
 #include "Building.h"
 #include "ObbComponent.h"
+#include "AnotherPlayer.h"
 
 CScene::CScene()
 {
@@ -388,9 +389,27 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
+
+	CRootObject* object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(650, terrain_->GetHeight(650, 550), 550);
+	collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+	dynamic_object_list_.push_back(object);
+
+	object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(450, terrain_->GetHeight(450, 550), 550);
+	//collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+	dynamic_object_list_.push_back(object);
+
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
-	CRootObject* object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	object = new CMawang(pd3dDevice, pd3dCommandList, model);
 	object->set_position_vector(750, terrain_->GetHeight(750, 550), 550);
 
 	collision_socket = object->AddSocket("Bip001");

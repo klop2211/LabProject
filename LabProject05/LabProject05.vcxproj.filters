@@ -159,6 +159,9 @@
     <ClInclude Include="ObbComponent.h">
       <Filter>Components</Filter>
     </ClInclude>
+    <ClInclude Include="AnotherPlayer.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LabProject05.cpp">
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="ObbComponent.cpp">
       <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="AnotherPlayer.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
