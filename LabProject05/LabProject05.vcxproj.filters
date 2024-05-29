@@ -52,6 +52,9 @@
     <Filter Include="Objects\Weapon">
       <UniqueIdentifier>{50bd4449-a4ef-4668-b8cf-eb5d86c2cb92}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Objects\AnotherPlayer">
+      <UniqueIdentifier>{67804718-8997-4b32-8aac-5aa2bd369fe8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -160,7 +163,7 @@
       <Filter>Components</Filter>
     </ClInclude>
     <ClInclude Include="AnotherPlayer.h">
-      <Filter>Objects</Filter>
+      <Filter>Objects\AnotherPlayer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -252,7 +255,7 @@
       <Filter>Components</Filter>
     </ClCompile>
     <ClCompile Include="AnotherPlayer.cpp">
-      <Filter>Objects</Filter>
+      <Filter>Objects\AnotherPlayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -329,10 +329,10 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
 
-	XMFLOAT3 min_point(-15.f, -25, -87.5), max_point(15, 25, 87.5);
+	XMFLOAT3 extents(15, 25, 87.5);
 	CGameObject* collision_socket = player_->AddSocket("Bip001");
 	
-	BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
+	BoundingBox aabb(XMFLOAT3(0,0,0), extents);
 	player_->AddObb(aabb, collision_socket);
 	shaders_[4]->AddObject(collision_socket);
 	shaders_[0]->AddObject(player_);
@@ -342,50 +342,28 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
 
 	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword_TXT.bin");
-	CWeapon* weapon = new CSword(model);
+	CWeapon* weapon = new CSword(model, sword_socket);
 
 	weapon->set_name("default_sword");
 
-	// 검 오프셋
-	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
-	XMFLOAT4X4 temp;
-	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&weapon->to_parent_matrix()), R));
-	weapon->set_to_parent_matrix(temp);
-	weapon->set_position_vector(0.f, 0.f, 110.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);
 	shaders_[2]->AddObject(sword_socket);
+	dynamic_object_list_.push_back(weapon);
 
 	player_->SetEtherWeaponSocketByShader(shaders_[2]);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
-	weapon = new CSphere(model);
+	weapon = new CSphere(model, sword_socket);
 	weapon->set_name("default_sphere");
-
-	// 창 오프셋
-	z_axis = XMFLOAT3(0, 0, 1);
-	R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
-	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&weapon->to_parent_matrix()), R));
-	weapon->set_to_parent_matrix(temp);
-	weapon->set_position_vector(0.f, 0.f, 55.f);
-
-	// 창 obb 오프셋
-	XMFLOAT4X4 obb_offset_matrix = Matrix4x4::Identity();
-	obb_offset_matrix._43 += 100.f;
-	CObbComponent* sphere_obb = new CObbComponent(weapon, aabb, sword_socket);
-	sphere_obb->set_offset_matrix(obb_offset_matrix);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	weapon->AddObb(sphere_obb);
-	weapon->OffAllObb();
 
 	player_->AddWeapon(weapon);
 	objects_.push_back(weapon);
 	dynamic_object_list_.push_back(weapon);
 
 	player_->set_weapon_socket(sword_socket);
-
 
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 

@@ -7,6 +7,6 @@ class CSword :
 {
 
 public:
-    CSword(const CModelInfo& model);
+    CSword(const CModelInfo& model, CGameObject* parent_socket);
 };
 

@@ -5,6 +5,6 @@ class CSphere :
 {
 
 public:
-    CSphere(const CModelInfo& model);
+    CSphere(const CModelInfo& model, CGameObject* parent_socket);
 };
 
