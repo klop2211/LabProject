@@ -612,7 +612,6 @@ void CGameFramework::ProcessInput()
 	{
 		press_keyboard_movement_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
 	}
-
 	if (left_click_)
 	{
 		click_time_ += elapsed_time;

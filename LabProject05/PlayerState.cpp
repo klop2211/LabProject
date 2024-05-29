@@ -600,7 +600,9 @@ void PSphereAttack3::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->animation_controller()->set_is_blend_change(false);
 			if (is_charging_)
+			{
 				player->set_animation_state(PlayerAnimationState::SphereAttack32);
+			}
 			else
 				player->set_animation_state(PlayerAnimationState::SphereAttack33);
 

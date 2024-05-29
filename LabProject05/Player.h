@@ -114,5 +114,6 @@ public:
 	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
 
 	void SendInput(uint8_t& input);
+	void SendSkill(bool skillend);
 };
 

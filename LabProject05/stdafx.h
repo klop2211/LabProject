@@ -74,7 +74,7 @@ using Microsoft::WRL::ComPtr;
 #define _WITH_CB_WORLD_MATRIX_DESCRIPTOR_TABLE
 
 // 무기 상태 None 타입은 납도 상태
-enum class WeaponType { None = -1, Sword = 0, Sphere };
+enum class WeaponType { None = 0, Sword = 1, Sphere = 2 };
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")

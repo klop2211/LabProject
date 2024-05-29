@@ -265,3 +265,14 @@ void CPlayer::SendInput(uint8_t& input)
 	DoSend(&p);
 }
 
+void CPlayer::SendSkill(bool skillend)
+{
+	CS_SKILL_PACKET p;
+	p.size = sizeof(p);
+	p.type = CS_SKILL;
+	p.Weapon_N_Attack = (static_cast<uint8_t>(current_weapon_type_) << 4)
+						| static_cast<uint8_t>(attack_type_);
+	p.Animation = (static_cast<uint8_t>(animation_state_) << 1) | skillend;
+	DoSend(&p);
+}
+
