@@ -411,6 +411,16 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				press_keyboard_movement_ = true;
 				input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
 				break;
+			
+			case 'r':
+			case 'R':
+				player_->set_is_ether(!player_->is_ether());
+				break;
+			case VK_CONTROL:
+				control_key_ = true;
+				break;
+			default:
+				break;
 			}
 		break;
 		case WM_KEYUP:

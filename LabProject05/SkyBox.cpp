@@ -22,5 +22,7 @@ void CSkyBox::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamer
 {
 	set_position_vector(pCamera->GetPosition());
 
+	UpdateTransform(NULL);
+
 	CGameObject::Render(pd3dCommandList, pCamera, shader_num);
 }

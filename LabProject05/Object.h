@@ -13,6 +13,8 @@ class CDescriptorManager;
 class CMaterial;
 //class CAnimationController;
 class CGameObject;
+class CObbComponent;
+class CSocket;
 
 struct CModelInfo
 {
@@ -57,13 +59,16 @@ protected:
 	CGameObject* child_ = NULL;
 	CGameObject* sibling_ = NULL;
 
-	CMesh* m_pMesh = NULL;
+	std::vector<CMesh*> meshes_;
+
+	//스킨메쉬가 가진 본프레임 캐쉬(bonetransform 행렬을 업데이트하기 위해 사용)
+	CGameObject** bone_frame_caches_ = NULL;
+	int bone_count_ = 0;
+
 
 	// 이 오브젝트가 사용하는 쉐이더 넘버
 	int shader_num_ = -1;
 
-	// animation 관련
-	CAnimationController* animation_controller_ = NULL;
 	
 	// 물리 옵션 적용관련 변수
 	bool is_fall_ = false; //중력의 적용을 받는지
@@ -118,8 +123,13 @@ public:
 	void SetScale(const XMFLOAT3& xmf3Value) { m_xmf3Scale = xmf3Value; }
 	void SetRotation(const XMFLOAT3& xmf3Value) { m_xmf3Rotation = xmf3Value; }
 	void SetTranslation(const XMFLOAT3& xmf3Value) { m_xmf3Translation = xmf3Value; }
+	void SetBoneFrameCaches(CGameObject** bone_frame_caches, int bone_count);
 
 	//getter
+	CMesh** meshes() { return meshes_.data(); }
+	int meshes_count() const { return meshes_.size(); }
+	CGameObject** bone_frame_caches() const { return bone_frame_caches_; }
+	int bone_count() const { return bone_count_; }
 	int shader_num() const { return shader_num_; }
 	bool is_visible() const { return is_visible_; }
 	XMFLOAT4X4 to_parent_matrix() const { return to_parent_matrix_; }
@@ -139,12 +149,14 @@ public:
 	XMFLOAT3 GetBlendedTranslation() const { return m_xmf3BlendedTranslation; }
 	int GetMyId() { return my_id_; }
 
-	void ResetChild(CGameObject* ptr) { child_ = ptr; child_->set_parent(this); }
+	void AddMaterial(CMaterial* pMaterial);
+
+	void ResetChild(CGameObject* ptr) { child_ = ptr; if(child_) child_->set_parent(this); }
 
 	void UpdateMatrixByBlendedSRT();
 
 	void UpdateTransform(XMFLOAT4X4* pxmf4x4Parent);
-	void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	void CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescriptorManager* pDescriptorManager);
 
@@ -154,20 +166,18 @@ public:
 
 	virtual void ReleaseUploadBuffers();
 
-	virtual void HandleCollision(CGameObject* other) {}
-
 	CGameObject* FindFrame(const std::string& strFrameName);
 	void PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject);
-
-	CGameObject* AddSocket(const std::string& frame_name);
+	CSocket* AddSocket(CGameObject* parent_frame);
+	CSocket* AddSocket(const std::string& frame_name);
 
 	//모델 파일 로드 관련 함수
-	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
+	void LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, CGameObject* root_object);
 	static CModelInfo LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
 		const std::string& heirarchy_file_name);
 	static CAnimationController* LoadAnimationFromFile(std::ifstream& file, CGameObject* root_object);
 	static CGameObject* LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
-		std::ifstream& InFile, int& nFrames);
+		std::ifstream& InFile, int& nFrames, CGameObject* root_object);
 
 	void UpdateLookVector(const XMFLOAT3& look);
 
@@ -203,7 +213,61 @@ public:
 	float GetWidth() { return(m_nWidth * m_xmf3Scale.x); }
 	float GetLength() { return(m_nLength * m_xmf3Scale.z); }
 
-	virtual void HandleCollision(CGameObject* other) override {}
+	//virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObb) {}
 
 };
 
+//모델의 heirachy root를 child로 갖는 객체. 
+//즉, 실제 씬에서 관리하는 최상위 객체
+// 앞으로 모든 오브젝트는 이 클래스를 상속받아 사용하는 것을 원칙으로 함
+class CRootObject : public CGameObject
+{
+private:
+	std::vector<ID3D12Resource*> skinning_bone_transforms_;
+	std::vector<XMFLOAT4X4*> mapped_skinning_bone_transforms_;
+
+protected:
+	std::list<CObbComponent*> obb_list_;
+
+	// animation 관련
+	CAnimationController* animation_controller_ = NULL;
+
+public:
+	CRootObject();
+	CRootObject(const CModelInfo& model);
+	CRootObject(const CRootObject& other);
+	~CRootObject();
+
+	//setter
+	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
+
+	void Rotate(float pitch, float yaw, float roll);
+
+	void AddObb(CObbComponent* value) { obb_list_.push_back(value); }
+	void AddObb(const BoundingBox& aabb, CGameObject* parent_socket);
+	void OnAllObb();
+	void OffAllObb();
+
+	virtual void Animate(float fTimeElapsed);
+
+	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num);
+
+	void CreateBoneTransformMatrix(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
+
+	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
+
+	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) {}
+
+	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
+	void RenderObbList(ID3D12GraphicsCommandList* command_list);
+
+public:
+	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+};
+
+class CSocket : public CGameObject
+{
+
+public:
+	virtual void Animate(float elapsed_time);
+};

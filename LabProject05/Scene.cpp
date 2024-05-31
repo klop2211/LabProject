@@ -13,6 +13,8 @@
 #include "Sword.h"
 #include "Sphere.h"
 #include "Building.h"
+#include "ObbComponent.h"
+#include "AnotherPlayer.h"
 
 
 //extern std::unordered_map<int, bool> g_objects;
@@ -274,10 +276,14 @@ void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();
 
+	// 05.17 수정: 이제 객체의 애니메이션은 렌더 직전에 이루어짐(shader 렌더 항목 참조)
+	//player_->Animate(elapsed_time);
+	//terrain_->Animate(elapsed_time);
 
-	player_->Animate(elapsed_time);
-	terrain_->Animate(elapsed_time);
+	//for (auto& pObject : objects_)
+	//	pObject->Animate(elapsed_time);
 
+	// TODO : 이부분 수정 필요 Shader 렌더 부분으로 옮겨라
 	for (auto& pObject : g_objects)
 	{
 		// 자신의 id는 그리지 않는다 && 기본 y를 -999로 설정해놓음
@@ -318,7 +324,7 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	d3d12_root_signature_ = CreateGraphicsRootSignature(pd3dDevice);
 
-	int shader_num = 4;
+	int shader_num = 5;
 	shaders_.reserve(shader_num);
 
 	shaders_.emplace_back(new CStandardShader);
@@ -363,18 +369,13 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	player_->set_position_vector(500, terrain_->GetHeight(500, 500), 500);
 	player_->SetAnimationCallbackKey((int)PlayerAnimationState::Run, 0.1, new CSoundCallbackFunc(audio_manager_, "Footstep01"));
 	player_->SetShader(4);
+
+	XMFLOAT3 extents(15, 25, 87.5);
+	CGameObject* collision_socket = player_->AddSocket("Bip001");
 	
-	//XMFLOAT3 min_point(-15.f, -25, -30.5), max_point(15, 25, 30.5);
-	//CGameObject* collision_socket = player_->AddSocket("Bip001");
-	//CCubeMesh* collision_mesh = new CCubeMesh(pd3dDevice, pd3dCommandList, min_point, max_point);
-	//collision_socket->SetMesh(collision_mesh);
-	//collision_socket->SetShader(0);
-	//BoundingBox aabb(XMFLOAT3(0,0,0), max_point);
-
-	//shaders_[4]->AddObject(collision_socket);
-
-	//XMFLOAT3 max_point { 25.f, 175.f}
-	//BoundingBox::CreateFromPoints()
+	BoundingBox aabb(XMFLOAT3(0,0,0), extents);
+	player_->AddObb(aabb, collision_socket);
+	shaders_[4]->AddObject(collision_socket);
 	shaders_[0]->AddObject(player_);
 
 
@@ -399,58 +400,105 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 		shaders_[0]->AddObject(object);
 	}
 
+	// TODO : 바뀐부분 체크
+	dynamic_object_list_.push_back(player_);
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
 
 	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sword_TXT.bin");
-	CWeapon* weapon = new CSword(model);
+	CWeapon* weapon = new CSword(model, sword_socket);
 
 	weapon->set_name("default_sword");
 
-	// 검 오프셋
-	XMFLOAT3 z_axis = XMFLOAT3(0, 0, 1);
-	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
-	XMFLOAT4X4 temp;
-	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&weapon->to_parent_matrix()), R));
-	weapon->set_to_parent_matrix(temp);
-	weapon->set_position_vector(0.f, 0.f, 110.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	weapon_object_.push_back(weapon);
 	player_->AddWeapon(weapon);
+	objects_.push_back(weapon);
+	shaders_[2]->AddObject(sword_socket);
+	dynamic_object_list_.push_back(weapon);
+
+	player_->SetEtherWeaponSocketByShader(shaders_[2]);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Weapons/Sphere_TXT.bin");
-	weapon = new CSphere(model);
+	weapon = new CSphere(model, sword_socket);
 	weapon->set_name("default_sphere");
-
-	// 창 오프셋
-	z_axis = XMFLOAT3(0, 0, 1);
-	R = XMMatrixRotationAxis(XMLoadFloat3(&z_axis), XMConvertToRadians(180.f));
-	XMStoreFloat4x4(&temp, XMMatrixMultiply(XMLoadFloat4x4(&weapon->to_parent_matrix()), R));
-	weapon->set_to_parent_matrix(temp);
-	weapon->set_position_vector(0.f, 0.f, 55.f);
 	weapon->SetShader((int)ShaderNum::StaticMesh);
-	weapon_object_.push_back(weapon);
+
 	player_->AddWeapon(weapon);
+	objects_.push_back(weapon);
+	dynamic_object_list_.push_back(weapon);
 
 	player_->set_weapon_socket(sword_socket);
 
-	shaders_[2]->AddObject(sword_socket);
+	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
 
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
 
+	CRootObject* object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(650, terrain_->GetHeight(650, 550), 550);
+	collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+	dynamic_object_list_.push_back(object);
+
+	object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(450, terrain_->GetHeight(450, 550), 550);
+	//collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+	dynamic_object_list_.push_back(object);
+
+	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
+	
+	object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(750, terrain_->GetHeight(750, 550), 550);
+
+	collision_socket = object->AddSocket("Bip001");
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+
+	dynamic_object_list_.push_back(object);
+
+	object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	object->set_position_vector(50, terrain_->GetHeight(50, 550), 550);
+	object->AddObb(aabb, collision_socket);
+	objects_.push_back(object);
+	shaders_[0]->AddObject(object);
+
+	dynamic_object_list_.push_back(object);
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Building/Test_TXT.bin");
 
-	CGameObject* object = new CBuilding(model);
-
+	object = new CBuilding(model);
+	collision_socket = object->AddSocket(object);
+	aabb.Extents = XMFLOAT3(500, 500, 200);
+	collision_socket->set_position_vector(0, 0, 200);
+	object->AddObb(aabb, collision_socket);
 	object->set_position_vector(2000, terrain_->GetHeight(2000, 600), 600);
-	weapon_object_.push_back(object);
+	object->Rotate(0, 45, 0);
+	objects_.push_back(object);
 	object->SetShader((int)ShaderNum::StaticMesh);
 	shaders_[2]->AddObject(object);
+
+	static_object_list_.push_back(object);
 
 	CreateShaderResourceViews(pd3dDevice); // 모든 오브젝트의 Srv 생성
 
 	player_->EquipWeapon("default_sphere");
 	
+	// obb 업데이트를 위한 사전 animate
+	for (auto& p : dynamic_object_list_)
+	{
+		p->Animate(0);
+	}
+	for (auto& p : static_object_list_)
+	{
+		p->Animate(0);
+	}
+
+	CreateCollisionCubeMesh(pd3dDevice, pd3dCommandList);
 
 }
 
@@ -478,6 +526,7 @@ void CScene::ReleaseObjects()
 		delete Object;
 		Object = NULL;
 	}
+
 
 	for (auto& shader : shaders_)
 	{
@@ -516,6 +565,18 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 	for (auto& shader : shaders_)
 	{
 		shader->Render(pd3dCommandList, pCamera, elapsed_time);
+
+		if (debug_collision_ && shader->GetShaderNum() == (int)ShaderNum::Diffused)
+		{
+			for (auto& object : dynamic_object_list_)
+			{
+				object->RenderObbList(pd3dCommandList);
+			}
+			for (auto& object : static_object_list_)
+			{
+				object->RenderObbList(pd3dCommandList);
+			}
+		}
 	}
 
 
@@ -523,13 +584,6 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 void CScene::UpdateCollisionList()
 {
-	collision_list_.clear();
-
-	for (auto& object : g_objects)
-	{
-		if (Vector3::Length(player_->position_vector() - objects_[object.first]->position_vector()) < 30000.f) // 300미터보다 가까이 있는 객체
-			collision_list_.push_back(objects_[object.first]);
-	}
 }
 
 void CScene::CollisionCheck()
@@ -549,5 +603,47 @@ void CScene::CollisionCheck()
 		
 
 	//TODO: 객체의 OBB를 이용해서 서로 겹치면 밀어내는 기본 충돌처리 구현
+	for (auto p = dynamic_object_list_.begin(); p != dynamic_object_list_.end(); ++p)
+	{
+		for (auto other = p; other != dynamic_object_list_.end(); ++other)
+		{
+			// 충돌한 소켓을 찾기위한 객체
+			CObbComponent a, b;
+			if (other != p && CRootObject::CollisionCheck(*p, *other, a, b))
+			{
+				(*p)->HandleCollision(*other, a, b);
+				(*other)->HandleCollision(*p, b, a);
+			}			
+		}
+	}
+
+	for (auto& p : dynamic_object_list_)
+	{
+		for (auto& other : static_object_list_)
+		{
+			// 충돌한 소켓을 찾기위한 객체
+			CObbComponent a, b;
+			if (CRootObject::CollisionCheck(p, other, a, b))
+			{
+				p->HandleCollision(other, a, b);
+				other->HandleCollision(p, b, a);
+			}
+		}
+	}
+
+}
+
+void CScene::CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& object : static_object_list_)
+	{
+		object->CreateCollisionCubeMesh(device, command_list);
+	}
+
+	for (auto& object : dynamic_object_list_)
+	{
+		object->CreateCollisionCubeMesh(device, command_list);
+	}
+
 }
 

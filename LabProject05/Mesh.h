@@ -5,6 +5,7 @@
 #pragma once
 
 class CGameObject;
+class CMaterial;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -131,6 +132,8 @@ public:
 	int GetType() { return m_nType; }
 
 protected:
+	CMaterial* material_ = NULL;
+
 	ID3D12Resource* m_pd3dVertexBuffer = NULL;
 	ID3D12Resource* m_pd3dVertexUploadBuffer = NULL;
 
@@ -163,6 +166,8 @@ protected:
 	int m_nType = 0; // 0: 일반 메쉬, 1: 스킨메쉬
 
 public:
+	void set_material(CMaterial* value) { material_ = value; }
+
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void OnPreRender(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList) {}
@@ -184,6 +189,10 @@ class CSkinMesh : public CMesh
 public:
 	CSkinMesh();
 	~CSkinMesh() ;
+
+	//getter
+	int bone_count() const { return m_nBones; }
+	CGameObject** bone_frame_caches() { return m_BoneFrameCaches.data(); }
 
 	void LoadSkinMeshFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile);
 

@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "DescriptorManager.h"
 #include "Material.h"
+#include "ObbComponent.h"
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 //|||||||||||||||||||||||||||||||||||||||||||||||||||| <CGameObject> |||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -37,7 +38,7 @@ CGameObject::CGameObject(ObjectType object_type)
 
 CGameObject::~CGameObject()
 {
-	if (m_pMesh) m_pMesh->Release();
+	for (auto& p : meshes_) p->Release();
 	for (auto& p : m_Materials) p->Release();
 	if (axis_transform_matrix_) delete axis_transform_matrix_;
 
@@ -60,15 +61,19 @@ void CGameObject::set_up_vector(const float& x, const float& y, const float& z)
 	to_parent_matrix_._21 = x, to_parent_matrix_._22 = y, to_parent_matrix_._23 = z;
 }
 
-void CGameObject::SetMesh(CMesh* pMesh)
+void CGameObject::SetMesh(CMesh* mesh)
 {
-	if (m_pMesh)
-	{
-		m_pMesh->Release();
-	}
-	m_pMesh = pMesh;
-	if (pMesh) pMesh->AddRef();
+	meshes_.push_back(mesh);
 }
+
+void CGameObject::AddMaterial(CMaterial* pMaterial)
+{
+	m_Materials.emplace_back(pMaterial);
+	m_Materials.back()->AddRef();
+
+	meshes_[m_Materials.size() - 1]->set_material(pMaterial);
+}
+
 
 void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 {
@@ -79,6 +84,8 @@ void CGameObject::SetMaterial(const int& index, CMaterial* pMaterial)
 	else 
 		m_Materials[index] = pMaterial;
 	m_Materials[index]->AddRef();
+
+	meshes_[index]->set_material(pMaterial);
 }
 
 void CGameObject::UpdateTransform(XMFLOAT4X4* pxmf4x4Parent)
@@ -113,11 +120,6 @@ void CGameObject::CreateShaderResourceViews(ID3D12Device* pd3dDevice, CDescripto
 
 void CGameObject::Animate(float fTimeElapsed)
 {
-	if (animation_controller_)
-	{
-		ResetAnimatedSRT();
-		animation_controller_->Animate(fTimeElapsed, this);
-	}
 
 	if (sibling_) sibling_->Animate(fTimeElapsed);
 	if (child_) child_->Animate(fTimeElapsed);
@@ -139,16 +141,15 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 	if (shader_num != shader_num_) return;
 	if (!is_visible_) return;
 
-	if (!parent_ && !animation_controller_)	// 이 오브젝트가 루트 노드이고 애니메이션이 없을 때만 시행
-		UpdateTransform(NULL);
+	// 05.17: 이제 텍스처는 적용되는 메쉬에서 렌더전에 set함
+	//for(auto& p : m_Materials)
+	//	p->UpdateShaderVariables(pd3dCommandList);
 
-	for(auto& p : m_Materials)
-		p->UpdateShaderVariables(pd3dCommandList);
 
-	if (m_pMesh) 
+	for (auto& p : meshes_)
 	{
 		UpdateShaderVariables(pd3dCommandList);
-		m_pMesh->Render(pd3dCommandList);
+		p->Render(pd3dCommandList);
 	}
 
 	if (child_) child_->Render(pd3dCommandList, pCamera, shader_num);
@@ -157,10 +158,17 @@ void CGameObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pC
 
 void CGameObject::ReleaseUploadBuffers()
 {
-	if (m_pMesh) m_pMesh->ReleaseUploadBuffers();
+	for (auto& p : meshes_)
+		p->ReleaseUploadBuffers();
 
 	for (auto& p : m_Materials)
 		p->ReleaseUploadBuffers();
+}
+
+void CGameObject::SetBoneFrameCaches(CGameObject** bone_frame_caches, int bone_count)
+{
+	bone_count_ = bone_count;
+	bone_frame_caches_ = bone_frame_caches;
 }
 
 void CGameObject::set_position_vector(const float& x, const float& y, const float& z)
@@ -267,24 +275,36 @@ CGameObject* CGameObject::FindFrame(const std::string& strFrameName)
 
 void CGameObject::PrepareSkinning(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CGameObject* pRootObject)
 {
-	CSkinMesh* pSkinMesh = dynamic_cast<CSkinMesh*>(m_pMesh);
-	if(pSkinMesh)
-		pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
+	for (auto& p : meshes_)
+	{
+		CSkinMesh* pSkinMesh = dynamic_cast<CSkinMesh*>(p);
+		if (pSkinMesh)
+			pSkinMesh->SetBoneFrameCaches(pd3dDevice, pd3dCommandList, pRootObject);
+	}
 
 	if (child_) child_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 	if (sibling_) sibling_->PrepareSkinning(pd3dDevice, pd3dCommandList, pRootObject);
 }
 
-CGameObject* CGameObject::AddSocket(const std::string& frame_name)
+CSocket* CGameObject::AddSocket(CGameObject* parent_frame)
 {
-	CGameObject* socket = new CGameObject();
+	CSocket* socket = new CSocket();
+	CGameObject* socket_parent = parent_frame;
+	socket_parent->set_child(socket);
+
+	return socket;
+}
+
+CSocket* CGameObject::AddSocket(const std::string& frame_name)
+{
+	CSocket* socket = new CSocket();
 	CGameObject* socket_parent = FindFrame(frame_name);
 	socket_parent->set_child(socket);
 
 	return socket;
 }
 
-void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile)
+void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, std::ifstream& InFile, CGameObject* root_object)
 {
 	int nMaterials = FBXLoad::ReadFromFile<int>(InFile);
 	m_Materials.reserve(nMaterials);
@@ -308,7 +328,7 @@ void CGameObject::LoadMaterialFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsC
 
 		pMaterial->LoadTexturePropertiesFromFile(pd3dDevice, pd3dCommandList, InFile);
 
-		m_Materials.emplace_back(pMaterial);
+		root_object->AddMaterial(pMaterial);
 
 		FBXLoad::ReadStringFromFile(InFile, strToken); // </TextureProperties>
 
@@ -341,7 +361,7 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 {
 	std::string token;
 
-	CGameObject* frame_root = NULL;
+	CGameObject* frame_root = new CGameObject();
 
 	//Heirarchy
 	std::ifstream file(model_file_name, std::ios::binary);
@@ -355,11 +375,13 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 		if (token == "<Frame>:")
 		{
 			CGameObject* frame;
-			frame = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, file, frames);
-			if(!frame_root) 
-				frame_root = frame;
-			else
-				frame_root->set_sibling(frame);
+			frame = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, file, frames, frame_root);
+
+			frame_root->set_child(frame);
+			//if(!frame_root) 
+			//	frame_root = frame;
+			//else
+			//	frame_root->set_sibling(frame);
 		}
 	}
 
@@ -380,7 +402,8 @@ CModelInfo CGameObject::LoadModelInfoFromFile(ID3D12Device* pd3dDevice, ID3D12Gr
 	CModelInfo rvalue;
 
 	rvalue.heirarchy_root = frame_root;
-	rvalue.animation_controller.reset(animation_controller);
+	if(animation_controller)
+		rvalue.animation_controller.reset(animation_controller);
 
 	return rvalue;
 }
@@ -389,7 +412,13 @@ CAnimationController* CGameObject::LoadAnimationFromFile(std::ifstream& file, CG
 {
 	CAnimationController* rvalue = new CAnimationController;
 
-	rvalue->LoadAnimationFromFile(file);
+	int animation_count = rvalue->LoadAnimationFromFile(file);
+
+	if (animation_count == 0)
+	{
+		delete rvalue;
+		return NULL;
+	}
 
 	//rvalue->SetFrameCaches(root_object);
 
@@ -397,7 +426,7 @@ CAnimationController* CGameObject::LoadAnimationFromFile(std::ifstream& file, CG
 }
 
 CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList,
-	std::ifstream& InFile, int& nFrames)
+	std::ifstream& InFile, int& nFrames, CGameObject* root_object)
 {
 	CGameObject* rvalue = new CGameObject;
 
@@ -430,17 +459,17 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 
 			if (strToken == "<Mesh>:") pSkinMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
 
-			rvalue->SetMesh(pSkinMesh);
+			root_object->SetMesh(pSkinMesh);
 		}
 		else if (strToken == "<Mesh>:")
 		{
 			CMesh* pMesh = new CMesh(pd3dDevice, pd3dCommandList);
 			pMesh->LoadMeshFromFile(pd3dDevice, pd3dCommandList, InFile);
-			rvalue->SetMesh(pMesh);
+			root_object->SetMesh(pMesh);
 		}
 		else if (strToken == "<Materials>:")
 		{
-			rvalue->LoadMaterialFromFile(pd3dDevice, pd3dCommandList, InFile);
+			rvalue->LoadMaterialFromFile(pd3dDevice, pd3dCommandList, InFile, root_object);
 		}
 		else if (strToken == "<Children>:")
 		{
@@ -450,7 +479,7 @@ CGameObject* CGameObject::LoadHeirarchyFromFile(ID3D12Device* pd3dDevice, ID3D12
 				FBXLoad::ReadStringFromFile(InFile, strToken);
 				if (strToken == "<Frame>:")
 				{
-					CGameObject* pChild = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames);
+					CGameObject* pChild = CGameObject::LoadHeirarchyFromFile(pd3dDevice, pd3dCommandList, InFile, nFrames, root_object);
 					if (pChild) rvalue->set_child(pChild);
 				}
 			}
@@ -542,4 +571,189 @@ int CHeightMapTerrain::GetRawImageWidth()
 int CHeightMapTerrain::GetRawImageLength()
 { 
 	return(m_pHeightMapImage->GetHeightMapLength());
+}
+
+CRootObject::CRootObject() : CGameObject()
+{
+	skinning_bone_transforms_.reserve(0);
+	mapped_skinning_bone_transforms_.reserve(0);
+	obb_list_.clear();
+}
+
+CRootObject::CRootObject(const CModelInfo& model) : CRootObject()
+{
+	model.heirarchy_root->AddRef();
+	set_child(model.heirarchy_root);
+
+	if (model.animation_controller)
+	{
+		animation_controller_ = new CAnimationController(*model.animation_controller);
+
+		animation_controller_->SetFrameCaches(this);
+
+		animation_controller_->EnableTrack(0);
+	}
+}
+
+CRootObject::CRootObject(const CRootObject& other)
+{
+	other.child_->AddRef();
+	set_child(other.child_);
+
+	if (other.animation_controller_)
+	{
+		animation_controller_ = new CAnimationController(*other.animation_controller_);
+
+		animation_controller_->SetFrameCaches(this);
+
+		animation_controller_->EnableTrack(0);
+	}
+
+	for (auto& p : other.obb_list_)
+	{
+		obb_list_.push_back(new CObbComponent(*p));
+	}
+}
+
+CRootObject::~CRootObject()
+{
+	for (auto& p : skinning_bone_transforms_) 
+	{
+		p->Unmap(0, NULL); 
+		p->Release();
+	}
+	for (auto& p : obb_list_)
+		delete p;
+}
+
+void CRootObject::CreateBoneTransformMatrix(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	int mesh_count = child_->meshes_count();
+	skinning_bone_transforms_.resize(mesh_count);
+	mapped_skinning_bone_transforms_.resize(mesh_count);
+
+	for (int i = 0; i < mesh_count; ++i)
+	{
+		UINT ncbElementBytes = (((sizeof(XMFLOAT4X4) * SKINNED_ANIMATION_BONES) + 255) & ~255); //256의 배수
+		skinning_bone_transforms_[i] = ::CreateBufferResource(device, command_list, NULL, ncbElementBytes);
+		skinning_bone_transforms_[i]->Map(0, NULL, (void**)&mapped_skinning_bone_transforms_[i]);
+	}
+}
+
+void CRootObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
+{
+	CGameObject::UpdateShaderVariables(pd3dCommandList);
+}
+
+void CRootObject::Rotate(float pitch, float yaw, float roll)
+{
+	XMMATRIX R = XMMatrixRotationRollPitchYaw(XMConvertToRadians(pitch), XMConvertToRadians(yaw), XMConvertToRadians(roll));
+	to_parent_matrix_ = Matrix4x4::Multiply(R, to_parent_matrix_);
+}
+
+void CRootObject::Animate(float fTimeElapsed)
+{
+	if (animation_controller_)
+	{
+		ResetAnimatedSRT();
+		animation_controller_->Animate(fTimeElapsed, this);
+	}
+
+	CGameObject::Animate(fTimeElapsed);
+
+	if (parent_)
+		UpdateTransform(&parent_->GetWorldMatrix());
+	else
+		UpdateTransform(NULL);
+
+	for (auto& p : obb_list_)
+		p->Update();
+}
+
+void CRootObject::AddObb(const BoundingBox& aabb, CGameObject* parent_socket)
+{
+	obb_list_.emplace_back(new CObbComponent(this, aabb, parent_socket));
+}
+
+void CRootObject::OffAllObb()
+{
+	for (auto& p : obb_list_)
+		p->Off();
+}
+
+void CRootObject::OnAllObb()
+{
+	for (auto& p : obb_list_)
+		p->On();
+}
+
+bool CRootObject::CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb)
+{
+	for (auto& p : a->obb_list_)
+	{
+		for (auto& other : b->obb_list_)
+		{
+			if (!p->is_active() || !other->is_active()) continue;
+			if (p->Intersects(other->animated_obb()))
+			{
+				a_obb = *p;
+				b_obb = *other;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void CRootObject::CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& obb : obb_list_)
+	{
+		obb->CreateDebugCubeMesh(device, command_list);
+	}
+}
+
+void CRootObject::RenderObbList(ID3D12GraphicsCommandList* command_list)
+{
+	for (auto& obb : obb_list_)
+		obb->Render(command_list);
+}
+
+void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
+{
+	if (!is_visible_) return;
+
+	UpdateShaderVariables(pd3dCommandList);
+
+	//child의 메쉬들을 렌더한다. 계층구조의 root가 이 객체의 child이기 때문이다.
+	CMesh** meshes = child_->meshes();
+	int meshes_count = child_->meshes_count();
+
+	for (int i = 0; i < meshes_count; ++i)
+	{
+		if (i < skinning_bone_transforms_.size())
+		{
+			D3D12_GPU_VIRTUAL_ADDRESS d3dcbBoneTransformsGpuVirtualAddress = skinning_bone_transforms_[i]->GetGPUVirtualAddress();
+			pd3dCommandList->SetGraphicsRootConstantBufferView(5, d3dcbBoneTransformsGpuVirtualAddress); //Skinned Bone Transforms
+
+			int bone_count = ((CSkinMesh*)meshes[i])->bone_count();
+			CGameObject** bone_frame_caches = ((CSkinMesh*)meshes[i])->bone_frame_caches();
+			for (int j = 0; j < bone_count; j++)
+			{
+				XMStoreFloat4x4(&mapped_skinning_bone_transforms_[i][j], XMMatrixTranspose(XMLoadFloat4x4(&bone_frame_caches[j]->GetWorldMatrix())));
+			}
+		}
+
+		meshes[i]->Render(pd3dCommandList);
+	}
+
+	//child_->Render(pd3dCommandList, pCamera, shader_num);
+}
+
+void CSocket::Animate(float elapsed_time)
+{
+	UpdateTransform(&parent_->GetWorldMatrix());
+	if (sibling_) sibling_->Animate(elapsed_time);
+	if (child_) child_->Animate(elapsed_time);
+
 }

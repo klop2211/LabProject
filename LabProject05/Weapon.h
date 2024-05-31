@@ -3,7 +3,7 @@
 #include "Object.h"
 
 
-class CWeapon : public CGameObject
+class CWeapon : public CRootObject
 {
 protected:
 	WeaponType type_ = WeaponType::None;
@@ -12,6 +12,7 @@ protected:
 
 public:
 	CWeapon(const CModelInfo& model);
+	CWeapon(const CWeapon& other);
 
 	//setter
 	void set_name(const std::string& value) { name_ = value; }

@@ -14,6 +14,7 @@
 #include "Material.h"
 #include "PlayerState.h"
 #include "Weapon.h"
+#include "ObbComponent.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -39,13 +40,23 @@ CPlayer::CPlayer()
 	weapons_.reserve(10);
 }
 
-CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera) : CPlayer()
+CPlayer::CPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, CCamera* pCamera) : CPlayer()
 {
 	CGameObject* pGameObject = NULL;
 
-	CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
+	CModelInfo model = CGameObject::LoadModelInfoFromFile(device, command_list, "../Resource/Model/Player_Model.bin");
 
 	set_child(model.heirarchy_root);
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p = AddSocket("Bip001");
+	} 
+	ether_weapon_sockets_[0]->set_position_vector(0, -150.f, 0);
+	ether_weapon_sockets_[1]->set_position_vector(0, -100.f, 100);
+	ether_weapon_sockets_[2]->set_position_vector(0, 150.f, 0);
+	ether_weapon_sockets_[3]->set_position_vector(0, 100.f, 100.f);
+
+	CreateBoneTransformMatrix(device, command_list);
 
 	animation_controller_ = new CAnimationController(*model.animation_controller);
 
@@ -59,9 +70,9 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 	animation_controller_->SetLoopType((int)PlayerAnimationState::Run, AnimationLoopType::Repeat);
 
 	CMaterial* Material = new CMaterial(1);
-	Material->AddTexturePropertyFromDDSFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
+	Material->AddTexturePropertyFromDDSFile(device, command_list, "../Resource/Model/Texture/uv.png", TextureType::RESOURCE_TEXTURE2D, 7);
 
-	SetMaterial(0, Material);
+	model.heirarchy_root->SetMaterial(0, Material);
 
 	speed_ = 550.f;
 
@@ -80,7 +91,7 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 
 	SetCamera(pCamera);
 
-	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+	CreateShaderVariables(device, command_list);
 
 	SetShader((int)ShaderNum::Standard);
 }
@@ -88,6 +99,11 @@ CPlayer::CPlayer(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* pd3dComman
 CPlayer::~CPlayer()
 {
 	ReleaseShaderVariables();
+	weapon_socket_->ResetChild(NULL);
+
+	// 무기들의 삭제는 씬에서..
+	//for (auto& p : weapons_)
+	//	delete p;
 
 	//if (camera_) delete camera_;
 }
@@ -99,6 +115,7 @@ void CPlayer::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsComm
 
 void CPlayer::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
 {
+	CRootObject::UpdateShaderVariables(pd3dCommandList);
 	if (camera_) camera_->UpdateShaderVariables(pd3dCommandList);
 }
 
@@ -156,8 +173,12 @@ void CPlayer::InputActionRotate(const XMFLOAT2& delta_xy, const float& elapsed_t
 
 void CPlayer::InputActionRoll(const DWORD& direction)
 {
-	if(state_machine_->isInState(*PIdle::Instance()) || state_machine_->isInState(*PMove::Instance()))
+	if (state_machine_->isInState(*PIdle::Instance()) || state_machine_->isInState(*PMove::Instance()))
+	{
+		// TODO : 어디로 옮긴지 확인후 받은 ID의 Yaw값으로 움직이게 하라
+		OrientRotationToMove();
 		state_machine_->ChangeState(PEvade::Instance());	
+	}
 }
 
 void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
@@ -168,8 +189,12 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	// 이미 해당 공격을 실행중
 	if (attack_type_ == attack_type)
 		return;
-	attack_type_ = attack_type;
+	if (state_machine_->isInState(*PEvade::Instance()))
+		return;
 
+	OrientRotationToMove();
+
+	attack_type_ = attack_type;
 
 	if (current_weapon_type_ == WeaponType::None)
 	{
@@ -214,15 +239,30 @@ void CPlayer::Update(float elapsed_time)
 
 	if (rotation_component_)
 		rotation_component_->Update(elapsed_time);
+
+	UpdateEtherWeapon(elapsed_time);
 }
 
-void CPlayer::OrientRotationToMove(float elapsed_time)
+void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb)
 {
+	//슬라이딩 벡터 S = P - n(P*n), P: 입사벡터(여기서는 this가 이동한 벡터), n: 평면벡터(여기서는 other에서 this를 바라보는 벡터를 사용하여 실제 부딪힌 평면을 예측)
+	XMFLOAT3 P = position_vector() - movement_component_->prev_position_vector();
+	XMFLOAT3 other_to_this = Vector3::Normalize(position_vector() - other->position_vector());
+	XMFLOAT3 other_look = Vector3::Normalize(other->look_vector());
+	XMFLOAT3 other_right = Vector3::Normalize(other->right_vector());
+	XMFLOAT3 rect_extants(other_obb.animated_obb().Extents.x, 0, other_obb.animated_obb().Extents.y);
+	XMFLOAT3 x_axis = XMFLOAT3(1, 0, 0);
+	float angle = abs(Vector3::Angle(Vector3::Normalize(rect_extants), x_axis));
+	XMFLOAT3 n;
+	if (abs(Vector3::Angle(other_to_this, other_look)) < 90.f - angle) n = Vector3::Normalize(other_look);
+	if (abs(Vector3::Angle(other_to_this, other_look * -1)) < 90.f - angle) n = Vector3::Normalize(other_look * -1);
+	if (abs(Vector3::Angle(other_to_this, other_right)) < angle) n = Vector3::Normalize(other_right);
+	if (abs(Vector3::Angle(other_to_this, other_right * -1)) < angle) n = Vector3::Normalize(other_right * -1);
 
-	if (!IsZero(g_objects[g_myid].yaw))
-	{
-		rotation_component_->Rotate(0.f, g_objects[g_myid].yaw, 0.f);
-	}
+	XMFLOAT3 S = P - (n * (Vector3::DotProduct(P, n)));
+
+	//충돌전 위치에서 이동한 위치의 슬라이딩 벡터만큼 이동
+	set_position_vector(movement_component_->prev_position_vector() + S);
 }
 
 void CPlayer::EquipWeapon(const std::string& name)
@@ -234,9 +274,17 @@ void CPlayer::EquipWeapon(const std::string& name)
 			weapon = p;
 			break;
 		}
-	if (!weapon) 
-		return;
+	if (!weapon) return;
+	weapon_socket_->set_is_visible(false);
+	weapon->set_is_visible(true);
 	weapon_socket_->ResetChild(weapon);
+	weapon_socket_->set_is_visible(true);
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->ResetChild(new CWeapon(*(CWeapon*)weapon));
+		p->SetShader(weapon->shader_num());
+		p->set_is_visible(false);
+	}
 	current_weapon_type_ = ((CWeapon*)weapon)->type();
 	weapon_socket_->SetShader(weapon->shader_num());
 }
@@ -252,6 +300,62 @@ void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 void CPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func)
 {
 	animation_controller_->SetCallbackKey(index, time, func);
+}
+
+// 여기 계산된 YAW를 이용해서 돌게 코드 수정 필요
+void CPlayer::OrientRotationToMove(float elapsed_time)
+{
+	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
+	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
+	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
+	float yaw = Vector3::Angle(v, d);
+	if (result > 0)
+		yaw *= -1;
+	if (!IsZero(yaw))
+		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
+}
+
+void CPlayer::OrientRotationToMove()
+{
+	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
+	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
+	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+
+	float yaw = Vector3::Angle(v, d);
+	if (result > 0)
+		yaw *= -1;
+	if (!IsZero(yaw))
+		rotation_component_->Rotate(0.f, yaw, 0.f);
+}
+
+void CPlayer::UpdateEtherWeapon(float elapsed_time)
+{
+	if (is_ether_)
+	{
+	}
+}
+
+void CPlayer::SpawnEtherWeapon()
+{
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->set_is_visible(true);
+	}
+}
+
+void CPlayer::DespawnEtherWeapon()
+{
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p->set_is_visible(false);
+	}
+}
+
+void CPlayer::SetEtherWeaponSocketByShader(CShader* shader)
+{
+	for (auto& p : ether_weapon_sockets_)
+		shader->AddObject(p);
 }
 
 void CPlayer::SendInput(uint8_t& input)

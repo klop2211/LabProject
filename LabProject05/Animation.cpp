@@ -8,7 +8,7 @@ CAnimationController::CAnimationController()
 	animation_tracks_.reserve(0);
 }
 
-void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
+int CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
 {
 	std::string strToken;
 
@@ -26,6 +26,8 @@ void CAnimationController::LoadAnimationFromFile(std::ifstream& InFile)
 	}
 
 	FBXLoad::ReadStringFromFile(InFile, strToken); // </AnimationSets>
+
+	return nAnimationSets;
 }
 
 void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_object)
@@ -65,7 +67,6 @@ void CAnimationController::Animate(const float& elapsed_time, CGameObject* root_
 		}
 	}
 
-	root_object->UpdateTransform(NULL);
 }
 
 void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
