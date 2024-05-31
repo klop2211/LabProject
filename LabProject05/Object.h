@@ -238,6 +238,8 @@ public:
 	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList);
 
 	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) {}
+	
+	virtual void TakeDamage(float damage_amount, const CDamageEvent& damage_event, CRootObject* instigator, CRootObject* damage_causer) {}
 
 	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
 	void RenderObbList(ID3D12GraphicsCommandList* command_list);

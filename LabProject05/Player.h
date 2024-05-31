@@ -46,6 +46,9 @@ protected:
 	// 현재 플레이어의 무기상태를 나타냄 None은 납도
 	WeaponType current_weapon_type_ = WeaponType::None;
 
+	//플레이어의 공격속성 무, 불, 물, 땅, 번개
+	DamageType damage_type_ = DamageType::None;
+
 	CGameObject* weapon_socket_ = NULL;
 
 	//에테르 해방 공격 관련
@@ -72,6 +75,7 @@ public:
 	void set_weapon_socket(CGameObject* value) { weapon_socket_ = value; }
 
 	//getter
+	DamageType damage_type() const { return damage_type_; }
 	bool is_ether() const { return is_ether_; }
 	WeaponType current_weapon() const { return current_weapon_type_; }
 	CGameObject* weapon_socket() const { return weapon_socket_; }
@@ -91,8 +95,11 @@ public:
 	void InputActionRoll(const DWORD& direction);
 	void InputActionAttack(const PlayerAttackType& attack_type);
 
+	// 무기 관리
 	void AddWeapon(CWeapon* ptr) { weapons_.push_back(ptr); }
 	void EquipWeapon(const std::string& name);
+	void OnWeaponObb() { if (weapon_socket_) static_cast<CRootObject*>(weapon_socket_->child())->OnAllObb(); }
+	void OffWeaponObb() { if (weapon_socket_) static_cast<CRootObject*>(weapon_socket_->child())->OffAllObb(); }
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }

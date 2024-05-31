@@ -14,6 +14,8 @@ private:
     CGameObject* parent_socket_ = NULL;
     CCubeMesh* debug_cube_ = NULL;
 
+    std::string name_;
+
     bool is_active_ = true;
 
 public:
@@ -26,6 +28,7 @@ public:
     void set_offset_matrix(const XMFLOAT4X4& value) { offset_matrix_ = value; }
 
     //getter
+    std::string name() const { return name_; }
     bool is_active() const { return is_active_; }
     BoundingOrientedBox obb() const { return obb_; }
     BoundingOrientedBox animated_obb() const { return animated_obb_; }

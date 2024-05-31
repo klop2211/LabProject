@@ -72,6 +72,14 @@ using Microsoft::WRL::ComPtr;
 
 // 무기 상태 None 타입은 납도 상태
 enum class WeaponType { None = -1, Sword = 0, Sphere };
+// 데미지 타입
+enum class DamageType { None = 0, Fire, Water, Lightning, Earth };
+
+struct CDamageEvent
+{
+	DamageType type = DamageType::None;
+	std::string obb_name{ "None" };
+};
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")

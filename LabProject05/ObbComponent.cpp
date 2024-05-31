@@ -7,7 +7,8 @@ CObbComponent::CObbComponent(const CObbComponent& other) :
 	obb_ (other.obb_),
 	animated_obb_(other.animated_obb_),
 	world_matrix_(other.world_matrix_),
-	parent_socket_(other.parent_socket_)
+	parent_socket_(other.parent_socket_),
+	name_(other.name_)
 {
 	// 디버그 메쉬는 복사하지 않음
 	debug_cube_ = NULL;

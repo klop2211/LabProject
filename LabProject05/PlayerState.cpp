@@ -30,6 +30,8 @@ void PIdle::Enter(CPlayer* player)
 	}
 	if (player->is_ether())
 		player->SpawnEtherWeapon();
+
+	player->OffWeaponObb();
 }
 
 void PIdle::Execute(CPlayer* player, float elapsed)
@@ -79,6 +81,7 @@ void PMove::Enter(CPlayer* player)
 	player->movement_component()->set_max_speed(player->speed());
 	if (player->is_ether())
 		player->SpawnEtherWeapon();
+	player->OffWeaponObb();
 }
 
 void PMove::Execute(CPlayer* player, float elapsed_time)
@@ -112,6 +115,7 @@ void PEvade::Enter(CPlayer* player)
 	player->set_animation_state(PlayerAnimationState::Roll);
 	player->movement_component()->set_max_speed(700);
 	evade_time_ = 0.f;
+	player->OffWeaponObb();
 }
 
 void PEvade::Execute(CPlayer* player, float elapsed_time)
@@ -457,6 +461,7 @@ void PSphereAttack1::Enter(CPlayer* player)
 	player->set_animation_state(PlayerAnimationState::SphereAttack11);
 	attack_time_ = 0.f;
 	is_click_ = false;
+	player->OnWeaponObb();
 }
 
 void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
