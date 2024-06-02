@@ -411,7 +411,6 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				press_keyboard_movement_ = true;
 				input_key_ = (static_cast<uint8_t>(wParam) << 1) | true;
 				break;
-			
 			case 'r':
 			case 'R':
 				player_->set_is_ether(!player_->is_ether());
@@ -423,11 +422,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				break;
 			}
 		break;
-		case WM_KEYUP:
-			
-			//// [CS] key input이 있을시 패킷 전송
-			//input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
-			//player_->SendInput(input_key_);
+		case WM_KEYUP:		
 
 			switch (wParam)
 			{
@@ -582,7 +577,6 @@ void CGameFramework::ProcessInput()
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = false;
 	float elapsed_time = game_timer_.GetTimeElapsed();
-	// TODO : **이거 함정이야 Scene->ProcessInput이 가짜임
 	if (GetKeyboardState(pKeysBuffer) && scene_) bProcessedByScene = scene_->ProcessInput(pKeysBuffer);
 	if (!bProcessedByScene)
 	{
@@ -609,21 +603,24 @@ void CGameFramework::ProcessInput()
 		player_->InputActionRotate(delta_xy, elapsed_time);
 		player_->InputActionMove(dwDirection, elapsed_time);
 
+		if (0 == dwDirection)
+		{
+			press_keyboard_movement_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
+		}
+
 		// [CS] Move Packet Send
 		if(press_keyboard_movement_)
 		{	
 			player_->SendInput(input_key_);
 		}
+
 		//if (press_keyboard_movement_ && player_->animation_state() == CPlayer::PlayerAnimation::Roll)
 
 		if(camera_->GetMode() == CameraMode::GHOST) 
 			((CGhostCamera*)camera_)->Move(dwDirection, elapsed_time);
 
 	}
-	else
-	{
-		press_keyboard_movement_ = false;	// [CS] 키보드 입력 없을시 보내지 못하게
-	}
+
 	if (left_click_)
 	{
 		click_time_ += elapsed_time;
