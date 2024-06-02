@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PlayerState.h"
+
 class CShader;
 class CPlayer;
 class CGameObject;
@@ -10,6 +12,8 @@ class CDescriptorManager;
 class CAudioManager;
 class CSkyBox;
 class CRootObject;
+class CAnotherPlayer;
+
 
 struct LIGHT
 {
@@ -74,6 +78,9 @@ public:
 	void UpdateCollisionList();
 	void CollisionCheck();
 	
+	//[SC] 다른 플레이어 업데이트
+	void UpdatePlayerlist();
+
 	// 현재 충돌처리 리스트의 디버그 큐브메쉬를 생성
 	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
 
@@ -96,7 +103,9 @@ protected:
 	// 05.09 수정: 생성과 삭제가 빈번이 일어날 확률이 높은 씬의 오브젝트들은 벡터보다 리스트를 쓰는 것이 좋다고 판단 + 정렬도 필요없음
 	std::vector<CRootObject*> objects_;
 
-	std::list<CGameObject*> weapon_object_;
+	// anther player 따로 생성함
+	std::vector<CAnotherPlayer*> anothers_;
+
 
 	// 충돌 관리
 	std::list<CRootObject*> static_object_list_;

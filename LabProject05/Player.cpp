@@ -146,7 +146,6 @@ void CPlayer::InputActionMove(const DWORD& dwDirection, const float& fElapsedTim
 
 		//p.player_yaw = (rotation_component_->yaw());
 
-		//// TODO: 현재 direction를 float으로 보냄. 해당 direction를 줄일 방법 찾기
 		////p.yaw = (camera_->GetYaw());
 		////p.direction = static_cast<unsigned char>(dwDirection);
 		//p.direction = (dwDirection);
@@ -175,7 +174,6 @@ void CPlayer::InputActionRoll(const DWORD& direction)
 {
 	if (state_machine_->isInState(*PIdle::Instance()) || state_machine_->isInState(*PMove::Instance()))
 	{
-		// TODO : 어디로 옮긴지 확인후 받은 ID의 Yaw값으로 움직이게 하라
 		OrientRotationToMove();
 		state_machine_->ChangeState(PEvade::Instance());	
 	}
@@ -223,6 +221,8 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 		break;
 	}
 	state_machine_->ChangeState(attack_state);
+
+	
 }
 
 void CPlayer::Update(float elapsed_time)
@@ -305,28 +305,28 @@ void CPlayer::SetAnimationCallbackKey(const float& index, const float& time, CAn
 // 여기 계산된 YAW를 이용해서 돌게 코드 수정 필요
 void CPlayer::OrientRotationToMove(float elapsed_time)
 {
-	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
-	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
-	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
-
-	float yaw = Vector3::Angle(v, d);
-	if (result > 0)
-		yaw *= -1;
-	if (!IsZero(yaw))
-		rotation_component_->Rotate(0.f, yaw * 12.f * elapsed_time, 0.f);
+	if (!IsZero(g_objects[g_myid].yaw))
+	{
+		rotation_component_->Rotate(0.f, g_objects[g_myid].yaw, 0.f);
+	}
 }
 
 void CPlayer::OrientRotationToMove()
 {
-	// 벡터의 삼중적을 활용한 최단 방향 회전 d = Vector3::Normalize(movement_component_->velocity_vector())
-	XMFLOAT3 v = look_vector(), d = Vector3::Normalize(direction_vector_), u = XMFLOAT3(0.f, 1.f, 0.f);
-	float result = Vector3::DotProduct(u, Vector3::CrossProduct(d, v));
+	// TODO : 뒤로 돌면서 스킬 사용시 서버에서 추가 작업 필요
+	if (!IsZero(g_objects[g_myid].yaw))
+	{
+		rotation_component_->Rotate(0.f, g_objects[g_myid].yaw, 0.f);
+	}
+}
 
-	float yaw = Vector3::Angle(v, d);
-	if (result > 0)
-		yaw *= -1;
-	if (!IsZero(yaw))
-		rotation_component_->Rotate(0.f, yaw, 0.f);
+void CPlayer::OrientRotationAnothers(int another_num)
+{
+	// TODO : 뒤로 돌면서 스킬 사용시 서버에서 추가 작업 필요
+	if (!IsZero(g_objects[another_num].yaw))
+	{
+		Rotate(0.f, g_objects[another_num].yaw, 0.f);
+	}
 }
 
 void CPlayer::UpdateEtherWeapon(float elapsed_time)

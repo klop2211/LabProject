@@ -58,3 +58,16 @@ void CMovementComponent::Update(const float& elapsed_time)
 	owner_->set_position_vector(curr);
 	owner_->set_prev_position_vector(curr);
 }
+
+
+void CMovementComponent::UpdateAnother(int another_num)
+{
+	//++ 이전 위치와 새로 갱신된 위치의 차를 구해 걷는 애니메이션 구현
+	XMFLOAT3 prev = owner_->get_prev_position_vector();
+	// TODO : 자신의 번호를 받아서 돌리기
+	XMFLOAT3 curr = g_objects[another_num].Location;
+	set_direction_vector(Vector3::Subtract(curr, prev));
+
+	owner_->set_position_vector(curr);
+	owner_->set_prev_position_vector(curr);
+}

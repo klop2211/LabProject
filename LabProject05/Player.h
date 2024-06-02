@@ -75,9 +75,10 @@ public:
 	bool is_ether() const { return is_ether_; }
 	WeaponType current_weapon() const { return current_weapon_type_; }
 	CGameObject* weapon_socket() const { return weapon_socket_; }
-	StateMachine<CPlayer>* state_machine()const { return state_machine_; }
+	StateMachine<CPlayer>* state_machine() const { return state_machine_; }
 	CAnimationController* animation_controller() const { return animation_controller_; }
 	float speed() const { return speed_; }
+	// 추가+ -  another에서 상태 관리 위해 const 뺌
 	CMovementComponent* movement_component() const { return movement_component_; }
 	//float rotation_component_yaw() const { return rotation_component_->yaw(); }
 	bool orient_rotation_to_movement() const { return orient_rotation_to_movement_; }
@@ -101,9 +102,11 @@ public:
 	virtual void Update(float fTimeElapsed);
 
 	// 시간에 따라 회전
-	void OrientRotationToMove(float fTimeElapsed);
+	virtual void OrientRotationToMove(float fTimeElapsed);
 	// 남은 회전 각도만큼 즉시 회전
 	void OrientRotationToMove();
+
+	virtual void OrientRotationAnothers (int anther_num) override;
 
 	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb) override;
 
@@ -133,5 +136,6 @@ public:
 
 	void SendInput(uint8_t& input);
 	void SendSkill(bool skillend);
+
 };
 

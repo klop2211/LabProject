@@ -26,7 +26,10 @@ public:
     //현재 상태의 Execute 실행
     void  Update(float elapsed)const
     {
-        if (current_state_) current_state_->Execute(owner_, elapsed);
+        if (current_state_)
+        {
+            current_state_->Execute(owner_, elapsed);
+        }
     }
 
     //상태 변경: 기존 상태의 exit 호출 후 변경한 뒤 새로운 상태의 enter를 호출한다.

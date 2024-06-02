@@ -38,5 +38,6 @@ public:
 	void set_direction_vector(const XMFLOAT3& xmf3Value) { direction_vector_ = xmf3Value; }
 	
 	virtual void Update(const float& fElapsedTime);
+	void UpdateAnother(int another_num);
 };
 

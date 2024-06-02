@@ -230,6 +230,7 @@ void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->movement_component()->set_max_speed(slash_move_speed_);
 			player->movement_component()->set_direction_vector(player->look_vector());
+			player->SendSkill(true);
 		}
 		if (slash_time_ > slash_move_end_time_)
 		{
@@ -272,6 +273,7 @@ void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 		if (player->animation_state() == PlayerAnimationState::SwordAttack13)
 		{
 			player->state_machine()->ChangeState(PIdle::Instance());
+			player->SendSkill(false);
 		}
 	}
 }
@@ -327,6 +329,7 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 			{
 				player->set_is_move_allow(true);
 				player->set_animation_state(PlayerAnimationState::SwordAttack22);
+				player->SendSkill(true);
 			}
 			return;
 		}
@@ -347,6 +350,7 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 		if (player->animation_state() == PlayerAnimationState::SwordAttack23)
 		{
 			player->state_machine()->ChangeState(PIdle::Instance());
+			player->SendSkill(false);
 		}
 	}
 }
@@ -379,6 +383,7 @@ void PSwordAttack3::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->movement_component()->set_direction_vector(player->look_vector());
 			player->movement_component()->set_max_speed(move_speed_[i]);
+			player->SendSkill(true);
 			break;
 		}
 		else
@@ -390,6 +395,7 @@ void PSwordAttack3::Execute(CPlayer* player, float elapsed_time)
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		player->state_machine()->ChangeState(PIdle::Instance());
+		player->SendSkill(false);
 	}
 }
 
@@ -423,6 +429,7 @@ void PSwordAttack4::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->movement_component()->set_direction_vector(player->look_vector());
 			player->movement_component()->set_max_speed(move_speed_[i]);
+			player->SendSkill(true);
 			break;
 		}
 		else
@@ -437,6 +444,7 @@ void PSwordAttack4::Execute(CPlayer* player, float elapsed_time)
 		player->animation_controller()->set_is_blend_change(false);
 		player->set_current_weapon(WeaponType::None);
 		player->state_machine()->ChangeState(PIdle::Instance());
+		player->SendSkill(false);
 	}
 }
 
@@ -475,6 +483,7 @@ void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->movement_component()->set_direction_vector(player->look_vector());
 			player->movement_component()->set_max_speed(move_speed_[i]);
+			player->SendSkill(true);
 			break;
 		}
 		else
@@ -496,11 +505,13 @@ void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
 			{
 				player->animation_controller()->set_is_blend_change(false);
 				player->set_animation_state(PlayerAnimationState::SphereAttack12);
+				player->SendSkill(true);
 			}
 			else
 			{
 				player->animation_controller()->set_is_end_time_blending(true);
 				player->state_machine()->ChangeState(PIdle::Instance());
+				player->SendSkill(false);
 			}
 			return;
 		}
@@ -508,6 +519,7 @@ void PSphereAttack1::Execute(CPlayer* player, float elapsed_time)
 		if (player->animation_state() == PlayerAnimationState::SphereAttack12)
 		{
 			player->state_machine()->ChangeState(PIdle::Instance());
+			player->SendSkill(false);
 			return;
 		}
 	}
@@ -539,8 +551,10 @@ void PSphereAttack2::Execute(CPlayer* player, float elapsed_time)
 	{
 		if (move_start_time_[i] < attack_time_ && attack_time_ < move_end_time_[i])
 		{
+			
 			player->movement_component()->set_direction_vector(player->look_vector());
 			player->movement_component()->set_max_speed(move_speed_[i]);
+			player->SendSkill(true);
 			break;
 		}
 		else
@@ -553,6 +567,7 @@ void PSphereAttack2::Execute(CPlayer* player, float elapsed_time)
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		player->state_machine()->ChangeState(PIdle::Instance());
+		player->SendSkill(false);
 	}
 }
 
@@ -592,6 +607,7 @@ void PSphereAttack3::Execute(CPlayer* player, float elapsed_time)
 	{
 		player->movement_component()->set_direction_vector(player->look_vector());
 		player->movement_component()->set_max_speed(move_speed_);
+		player->SendSkill(true);
 	}
 	else
 	{
@@ -634,6 +650,7 @@ void PSphereAttack3::Execute(CPlayer* player, float elapsed_time)
 		if (player->animation_state() == PlayerAnimationState::SphereAttack33)
 		{
 			player->state_machine()->ChangeState(PIdle::Instance());
+			player->SendSkill(false);
 			return;
 		}
 	}
@@ -668,6 +685,7 @@ void PSphereAttack4::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->movement_component()->set_direction_vector(player->look_vector());
 			player->movement_component()->set_max_speed(move_speed_[i]);
+			player->SendSkill(true);
 			break;
 		}
 		else
@@ -680,6 +698,7 @@ void PSphereAttack4::Execute(CPlayer* player, float elapsed_time)
 	if (!player->animation_controller()->IsEnableTrack((int)player->animation_state()))
 	{
 		player->state_machine()->ChangeState(PIdle::Instance());
+		player->SendSkill(false);
 	}
 }
 

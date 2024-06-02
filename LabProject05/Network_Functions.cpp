@@ -163,6 +163,12 @@ void DoRecv()
         {
             // NON-Blocking WOULDBLOCK
         }
+        else if (err == WSAECONNRESET || err == WSAENOTCONN)
+        {
+            // Disconnect
+            closesocket(g_server_socket);
+            exit(0);
+        }
         else
         {
             print_error("WSARecv", err);

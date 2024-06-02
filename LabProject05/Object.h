@@ -1,5 +1,7 @@
 #pragma once
 #include "Animation.h"
+
+
 #define DIR_FORWARD				0x01
 #define DIR_BACKWARD			0x02
 #define DIR_LEFT				0x04
@@ -110,7 +112,6 @@ public:
 	void set_prev_position_vector(const XMFLOAT3& position) { set_prev_position_vector(position.x, position.y, position.z); }
 	XMFLOAT3 get_prev_position_vector() const { return XMFLOAT3(to_prev_matrix_._41, to_prev_matrix_._42, to_prev_matrix_._43); };
 
-	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
 	void set_child(CGameObject* pChild);
 	void set_sibling(CGameObject* ptr);
 	void set_parent(CGameObject* ptr);
@@ -181,6 +182,9 @@ public:
 
 	void UpdateLookVector(const XMFLOAT3& look);
 
+
+	//==
+	//virtual StateMachine<CPlayer>* state_machine() const = 0;
 };
 
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -263,6 +267,9 @@ public:
 
 public:
 	static bool CollisionCheck(CRootObject* a, CRootObject* b, CObbComponent& a_obb, CObbComponent& b_obb);
+
+	//[CS] another player rotation을 위한 함수
+	virtual void OrientRotationAnothers(int player_num);
 };
 
 class CSocket : public CGameObject

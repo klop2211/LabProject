@@ -3,6 +3,7 @@
 
 class CPlayer;
 
+
 class PIdle : public State<CPlayer>
 {
     const float release_weapon_time_ = 3.f;

@@ -251,64 +251,27 @@ void CScene::CreateShaderResourceViews(ID3D12Device* pd3dDevice)
 
 	skybox_->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 
-	for (auto& Object : g_objects)
-	{
-		objects_[Object.first]->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
-	}
 
-	for (auto& Object : weapon_object_)
+	for (auto& Object : objects_)
 	{
 		Object->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
+	}
+	for (auto& another : anothers_)
+	{
+		another->CreateShaderResourceViews(pd3dDevice, descriptor_manager_);
 	}
 
 }
 
 void CScene::ReleaseUploadBuffers()
 {
-	for (auto& pObject : g_objects) objects_[pObject.first]->ReleaseUploadBuffers();
-	for (auto& Object : weapon_object_)
-	{
-		Object->ReleaseUploadBuffers();
-	}
+	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
+	for (auto& pAnother : anothers_) pAnother->ReleaseUploadBuffers();
 }
 
 void CScene::AnimateObjects(float elapsed_time)
 {
-	//player_->OnPrepareRender();
-
-	// 05.17 수정: 이제 객체의 애니메이션은 렌더 직전에 이루어짐(shader 렌더 항목 참조)
-	//player_->Animate(elapsed_time);
-	//terrain_->Animate(elapsed_time);
-
-	//for (auto& pObject : objects_)
-	//	pObject->Animate(elapsed_time);
-
-	// TODO : 이부분 수정 필요 Shader 렌더 부분으로 옮겨라
-	for (auto& pObject : g_objects)
-	{
-		// 자신의 id는 그리지 않는다 && 기본 y를 -999로 설정해놓음
-		if (pObject.first != g_myid && pObject.second.Location.y != -999)
-		{
-			// 위치 업데이트
-			objects_[pObject.first]->set_position_vector(pObject.second.Location);
-
-			XMFLOAT3 update_look = objects_[pObject.first]->look_vector();
-			update_look.y = pObject.second.yaw;
-			objects_[pObject.first]->UpdateLookVector(update_look);
-		}
-		else
-		{
-			objects_[pObject.first]->set_position_vector(-9999, -999, -9999);
-		}
-		objects_[pObject.first]->Animate(elapsed_time);
-		
-	}
 	
-	for (auto& Object : weapon_object_)
-	{
-		Object->Animate(elapsed_time);
-	}
-
 	if (m_pLights)
 	{
 		m_pLights->m_pLights[1].m_xmf3Position = player_->position_vector();
@@ -379,29 +342,41 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 	shaders_[0]->AddObject(player_);
 
 
+	dynamic_object_list_.push_back(player_);
+
+
 	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
-	// TODO: 현재 0번째 빼고 텍스쳐를 읽으면 터지는 문제 존재.
-	// TODO : 마왕 오브젝트가 아닌 플레이어 객체여야 한다.
-	for (int i = 0; i < 4; i++)
+	//=========================================
+	// Another Player
+	//=========================================
+	for (int i = 0; i < MAX_USER; ++i)
 	{
+		CModelInfo another = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
+
+		//CPlayer* object = new CPlayer(pd3dDevice, pd3dCommandList, NULL);
+		CAnotherPlayer* object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, another);
+		//CRootObject* object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, another);
+		object->set_position_vector(-9999, -999, -9999);
+		object->set_look_vector(0.f, 0.f, 1.f);
 		
-		CModelInfo model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
-		CGameObject* object = new CMawang(model);
+		collision_socket = object->AddSocket("Bip001");
+		object->AddObb(aabb, collision_socket);
+		//object->SetState()->ChangeState(PIdle::Instance());
+		anothers_.push_back(object);
+		
 
-		g_objects[i].Location = XMFLOAT3(-9999, -999, -9999);
-		objects_.push_back(object);
+		/*CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
+		object->set_weapon_socket(sword_socket);*/
 
-		// TODO: ** 플레이어 순서가 꼬였을 때, 다른 객체가 움직일 수 있음
-		objects_[i]->set_my_id(i);
-
-		XMFLOAT3 init_position = g_objects[i].Location;
-		objects_[i]->set_position_vector(init_position);
+		// player_를 따로 만드는건 내부에 player_객체가 두개 인거라 비효율
+		/*object->player_->set_current_weapon(WeaponType::None);
+		object->player_->state_machine()->ChangeState(PMove::Instance());*/
 
 		shaders_[0]->AddObject(object);
+		dynamic_object_list_.push_back(object);
 	}
 
-	// TODO : 바뀐부분 체크
-	dynamic_object_list_.push_back(player_);
+	//=========================================
 
 	CGameObject* sword_socket = player_->AddSocket("Bip001_R_Hand");
 
@@ -429,29 +404,11 @@ void CScene::BuildObjects(ID3D12Device* pd3dDevice, ID3D12GraphicsCommandList* p
 
 	player_->set_weapon_socket(sword_socket);
 
-	// 04.30 수정: 플레이어 객체와 터레인 객체는 따로관리(충돌체크 관리를 위해)
-
-	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, "../Resource/Model/Player_Model.bin");
-
-	CRootObject* object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
-	object->set_position_vector(650, terrain_->GetHeight(650, 550), 550);
-	collision_socket = object->AddSocket("Bip001");
-	object->AddObb(aabb, collision_socket);
-	objects_.push_back(object);
-	shaders_[0]->AddObject(object);
-	dynamic_object_list_.push_back(object);
-
-	object = new CAnotherPlayer(pd3dDevice, pd3dCommandList, model);
-	object->set_position_vector(450, terrain_->GetHeight(450, 550), 550);
-	//collision_socket = object->AddSocket("Bip001");
-	object->AddObb(aabb, collision_socket);
-	objects_.push_back(object);
-	shaders_[0]->AddObject(object);
-	dynamic_object_list_.push_back(object);
+	
 
 	model = CGameObject::LoadModelInfoFromFile(pd3dDevice, pd3dCommandList, CMawang::mawang_model_file_name_);
 	
-	object = new CMawang(pd3dDevice, pd3dCommandList, model);
+	CRootObject* object = new CMawang(pd3dDevice, pd3dCommandList, model);
 	object->set_position_vector(750, terrain_->GetHeight(750, 550), 550);
 
 	collision_socket = object->AddSocket("Bip001");
@@ -515,16 +472,17 @@ void CScene::ReleaseObjects()
 	delete skybox_;
 	skybox_ = NULL;
 
-	for (auto& pObject : g_objects)
+
+	for (auto& pObject : objects_)
 	{
-		delete objects_[pObject.first];
-		objects_[pObject.first] = NULL;
+		delete pObject;
+		pObject = NULL;
 	}
 
-	for (auto& Object : weapon_object_)
+	for (auto& pAnother : anothers_)
 	{
-		delete Object;
-		Object = NULL;
+		delete pAnother;
+		pAnother = NULL;
 	}
 
 
@@ -584,6 +542,20 @@ void CScene::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera
 
 void CScene::UpdateCollisionList()
 {
+}
+
+void CScene::UpdatePlayerlist()
+{
+	for (int i = 0; i < MAX_USER; i++)
+	{
+		if (g_myid == i)	continue;
+		if (g_objects[i].Location.y != -999)
+		{
+			anothers_[i]->set_position_vector(g_objects[i].Location);
+			//anothers_[i]->player_->state_machine()->ch
+			anothers_[i]->OrientRotationAnothers(i);
+		}
+	}
 }
 
 void CScene::CollisionCheck()

@@ -6,6 +6,8 @@
 
 CAnotherPlayer::CAnotherPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, const CModelInfo& model)
 {
+	player_ = new CPlayer(device, command_list, NULL);
+
 	model.heirarchy_root->AddRef();
 	set_child(model.heirarchy_root);
 

@@ -719,6 +719,15 @@ void CRootObject::RenderObbList(ID3D12GraphicsCommandList* command_list)
 		obb->Render(command_list);
 }
 
+
+void CRootObject::OrientRotationAnothers(int player_num)
+{
+	if (!IsZero(g_objects[player_num].yaw))
+	{
+		Rotate(0.f, g_objects[player_num].yaw, 0.f);
+	}
+}
+
 void CRootObject::Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num)
 {
 	if (!is_visible_) return;

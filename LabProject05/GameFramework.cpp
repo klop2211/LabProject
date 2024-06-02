@@ -436,11 +436,12 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			case VK_S:
 			case VK_D:
 				// [CS] key input이 있을시 패킷 전송
-				input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
-				player_->SendInput(input_key_);
-				break;
-			
-
+				if (true == press_keyboard_movement_)
+				{
+					input_key_ = (static_cast<uint8_t>(wParam) << 1) | false;
+					player_->SendInput(input_key_);
+					break;
+				}
 			case VK_CONTROL:
 				control_key_ = false;
 			break;
@@ -448,8 +449,8 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				//player_->InputActionRoll(0);
 			break;
 			case VK_ESCAPE:
-				// TODO : 게임 종료 패킷 서버에게 보내야한다.
 				::PostQuitMessage(0);
+				exit(0);
 				break;
 			case VK_OEM_MINUS:
 			{
@@ -581,6 +582,7 @@ void CGameFramework::ProcessInput()
 	static UCHAR pKeysBuffer[256];
 	bool bProcessedByScene = false;
 	float elapsed_time = game_timer_.GetTimeElapsed();
+	// TODO : **이거 함정이야 Scene->ProcessInput이 가짜임
 	if (GetKeyboardState(pKeysBuffer) && scene_) bProcessedByScene = scene_->ProcessInput(pKeysBuffer);
 	if (!bProcessedByScene)
 	{
@@ -654,6 +656,9 @@ void CGameFramework::ProcessInput()
 	}
 
 	//scene_->CollisionCheck();
+	
+	// [SC] 다른 플레이어 상태 업데이트
+	scene_->UpdatePlayerlist();
 
 	player_->Update(elapsed_time);
 	
