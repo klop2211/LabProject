@@ -74,7 +74,7 @@ private:
 	std::vector<CAnimationLayer> m_Layers;
 };
 
-enum class AnimationLoopType{ Once, Repeat };
+enum class AnimationLoopType{ Once, Repeat, Part };
 
 struct CallbackKey
 {
@@ -109,6 +109,7 @@ public:
 
 	void AddWeight(const float& value);
 	void AddCallbackKey(const float& time, CAnimationCallbackFunc* callback_func);
+	void SetDeadCallbackKey(CRootObject* target);
 
 	void Animate(const float& fElapsedTime);
 
@@ -118,6 +119,7 @@ public:
 	void Stop() { speed_ = 0.f; }
 	void Start() { speed_ = 1.f; }
 
+	void Reset() { position_ = 0; speed_ = 1; weight_ = 1; }
 private:
 	void UpdatePosition(const float& fElapsedTime, bool reset);
 
@@ -179,6 +181,7 @@ public:
 	void ChangeAnimation(const int& index);
 
 	void SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func);
+	void SetDeadCallbackKey(const int& index, CRootObject* target);
 
 	void SetLoopType(const int& index, const AnimationLoopType& type);
 

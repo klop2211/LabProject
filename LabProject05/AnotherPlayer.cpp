@@ -4,10 +4,23 @@
 #include "Shader.h"
 
 
-CAnotherPlayer::CAnotherPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, const CModelInfo& model)
+CAnotherPlayer::CAnotherPlayer(ID3D12Device* device, ID3D12GraphicsCommandList* command_list, const CModelInfo& model) : CPlayer()
 {
 	model.heirarchy_root->AddRef();
 	set_child(model.heirarchy_root);
+
+	for (auto& p : ether_weapon_sockets_)
+	{
+		p = AddSocket("Bip001");
+	}
+	ether_weapon_sockets_[0]->set_position_vector(0, -150.f, 0);
+	ether_weapon_sockets_[1]->set_position_vector(0, -100.f, 100);
+	ether_weapon_sockets_[2]->set_position_vector(0, 150.f, 0);
+	ether_weapon_sockets_[3]->set_position_vector(0, 100.f, 100.f);
+
+	CGameObject* sword_socket = AddSocket("Bip001_R_Hand");
+
+	set_weapon_socket(sword_socket);
 
 	CreateBoneTransformMatrix(device, command_list);
 

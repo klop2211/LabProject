@@ -78,6 +78,7 @@ void CAnimationController::SetFrameCaches(CGameObject* pRootObject)
 void CAnimationController::EnableTrack(const int& index)
 {
 	// 3개의 애니메이션이 동시에 활성화되는 것을 방지
+	animation_tracks_[prev_index_].Reset();
 	animation_tracks_[prev_index_].set_enable(false);
 
 	prev_index_ = curr_index_;
@@ -119,6 +120,11 @@ void CAnimationController::ChangeAnimation(const int& index)
 void CAnimationController::SetLoopType(const int& index, const AnimationLoopType& type)
 {
 	animation_tracks_[index].set_loop_type(type);
+}
+
+void CAnimationController::SetDeadCallbackKey(const int& index, CRootObject* target)
+{
+	animation_tracks_[index].SetDeadCallbackKey(target);
 }
 
 void CAnimationController::SetCallbackKey(const int& index, const float& time, CAnimationCallbackFunc* callback_func)
@@ -225,6 +231,11 @@ void CAnimationTrack::UpdatePosition(const float& fElapsedTime, bool reset)
 		}
 		position_ = 0.f;
 	}
+}
+
+void CAnimationTrack::SetDeadCallbackKey(CRootObject* target)
+{
+	AddCallbackKey(end_time() - callback_check_time_, new CDeleteCallbackFunc(target));
 }
 
 

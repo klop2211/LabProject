@@ -87,8 +87,9 @@ public:
 class PSwordAttack1 : public PAttack1
 {
 private:
-    const float max_charge_time_ = 2.5f;
-    float charge_time_ = 0.f;
+    std::array<float, 5> charge_damage_scale_{ 0.8, 1.2, 1.6, 2.4, 2.0 };
+    int charge_step_ = 0;
+    const int max_charge_step_ = 4;
     bool is_charging_ = false;
 
     const float slash_move_start_time_ = 1.f / 60.f * 12.f;
@@ -113,6 +114,8 @@ class PSwordAttack2 : public PAttack2
 private:
     const float slash_move_speed_ = 700.f;
     const float max_hold_time_ = 4.0f;
+    const float damage_scale_holding_attack_ = 0.4;
+    const float damage_scale_last_attack_ = 1.f;
     float hold_time_ = 0.f;
     bool is_holding_ = false;
 
@@ -134,7 +137,9 @@ private:
     const std::array<float, 2> move_start_time_ = { 1.f / 30.f * 10.f, 1.f / 30.f * 20.f };
     const std::array<float, 2> move_end_time_ = { 1.f / 30.f * 20.f, 1.f / 30.f * 30.f };
     const std::array<float, 2> move_speed_ = { 1500.f, 1000.f };
+    const float damage_scale_ = 1.1;
 
+    bool obb_triger_ = false;
     float attack_time_ = 0.f;
 
 public:
@@ -156,7 +161,9 @@ private:
     const std::array<float, 2> move_start_time_ = { 0.f, 1.f / 30.f * 30.f };
     const std::array<float, 2> move_end_time_ = { 1.f / 30.f * 5.f, 1.f / 30.f * 40.f };
     const std::array<float, 2> move_speed_ = { 240.f, 120.f };
-   
+    const float damage_scale_ = 0.9;
+
+    bool obb_triger_ = false;
     float attack_time_ = 0.f;
 
 public:
@@ -177,6 +184,10 @@ private:
     const std::array<float, 2> move_start_time_ = { 1.f / 30.f * 3.f, 1.f / 30.f * 25.f };
     const std::array<float, 2> move_end_time_ = { 1.f / 30.f * 10.f, 1.f / 30.f * 35.f };
     const std::array<float, 2> move_speed_ = { 1000.f, 1500.f };
+    const float damage_scale_first_attack_ = 1.0;
+    const float damage_scale_second_attack_ = 1.2;
+
+    bool obb_triger_ = false;
 
     float attack_time_ = 0.f;
 
@@ -244,7 +255,9 @@ private:
     const std::array<float, 3> move_start_time_ =   { 1.f / 30.f * 0.f, 1.f / 30.f * 20.f, 1.f / 30.f * 40 };
     const std::array<float, 3> move_end_time_ =     { 1.f / 30.f * 5.f, 1.f / 30.f * 30.f, 1.f / 30.f * 50 };
     const std::array<float, 3> move_speed_ = { 500.f, 3000.f, 200.f };
+    const float damage_scale_ = 1.f;
 
+    bool obb_triger_ = false;
     float attack_time_ = 0.f;
 
 public:

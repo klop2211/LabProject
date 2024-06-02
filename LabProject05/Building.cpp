@@ -11,4 +11,6 @@ CBuilding::CBuilding(const CModelInfo& model) : CRootObject(model)
 		0, 1, 0, 0,
 		0, 0, 0, 1
 	);
+
+	collision_type_ = CollisionType::Static;
 }

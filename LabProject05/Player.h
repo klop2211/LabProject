@@ -49,13 +49,20 @@ protected:
 	//플레이어의 공격속성 무, 불, 물, 땅, 번개
 	DamageType damage_type_ = DamageType::None;
 
+	// 플레이어 무기 소켓(현재 플레이어가 공격할 때 사용하는 무기)
 	CGameObject* weapon_socket_ = NULL;
+
+	// 플레이어가 장착 가능한 무기 슬롯
+	std::array<CWeapon*, 2> weapon_slot_ = { NULL, NULL };
+
+	// 사용중인 무기슬롯 인덱스
+	int current_weapon_slot_index_ = 0;
 
 	//에테르 해방 공격 관련
 	bool is_ether_ = false;
 	std::array<CGameObject*, 4> ether_weapon_sockets_;
 
-
+	//무기 데이터 (차후 인벤토리 형식으로 바뀔 예정)
 	std::vector<CWeapon*> weapons_;
 
 	PlayerAttackType attack_type_ = PlayerAttackType::None;
@@ -97,9 +104,15 @@ public:
 
 	// 무기 관리
 	void AddWeapon(CWeapon* ptr) { weapons_.push_back(ptr); }
-	void EquipWeapon(const std::string& name);
-	void OnWeaponObb() { if (weapon_socket_) static_cast<CRootObject*>(weapon_socket_->child())->OnAllObb(); }
-	void OffWeaponObb() { if (weapon_socket_) static_cast<CRootObject*>(weapon_socket_->child())->OffAllObb(); }
+	void ChangeWeapon();
+	void EquipWeapon(int index);
+	void EnableWeapon();
+	void DisableWeapon();
+	void SetWeaponSlot(CWeapon* weapon, int index) { weapon_slot_[index] = weapon; }
+	void OnWeaponObb() { if (weapon_socket_->child()) static_cast<CRootObject*>(weapon_socket_->child())->OnAllObb(); }
+	void OffWeaponObb() { if (weapon_socket_->child()) static_cast<CRootObject*>(weapon_socket_->child())->OffAllObb(); }
+	void ClearDamagedObjectList();
+	void SetWeaponDamageScale(const float& value);
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }

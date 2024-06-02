@@ -1,6 +1,7 @@
 #pragma once
 
 class CAudioManager;
+class CRootObject;
 
 class CAnimationCallbackFunc
 {
@@ -25,6 +26,17 @@ class CSoundCallbackFunc : public CAnimationCallbackFunc
 public:
 	CSoundCallbackFunc(CAudioManager* audio_manager, const std::string& track_name);
 	~CSoundCallbackFunc() {}
+
+	virtual void Util();
+};
+
+class CDeleteCallbackFunc : public CAnimationCallbackFunc
+{
+	CRootObject* target_ = NULL;
+
+public:
+	CDeleteCallbackFunc(CRootObject* target) : target_(target) {}
+	~CDeleteCallbackFunc() {}
 
 	virtual void Util();
 };

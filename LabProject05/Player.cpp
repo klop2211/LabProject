@@ -36,6 +36,7 @@ CPlayer::CPlayer()
 	state_machine_->SetCurrentState(PIdle::Instance());
 	state_machine_->SetPreviousState(PIdle::Instance());
 
+
 	//TODO: 씬에서 사용하는 모든 무기의 개수만큼 잡아야함
 	weapons_.reserve(10);
 }
@@ -206,7 +207,7 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 	if (current_weapon_type_ == WeaponType::None)
 	{
 		current_weapon_type_ = ((CWeapon*)weapon_socket_->child())->type();
-		weapon_socket_->set_is_visible(true);
+		EnableWeapon();
 	}
 
 	State<CPlayer>* attack_state = NULL;
@@ -230,6 +231,11 @@ void CPlayer::InputActionAttack(const PlayerAttackType& attack_type)
 		break;
 	}
 	state_machine_->ChangeState(attack_state);
+}
+
+void CPlayer::SetWeaponDamageScale(const float& value)
+{
+	weapon_slot_[current_weapon_slot_index_]->set_damage_scale(value);
 }
 
 void CPlayer::Update(float elapsed_time)
@@ -269,29 +275,53 @@ void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 	set_position_vector(movement_component_->prev_position_vector() + S);
 }
 
-void CPlayer::EquipWeapon(const std::string& name)
+// 06.01 수정: 이제 플레이어는 무기 슬롯에 있는 무기를 장착함
+void CPlayer::EquipWeapon(int index)
 {
-	CGameObject* weapon = NULL;
-	for (const auto& p : weapons_)
-		if (p->name() == name)
-		{
-			weapon = p;
-			break;
-		}
-	if (!weapon) return;
-	weapon_socket_->set_is_visible(false);
-	weapon->set_is_visible(true);
+	//기존 무기 비활성화
+	DisableWeapon();
+	OffWeaponObb();
+	//무기 교체
+	CWeapon* weapon = weapon_slot_[index];
 	weapon_socket_->ResetChild(weapon);
-	weapon_socket_->set_is_visible(true);
-	for (auto& p : ether_weapon_sockets_)
-	{
-		p->ResetChild(new CWeapon(*(CWeapon*)weapon));
-		p->SetShader(weapon->shader_num());
-		p->set_is_visible(false);
-	}
-	current_weapon_type_ = ((CWeapon*)weapon)->type();
-	weapon_socket_->SetShader(weapon->shader_num());
+
+	current_weapon_slot_index_ = index;
+	current_weapon_type_ = weapon->type();
+	//TODO: 에테르 해방 공격 관련 재구현이 필요
+	//for (auto& p : ether_weapon_sockets_)
+	//{
+	//	p->ResetChild(new CWeapon(*(CWeapon*)weapon));
+	//	p->SetShader(weapon->shader_num());
+	//	p->set_is_visible(false);
+	//}
 }
+
+void CPlayer::ChangeWeapon()
+{
+	current_weapon_slot_index_ = current_weapon_slot_index_ == 0 ? 1 : 0;
+	EquipWeapon(current_weapon_slot_index_);
+}
+
+void CPlayer::EnableWeapon()
+{
+	if (weapon_socket_->child())
+	{
+		weapon_socket_->child()->set_is_visible(true);
+	}
+}
+
+void CPlayer::DisableWeapon()
+{
+	if (weapon_socket_->child())
+	{
+		weapon_socket_->child()->set_is_visible(false);
+	}
+}
+void CPlayer::ClearDamagedObjectList()
+{ 
+	weapon_slot_[current_weapon_slot_index_]->ClearDamagedObjectList();
+}
+
 
 void CPlayer::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
@@ -331,6 +361,7 @@ void CPlayer::OrientRotationToMove()
 	if (!IsZero(yaw))
 		rotation_component_->Rotate(0.f, yaw, 0.f);
 }
+
 
 void CPlayer::UpdateEtherWeapon(float elapsed_time)
 {

@@ -198,6 +198,9 @@ public:
 
 };
 
+// 이 객체가 Scene의 충돌처리에서 어떤 방식으로 되어야하는지 표현
+enum class CollisionType { Dynamic = 0, Static };
+
 //모델의 heirachy root를 child로 갖는 객체. 
 //즉, 실제 씬에서 관리하는 최상위 객체
 // 앞으로 모든 오브젝트는 이 클래스를 상속받아 사용하는 것을 원칙으로 함
@@ -213,6 +216,11 @@ protected:
 	// animation 관련
 	CAnimationController* animation_controller_ = NULL;
 
+	// 이 객체의 생존 여부(false면 Scene에서 delete 한다)
+	bool is_live_ = true;
+
+	CollisionType collision_type_ = CollisionType::Dynamic;
+
 public:
 	CRootObject();
 	CRootObject(const CModelInfo& model);
@@ -220,7 +228,13 @@ public:
 	~CRootObject();
 
 	//setter
+	void set_collision_type(const CollisionType& value) { collision_type_ = value; }
 	void set_animation_controller(CAnimationController* value) { animation_controller_ = value; }
+	void set_is_live(const bool& value) { is_live_ = value; }
+
+	//getter
+	CollisionType collision_type() const { return collision_type_; }
+	bool is_live() const { return is_live_; }
 
 	void Rotate(float pitch, float yaw, float roll);
 

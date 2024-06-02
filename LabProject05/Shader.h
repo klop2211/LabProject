@@ -37,7 +37,9 @@ public:
 	virtual void OnPrepareRender(ID3D12GraphicsCommandList* pd3dCommandList);
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* camera, float elapsed_time);
 
+	// 렌더 오브젝트 관리
 	void AddObject(CGameObject* object) { render_list_.push_back(object); }
+	void ClearRenderList() { render_list_.clear(); }
 
 protected:
 	ID3D12PipelineState** m_ppd3dPipelineStates = NULL;

@@ -66,6 +66,7 @@ public:
 
 	bool ProcessInput(UCHAR* pKeysBuffer) { return false; }
 	void AnimateObjects(float fTimeElapsed);
+	void UpdateShaderRenderList();
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL, float elapsed_time = 0);
 
 	void ReleaseUploadBuffers();
@@ -76,6 +77,9 @@ public:
 	
 	// 현재 충돌처리 리스트의 디버그 큐브메쉬를 생성
 	void CreateCollisionCubeMesh(ID3D12Device* device, ID3D12GraphicsCommandList* command_list);
+
+	// 죽은 객체 삭제 처리
+	void DeleteDeadObjects();
 
 protected:
 	ID3D12RootSignature* d3d12_root_signature_ = NULL;

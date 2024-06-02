@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "AnimationCallbackFunc.h"
 #include "AudioManager.h"
+#include "Object.h"
 
 CAnimationCallbackFunc::~CAnimationCallbackFunc()
 {
@@ -15,4 +16,9 @@ CSoundCallbackFunc::CSoundCallbackFunc(CAudioManager* audio_manager, const std::
 void CSoundCallbackFunc::Util()
 {
 	audio_manager_->PlayTrack(track_name_);
+}
+
+void CDeleteCallbackFunc::Util()
+{
+	target_->set_is_live(false);
 }
