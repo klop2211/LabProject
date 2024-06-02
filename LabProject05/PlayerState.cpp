@@ -207,6 +207,7 @@ PSwordAttack1* PSwordAttack1::Instance()
 void PSwordAttack1::Enter(CPlayer* player)
 {
 	player->set_animation_state(PlayerAnimationState::SwordAttack11);
+	player->SendSkill(true);
 	player->set_is_move_allow(false);
 	player->movement_component()->set_max_speed(0.f);
 	charge_time_ = 0.f;
@@ -246,7 +247,9 @@ void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 		{
 			player->animation_controller()->set_is_blend_change(false);
 			if (!is_charging_)
+			{
 				player->set_animation_state(PlayerAnimationState::SwordAttack13);
+			}
 			else
 			{
 				player->set_animation_state(PlayerAnimationState::SwordAttack12);
@@ -259,10 +262,12 @@ void PSwordAttack1::Execute(CPlayer* player, float elapsed_time)
 			if (charge_time_ > max_charge_time_)
 			{
 				player->set_animation_state(PlayerAnimationState::SwordAttack13);
-
 			}
 			else if (is_charging_)
+			{
 				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SwordAttack12);
+				player->SendSkill(false);
+			}
 			else
 			{
 				player->set_animation_state(PlayerAnimationState::SwordAttack13);
@@ -295,7 +300,7 @@ void PSwordAttack2::Enter(CPlayer* player)
 	is_holding_ = false;
 	player->set_is_move_allow(false);
 	player->movement_component()->set_max_speed(0.f);
-
+	player->SendSkill(true);
 }
 
 void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
@@ -329,7 +334,7 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 			{
 				player->set_is_move_allow(true);
 				player->set_animation_state(PlayerAnimationState::SwordAttack22);
-				player->SendSkill(true);
+				
 			}
 			return;
 		}
@@ -337,7 +342,10 @@ void PSwordAttack2::Execute(CPlayer* player, float elapsed_time)
 		if (player->animation_state() == PlayerAnimationState::SwordAttack22)
 		{
 			if (is_holding_)
+			{
 				player->animation_controller()->EnableTrack((int)PlayerAnimationState::SwordAttack22);
+				
+			}
 			else
 			{
 				player->set_is_move_allow(false);

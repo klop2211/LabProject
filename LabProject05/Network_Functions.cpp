@@ -120,6 +120,20 @@ void ProcessPacket(char* ptr)
         }
         break;
     }
+    case SC_SKILL_PLAYER:
+    {
+        SC_SKILL_PACKET* my_packet = reinterpret_cast<SC_SKILL_PACKET*>(ptr);
+        int other_id = my_packet->id;
+        if (other_id == g_myid)
+        {
+
+        }
+        else
+        {
+            
+        }
+        break;
+    }
 
     case SC_REMOVE_PLAYER:
     {

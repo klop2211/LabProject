@@ -92,6 +92,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         exit(0);
     }
 
+    // Nagle 알고리즘 OFF
+    int DelayZeroOpt = 1;
+    setsockopt(g_server_socket, SOL_SOCKET, TCP_NODELAY, (const char*)&DelayZeroOpt, sizeof(DelayZeroOpt));
+
     // TODO: 해당 로그인 부분은 로그인 서버 완성시 그쪽으로 옮겨질 코드
     CS_LOGIN_PACKET p;
     p.size = sizeof(p);

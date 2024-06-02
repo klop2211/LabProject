@@ -360,6 +360,7 @@ void CPlayer::SetEtherWeaponSocketByShader(CShader* shader)
 
 void CPlayer::SendInput(uint8_t& input)
 {
+	if (my_id_ != g_myid)	return;
 	CS_MOVE_PACKET p;
 	p.size = sizeof(p);
 	p.type = CS_MOVE;
@@ -371,6 +372,7 @@ void CPlayer::SendInput(uint8_t& input)
 
 void CPlayer::SendSkill(bool skillend)
 {
+	if (my_id_ != g_myid)	return;
 	CS_SKILL_PACKET p;
 	p.size = sizeof(p);
 	p.type = CS_SKILL;
