@@ -15,6 +15,7 @@
 #include "PlayerState.h"
 #include "Weapon.h"
 #include "ObbComponent.h"
+#include "Scene.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPlayer
@@ -278,6 +279,8 @@ void CPlayer::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 // 06.01 수정: 이제 플레이어는 무기 슬롯에 있는 무기를 장착함
 void CPlayer::EquipWeapon(int index)
 {
+	if (index == current_weapon_slot_index_) return;
+
 	//기존 무기 비활성화
 	DisableWeapon();
 	OffWeaponObb();
@@ -287,19 +290,26 @@ void CPlayer::EquipWeapon(int index)
 
 	current_weapon_slot_index_ = index;
 	current_weapon_type_ = weapon->type();
-	//TODO: 에테르 해방 공격 관련 재구현이 필요
-	//for (auto& p : ether_weapon_sockets_)
-	//{
-	//	p->ResetChild(new CWeapon(*(CWeapon*)weapon));
-	//	p->SetShader(weapon->shader_num());
-	//	p->set_is_visible(false);
-	//}
 }
 
 void CPlayer::ChangeWeapon()
 {
-	current_weapon_slot_index_ = current_weapon_slot_index_ == 0 ? 1 : 0;
-	EquipWeapon(current_weapon_slot_index_);
+	int temp = current_weapon_slot_index_ == 0 ? 1 : 0;
+	EquipWeapon(temp);
+}
+
+void CPlayer::OnWeaponObb() 
+{ 
+	if (weapon_socket_->child()) 
+		static_cast<CRootObject*>(weapon_socket_->child())->OnAllObb();
+
+}
+
+void CPlayer::OffWeaponObb()
+{
+	if (weapon_socket_->child())
+		static_cast<CRootObject*>(weapon_socket_->child())->OffAllObb();
+
 }
 
 void CPlayer::EnableWeapon()
@@ -370,25 +380,53 @@ void CPlayer::UpdateEtherWeapon(float elapsed_time)
 	}
 }
 
-void CPlayer::SpawnEtherWeapon()
-{
+void CPlayer::SpawnEtherWeapon(CScene* scene)
+{	
+	if (!scene) return;
+
+	CWeapon* weapon = weapon_slot_[current_weapon_slot_index_];
 	for (auto& p : ether_weapon_sockets_)
 	{
-		p->set_is_visible(true);
+		CWeapon* ether_weapon = new CWeapon(*(CWeapon*)weapon);
+		ether_weapon->SetShader(weapon->shader_num());
+		ether_weapon->set_is_visible(true);
+		ether_weapon->ChangeObbParent(p);
+		scene->AddObject(ether_weapon);
+		p->ResetChild(ether_weapon);
 	}
+
+	OffEtherWeaponObb();
 }
 
 void CPlayer::DespawnEtherWeapon()
 {
 	for (auto& p : ether_weapon_sockets_)
 	{
-		p->set_is_visible(false);
+		if (p->child())
+			static_cast<CRootObject*>(p->child())->set_is_live(false);
+		p->ResetChild(NULL);
 	}
 }
 
-void CPlayer::SetEtherWeaponSocketByShader(CShader* shader)
+void CPlayer::OnEtherWeaponObb()
 {
-	for (auto& p : ether_weapon_sockets_)
-		shader->AddObject(p);
+	if (is_ether_)
+	{
+		for (auto& p : ether_weapon_sockets_)
+		{
+			static_cast<CRootObject*>(p->child())->OnAllObb();
+		}
+	}
+}
+
+void CPlayer::OffEtherWeaponObb()
+{
+	if (is_ether_)
+	{
+		for (auto& p : ether_weapon_sockets_)
+		{
+			static_cast<CRootObject*>(p->child())->OffAllObb();
+		}
+	}
 }
 

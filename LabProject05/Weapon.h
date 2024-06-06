@@ -41,4 +41,7 @@ public:
 
 	void AddDamagedObject(CRootObject* object) { damaged_object_list_.push_back(object); }
 	void ClearDamagedObjectList() { damaged_object_list_.clear(); }
+
+	//무기 Obb의 부모소켓을 변경하는 함수(에테르 해방 무기를 소환하는데 필요, 차후 투사체에도 사용 가능성 있음)
+	void ChangeObbParent(CGameObject* parent);
 };

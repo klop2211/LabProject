@@ -8,6 +8,7 @@ class CObbComponent;
 class CAnimationCallbackFunc;
 class CWeapon;
 class CShader;
+class CScene;
 
 enum class PlayerAnimationState { Idle = 0, Roll, Run, Walk, 
 	SwordIdle, SwordAttack11, SwordAttack12, SwordAttack13, SwordAttack21, SwordAttack22, SwordAttack23, SwordAttack30, SwordAttack40,
@@ -56,7 +57,10 @@ protected:
 	std::array<CWeapon*, 2> weapon_slot_ = { NULL, NULL };
 
 	// 사용중인 무기슬롯 인덱스
-	int current_weapon_slot_index_ = 0;
+	int current_weapon_slot_index_ = -1;
+
+	//무기 에테르 게이지, 0이면 데미지를 주지 않음
+	std::array<float, 2> ether_power_ = { 100.f, 100.f };
 
 	//에테르 해방 공격 관련
 	bool is_ether_ = false;
@@ -82,6 +86,8 @@ public:
 	void set_weapon_socket(CGameObject* value) { weapon_socket_ = value; }
 
 	//getter
+	float ether_power() { return ether_power_[current_weapon_slot_index_]; }
+	float ether_power(int index) { return ether_power_[index]; }
 	DamageType damage_type() const { return damage_type_; }
 	bool is_ether() const { return is_ether_; }
 	WeaponType current_weapon() const { return current_weapon_type_; }
@@ -109,10 +115,17 @@ public:
 	void EnableWeapon();
 	void DisableWeapon();
 	void SetWeaponSlot(CWeapon* weapon, int index) { weapon_slot_[index] = weapon; }
-	void OnWeaponObb() { if (weapon_socket_->child()) static_cast<CRootObject*>(weapon_socket_->child())->OnAllObb(); }
-	void OffWeaponObb() { if (weapon_socket_->child()) static_cast<CRootObject*>(weapon_socket_->child())->OffAllObb(); }
+	void OnWeaponObb();
+	void OffWeaponObb();
 	void ClearDamagedObjectList();
 	void SetWeaponDamageScale(const float& value);
+
+	// 에테르 무기 관련 함수
+	void SpawnEtherWeapon(CScene* scene);
+	void DespawnEtherWeapon();
+	void UpdateEtherWeapon(float elapsed_time);
+	void OnEtherWeaponObb();
+	void OffEtherWeaponObb();
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }
@@ -144,10 +157,5 @@ public:
 
 	void SetAnimationCallbackKey(const float& index, const float& time, CAnimationCallbackFunc* func);
 
-	// 에테르 무기 관련 함수
-	void SetEtherWeaponSocketByShader(CShader* shader);
-	void SpawnEtherWeapon();
-	void DespawnEtherWeapon();
-	void UpdateEtherWeapon(float elapsed_time);
 };
 

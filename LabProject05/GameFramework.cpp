@@ -398,7 +398,9 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 			{
 			case 'r':
 			case 'R':
-				player_->set_is_ether(!player_->is_ether());
+				//TODO: 에테르 해방공격 조건 추가 및 일정시간 뒤 삭제 구현
+				player_->set_is_ether(true);
+				player_->SpawnEtherWeapon(scene_);
 				break;
 			case VK_CONTROL:
 				control_key_ = true;

@@ -294,9 +294,6 @@ void CScene::UpdateShaderRenderList()
 	shaders_[1]->AddObject(terrain_);
 	shaders_[3]->AddObject(skybox_);
 	
-	// 에테르 해방 상태의 무기를 렌더하기 위한 셰이더 설정
-	player_->SetEtherWeaponSocketByShader(shaders_[2]);
-
 	if (debug_collision_)
 		UpdateCollisionList();
 }

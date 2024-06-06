@@ -26,3 +26,11 @@ void CWeapon::HandleCollision(CRootObject* other, const CObbComponent& my_obb, c
 	AddDamagedObject(other);
 
 }
+
+void CWeapon::ChangeObbParent(CGameObject* parent)
+{
+	for (auto& p : obb_list_)
+	{
+		p->set_parent_socket(parent);
+	}
+}

@@ -26,6 +26,7 @@ public:
 
     //setter
     void set_offset_matrix(const XMFLOAT4X4& value) { offset_matrix_ = value; }
+    void set_parent_socket(CGameObject* value) { parent_socket_ = value; }
 
     //getter
     std::string name() const { return name_; }

@@ -71,6 +71,9 @@ public:
 
 	void ReleaseUploadBuffers();
 
+	// 오브젝트 추가 함수
+	void AddObject(CRootObject* value) { objects_.push_back(value); }
+
 	// 충돌 처리
 	void UpdateCollisionList();
 	void CollisionCheck();
