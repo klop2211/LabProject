@@ -126,6 +126,7 @@ public:
 	void UpdateEtherWeapon(float elapsed_time);
 	void OnEtherWeaponObb();
 	void OffEtherWeaponObb();
+	void FireEtherWeapon(CRootObject* target_object, const XMFLOAT3& target_position);
 
 	CCamera *GetCamera() { return(camera_); }
 	void SetCamera(CCamera *pCamera) { camera_ = pCamera; }

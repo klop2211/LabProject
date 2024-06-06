@@ -588,6 +588,10 @@ void CRootObject::CreateBoneTransformMatrix(ID3D12Device* device, ID3D12Graphics
 	}
 }
 
+void CRootObject::Update(float elapsed_time)
+{
+}
+
 void CRootObject::UpdateShaderVariables(ID3D12GraphicsCommandList* pd3dCommandList)
 {
 	CGameObject::UpdateShaderVariables(pd3dCommandList);

@@ -619,6 +619,8 @@ void CGameFramework::ProcessInput()
 	player_->Update(elapsed_time);
 	camera_->Update(elapsed_time);
 
+	scene_->UpdateObjects(elapsed_time);
+
 }
 
 void CGameFramework::AnimateObjects()

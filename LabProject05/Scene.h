@@ -65,11 +65,15 @@ public:
 	ID3D12RootSignature* GetGraphicsRootSignature() { return(d3d12_root_signature_); }
 
 	bool ProcessInput(UCHAR* pKeysBuffer) { return false; }
+
+	void UpdateObjects(float elapsed_time);
 	void AnimateObjects(float fTimeElapsed);
 	void UpdateShaderRenderList();
 	void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera = NULL, float elapsed_time = 0);
 
 	void ReleaseUploadBuffers();
+
+
 
 	// 오브젝트 추가 함수
 	void AddObject(CRootObject* value) { objects_.push_back(value); }

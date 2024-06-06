@@ -257,6 +257,12 @@ void CScene::ReleaseUploadBuffers()
 	for (auto& pObject : objects_) pObject->ReleaseUploadBuffers();
 }
 
+void CScene::UpdateObjects(float elapsed_time)
+{
+	for (auto& object : objects_)
+		object->Update(elapsed_time);
+}
+
 void CScene::AnimateObjects(float elapsed_time)
 {
 	//player_->OnPrepareRender();

@@ -387,7 +387,7 @@ void CPlayer::SpawnEtherWeapon(CScene* scene)
 	CWeapon* weapon = weapon_slot_[current_weapon_slot_index_];
 	for (auto& p : ether_weapon_sockets_)
 	{
-		CWeapon* ether_weapon = new CWeapon(*(CWeapon*)weapon);
+		CWeapon* ether_weapon = new CEtherWeapon(*(CWeapon*)weapon);
 		ether_weapon->SetShader(weapon->shader_num());
 		ether_weapon->set_is_visible(true);
 		ether_weapon->ChangeObbParent(p);
@@ -427,6 +427,18 @@ void CPlayer::OffEtherWeaponObb()
 		{
 			static_cast<CRootObject*>(p->child())->OffAllObb();
 		}
+	}
+}
+
+void CPlayer::FireEtherWeapon(CRootObject* target_object, const XMFLOAT3& target_position)
+{
+	for (auto& p : ether_weapon_sockets_)
+	{
+		CEtherWeapon* temp = static_cast<CEtherWeapon*>(p->child());
+		temp->set_parent(NULL);
+		temp->set_to_parent_matrix(p->child()->GetWorldMatrix());
+		temp->set_target_object(target_object);
+		temp->set_target_position(target_position);
 	}
 }
 

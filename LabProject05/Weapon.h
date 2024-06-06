@@ -45,3 +45,20 @@ public:
 	//무기 Obb의 부모소켓을 변경하는 함수(에테르 해방 무기를 소환하는데 필요, 차후 투사체에도 사용 가능성 있음)
 	void ChangeObbParent(CGameObject* parent);
 };
+
+class CEtherWeapon : public CWeapon
+{
+	CRootObject* target_object_ = NULL;
+	XMFLOAT3 target_position_ {0,0,0};
+
+
+public:
+	CEtherWeapon(const CWeapon& other);
+
+	//setter
+	void set_target_position(const XMFLOAT3& value) { target_position_ = value; }
+	void set_target_object(CRootObject* value) { target_object_ = value; }
+
+	virtual void Update(float elapsed_time);
+	virtual void HandleCollision(CRootObject* other, const CObbComponent& my_obb, const CObbComponent& other_obb);
+};

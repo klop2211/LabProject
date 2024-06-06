@@ -243,6 +243,8 @@ public:
 	void OnAllObb();
 	void OffAllObb();
 
+	virtual void Update(float elapsed_time);
+
 	virtual void Animate(float fTimeElapsed);
 
 	virtual void Render(ID3D12GraphicsCommandList* pd3dCommandList, CCamera* pCamera, int shader_num);
